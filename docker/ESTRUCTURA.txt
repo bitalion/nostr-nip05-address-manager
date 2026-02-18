@@ -1,0 +1,307 @@
+╔════════════════════════════════════════════════════════════════════════════╗
+║              🐳 ESTRUCTURA REORGANIZADA - DOCKER ✅                        ║
+║                    NIP-05 Nostr Identifier                                  ║
+╚════════════════════════════════════════════════════════════════════════════╝
+
+📂 NUEVA ESTRUCTURA COMPLETA:
+════════════════════════════════════════════════════════════════════════════
+
+nip05/                                  ← Raíz del proyecto
+│
+├── 🎯 ACCESO RÁPIDO DESDE RAÍZ
+│   ├── docker-start                   ← Iniciar (desde cualquier lugar)
+│   ├── docker-stop                    ← Detener (desde cualquier lugar)
+│   └── Makefile                       ← make docker-start (desde raíz)
+│
+├── 📁 docker/                         ← TODO sobre Docker aquí
+│   │
+│   ├── 🔧 CONFIGURACIÓN
+│   │   ├── Dockerfile                 ← Imagen del contenedor
+│   │   ├── docker-compose.yml         ← Desarrollo local
+│   │   ├── docker-compose.prod.yml    ← Producción + Nginx
+│   │   ├── .dockerignore              ← Exclusiones
+│   │   └── Makefile                   ← Comandos make
+│   │
+│   ├── 🔨 SCRIPTS EJECUTABLES
+│   │   └── scripts/
+│   │       ├── docker-start.sh        ⭐ Recomendado
+│   │       ├── docker-build.sh
+│   │       └── docker-stop.sh
+│   │
+│   ├── 🌐 NGINX (PRODUCCIÓN)
+│   │   └── nginx/
+│   │       └── nginx.conf.example
+│   │
+│   ├── 📖 DOCUMENTACIÓN
+│   │   ├── README.md                  ← Lee primero
+│   │   └── docs/
+│   │       ├── DOCKER_QUICK_START.md  ← 5 minutos
+│   │       ├── DOCKER_FULL_GUIDE.md   ← Guía completa
+│   │       └── DOCKER_SETUP.md        ← Detalles técnicos
+│   │
+│   └── 📋 ESTE ARCHIVO
+│       └── ESTRUCTURA.txt
+│
+├── 📄 DOCUMENTACIÓN RAÍZ
+│   ├── DOCKER_INFO.md                 ← Guía de esta reorganización
+│   ├── main.py                        ← Aplicación FastAPI
+│   ├── requirements.txt
+│   ├── .env.example
+│   └── ...
+│
+├── 📂 DIRECTORIOS DE DATOS
+│   ├── data/                          ← Datos persistentes
+│   │   └── .well-known/               ← Registry NIP-05
+│   ├── templates/                     ← Plantillas HTML
+│   ├── static/                        ← Archivos estáticos
+│   └── ...
+│
+└── 🔒 CONFIGURACIÓN GIT
+    ├── .gitignore                     ← Actualizado
+    └── .github/                       ← GitHub Actions
+
+════════════════════════════════════════════════════════════════════════════
+
+🚀 FORMAS DE USAR:
+════════════════════════════════════════════════════════════════════════════
+
+1️⃣  DESDE LA RAÍZ (MÁS FÁCIL):
+    ────────────────────────────────
+    cd nip05
+    cp .env.example .env
+    nano .env
+    ./docker-start              ← Script automático
+
+    O con make:
+    make docker-start
+    make docker-stop
+    make docker-logs
+
+2️⃣  DESDE DIRECTORIO docker/:
+    ────────────────────────────────
+    cd nip05/docker
+    ./scripts/docker-start.sh   ← Script automático
+
+    O con docker-compose:
+    docker-compose up -d
+    docker-compose logs -f
+
+    O con make:
+    make docker-start
+    make help
+
+3️⃣  DESDE CUALQUIER LUGAR:
+    ────────────────────────────────
+    docker-compose -f /path/to/nip05/docker/docker-compose.yml up -d
+
+════════════════════════════════════════════════════════════════════════════
+
+✨ CARACTERÍSTICAS CLAVE:
+════════════════════════════════════════════════════════════════════════════
+
+✅ Rutas Automáticas
+   - Los scripts ajustan automáticamente las rutas
+   - Funcionan desde cualquier ubicación
+   - No hay errores por rutas relativas incorrectas
+
+✅ Contexto de Build Correcto
+   - Context: .. (raíz del proyecto)
+   - Dockerfile: docker/Dockerfile
+   - Archivos de app: raíz
+
+✅ Volúmenes Persistentes
+   - ../data/.well-known    → Datos NIP-05
+   - ../static              → Archivos estáticos
+   - ../templates           → Plantillas HTML
+
+✅ Fácil de Mantener
+   - Docker separado del código
+   - Estructura clara y lógica
+   - Fácil encontrar archivos
+
+════════════════════════════════════════════════════════════════════════════
+
+🔍 VERIFICACIÓN:
+════════════════════════════════════════════════════════════════════════════
+
+Después de ejecutar ./docker-start:
+
+✓ Contenedor corriendo:
+  docker-compose ps
+
+✓ Salud:
+  docker inspect nip05-app --format='{{.State.Health.Status}}'
+
+✓ Acceder:
+  http://localhost:8000
+
+✓ Logs:
+  docker-compose logs -f  (desde docker/)
+
+✓ API test:
+  curl http://localhost:8000/api/check-availability/test
+
+════════════════════════════════════════════════════════════════════════════
+
+📋 CONFIGURACIÓN NECESARIA:
+════════════════════════════════════════════════════════════════════════════
+
+1. Desde la RAÍZ del proyecto:
+
+   cp .env.example .env
+   nano .env
+
+   Variables obligatorias:
+   - LNBITS_URL         → Tu instancia LN Bits
+   - LNBITS_API_KEY     → API key de LN Bits
+   - INVOICE_AMOUNT_SATS → Cantidad en satoshis
+   - DOMAIN             → Tu dominio
+
+2. Asegúrate de que Docker está instalado:
+
+   docker --version
+   docker-compose --version
+
+════════════════════════════════════════════════════════════════════════════
+
+🎯 INICIO RÁPIDO (30 segundos):
+════════════════════════════════════════════════════════════════════════════
+
+1. cd nip05
+2. cp .env.example .env && nano .env
+3. ./docker-start
+4. Abre: http://localhost:8000
+
+¡Listo! 🎉
+
+════════════════════════════════════════════════════════════════════════════
+
+📚 DOCUMENTACIÓN:
+════════════════════════════════════════════════════════════════════════════
+
+Por orden de importancia:
+
+1. docker/README.md
+   → Guía rápida del directorio docker/
+
+2. docker/docs/DOCKER_QUICK_START.md
+   → Inicio rápido (5 minutos)
+
+3. docker/docs/DOCKER_FULL_GUIDE.md
+   → Guía completa con troubleshooting
+
+4. docker/docs/DOCKER_SETUP.md
+   → Detalles técnicos y arquitectura
+
+5. DOCKER_INFO.md (raíz)
+   → Guía de la nueva reorganización
+
+════════════════════════════════════════════════════════════════════════════
+
+⚡ COMANDOS RÁPIDOS:
+════════════════════════════════════════════════════════════════════════════
+
+Desde RAÍZ:
+  ./docker-start                   # Iniciar
+  ./docker-stop                    # Detener
+  make docker-logs                 # Ver logs
+  make docker-ps                   # Estado
+
+Desde docker/:
+  ./scripts/docker-start.sh        # Iniciar
+  docker-compose up -d             # Iniciar
+  docker-compose logs -f           # Logs
+  docker-compose ps                # Estado
+  make docker-start                # Iniciar
+
+════════════════════════════════════════════════════════════════════════════
+
+🐛 TROUBLESHOOTING:
+════════════════════════════════════════════════════════════════════════════
+
+❌ "docker-compose.yml no encontrado"
+✅ Los scripts navegan automáticamente. Si usas docker-compose:
+   - Desde raíz: docker-compose -f docker/docker-compose.yml up -d
+   - Desde docker/: docker-compose up -d
+
+❌ ".env no encontrado"
+✅ Debe estar en la RAÍZ del proyecto:
+   cp .env.example .env
+
+❌ "Puerto 8000 en uso"
+✅ Cambiar puerto en docker/docker-compose.yml:
+   ports:
+     - "8001:8000"
+
+❌ "Contenedor se detiene inmediatamente"
+✅ Ver logs: docker-compose logs nip05-app
+
+════════════════════════════════════════════════════════════════════════════
+
+🎓 ARQUITECTURA:
+════════════════════════════════════════════════════════════════════════════
+
+DESARROLLO:
+
+  Raíz (/home/bitalion/nip05/)
+    │
+    ├─ .env                    ← Configuración
+    ├─ main.py                 ← Aplicación
+    ├─ requirements.txt
+    ├─ templates/
+    ├─ static/
+    │
+    └─ docker/                 ← Configuración Docker
+        ├─ Dockerfile          ← Build image
+        └─ docker-compose.yml  ← Run container
+
+
+CONTENEDOR:
+
+  docker:8000
+    ├─ /app/main.py           ← Código de app
+    ├─ /app/requirements.txt
+    ├─ /app/templates/
+    ├─ /app/static/
+    └─ /app/.well-known/      ← Datos persistentes
+
+
+════════════════════════════════════════════════════════════════════════════
+
+💡 TIPS:
+════════════════════════════════════════════════════════════════════════════
+
+1. Los scripts ajustan automáticamente las rutas
+   → No preocuparse por directorios de trabajo
+
+2. Usar ./docker-start desde la raíz (más fácil)
+   → Automáticamente navega a docker/ y ejecuta el script
+
+3. Los archivos .env van en la RAÍZ
+   → Los scripts buscan ../.env
+
+4. Los volúmenes son relativos a docker-compose.yml
+   → .. = raíz del proyecto
+
+5. Para producción, ver docker/docs/DOCKER_FULL_GUIDE.md
+   → Sección "Despliegue en Producción"
+
+════════════════════════════════════════════════════════════════════════════
+
+🚀 PRÓXIMOS PASOS:
+════════════════════════════════════════════════════════════════════════════
+
+1. Lee docker/README.md
+2. Configura .env
+3. Ejecuta ./docker-start
+4. Abre http://localhost:8000
+5. ¡Disfruta! 🎉
+
+════════════════════════════════════════════════════════════════════════════
+
+¡Hecho con ❤️ por Cuba Bitcoin 2026! 🇨🇺
+
+Versión: 2.0.0 (Reorganizada)
+Fecha: 2026-02-17
+
+════════════════════════════════════════════════════════════════════════════

@@ -1,0 +1,68 @@
+version: '3.8'
+
+# Production configuration with Nginx reverse proxy
+
+services:
+  nip05-app:
+    build:
+      context: ..  # Context is the parent directory (project root)
+      dockerfile: docker/Dockerfile
+    container_name: nip05-app
+    restart: always
+    environment:
+      - LNBITS_URL=${LNBITS_URL}
+      - LNBITS_API_KEY=${LNBITS_API_KEY}
+      - INVOICE_AMOUNT_SATS=${INVOICE_AMOUNT_SATS:-100}
+      - DOMAIN=${DOMAIN:-example.com}
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ../data/.well-known:/app/.well-known
+      - ../static:/app/static
+      - ../templates:/app/templates
+    networks:
+      - nip05-network
+    expose:
+      - 8000
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 1G
+        reservations:
+          cpus: '1'
+          memory: 512M
+
+  nginx:
+    image: nginx:latest
+    container_name: nip05-nginx
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+      - ../static:/app/static:ro
+    depends_on:
+      - nip05-app
+    networks:
+      - nip05-network
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 256M
+
+networks:
+  nip05-network:
+    driver: bridge
+
+volumes:
+  nip05-data:
+    driver: local

@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NIP-05 Registration</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        body {
+            background: radial-gradient(ellipse at bottom right, #7c3aed 0%, #581c87 25%, #1e1b4b 50%, #0f172a 80%);
+            background-attachment: fixed;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-3 sm:p-4">
+    <div class="w-full max-w-2xl mb-20 sm:mb-24">
+        <div class="bg-slate-800/80 backdrop-blur-xl rounded-xl sm:rounded-2xl shadow-2xl border border-slate-700/50 p-4 sm:p-6 md:p-8">
+            <div class="text-center mb-6 sm:mb-8">
+                <div class="flex justify-end gap-2 mb-4">
+                    <button id="langEN" class="px-2 sm:px-3 py-1 rounded text-xs sm:text-sm bg-amber-500 text-white font-semibold">EN</button>
+                    <button id="langES" class="px-2 sm:px-3 py-1 rounded text-xs sm:text-sm bg-slate-600 text-white font-semibold">ES</button>
+                </div>
+                <h1 class="text-xl sm:text-2xl md:text-3xl font-bold text-white" id="title">NIP-05 Registration</h1>
+                <p class="text-slate-400 mt-2 text-sm sm:text-base" id="subtitle">Get your Nostr identifier</p>
+            </div>
+
+            <!-- NIP-05 Information Section -->
+            <div id="infoSection" class="mb-6 bg-slate-700/30 rounded-lg p-4 border border-slate-600/50">
+                <button id="infoToggle" type="button" class="w-full flex items-center justify-between text-left hover:text-amber-400 transition-colors">
+                    <span class="text-slate-300 font-semibold flex items-center gap-2">
+                        <i class="fa-solid fa-circle-question text-amber-400"></i>
+                        <span id="infoTitle">¿Qué es un NIP-05?</span>
+                    </span>
+                    <i id="infoIcon" class="fa-solid fa-chevron-down text-slate-400 transition-transform"></i>
+                </button>
+                <div id="infoContent" class="hidden mt-3 space-y-3 text-slate-400 text-sm">
+                    <p id="infoDesc1" class="leading-relaxed">
+                        Un NIP-05 es una especificación técnica (Nostr Implementation Possibility) que permite a los usuarios de Nostr asociar su clave pública (esa cadena larga de números y letras que empieza con "npub") con un identificador basado en internet, similar a una dirección de correo electrónico, como ejemplo@cubabitcoin.cu
+                    </p>
+                </div>
+            </div>
+
+            <!-- Section: How does it work? -->
+            <div id="howSection" class="mb-6 bg-slate-700/30 rounded-lg p-4 border border-slate-600/50">
+                <button id="howToggle" type="button" class="w-full flex items-center justify-between text-left hover:text-amber-400 transition-colors">
+                    <span class="text-slate-300 font-semibold flex items-center gap-2">
+                        <i class="fa-solid fa-circle-question text-amber-400"></i>
+                        <span id="howTitle">¿Cómo funciona?</span>
+                    </span>
+                    <i id="howIcon" class="fa-solid fa-chevron-down text-slate-400 transition-transform"></i>
+                </button>
+                <div id="howContent" class="hidden mt-3 space-y-3 text-slate-400 text-sm">
+                    <p id="howDesc" class="leading-relaxed">
+                        Es un proceso de verificación simple. Cuando configuras un NIP-05 en tu perfil, los clientes de Nostr (las aplicaciones que usas) verifican automáticamente que eres el dueño de esa identidad. Lo hacen buscando un archivo especial llamado nostr.json en el dominio que especificaste. Si en ese archivo aparece tu clave pública asociada a tu nombre de usuario, ¡la verificación es exitosa!
+                    </p>
+                </div>
+            </div>
+
+            <!-- Section: Why should you have one -->
+            <div id="whySection" class="mb-6 bg-slate-700/30 rounded-lg p-4 border border-slate-600/50">
+                <button id="whyToggle" type="button" class="w-full flex items-center justify-between text-left hover:text-amber-400 transition-colors">
+                    <span class="text-slate-300 font-semibold flex items-center gap-2">
+                        <i class="fa-solid fa-circle-question text-amber-400"></i>
+                        <span id="whyTitle">¿Por qué deberías tener uno?</span>
+                    </span>
+                    <i id="whyIcon" class="fa-solid fa-chevron-down text-slate-400 transition-transform"></i>
+                </button>
+                <div id="whyContent" class="hidden mt-3 space-y-4 text-slate-400 text-sm">
+                    <div>
+                        <p class="font-semibold text-slate-300 mb-1" id="whyBenefit1">Identidad legible</p>
+                        <p id="whyDesc1" class="leading-relaxed">
+                            En lugar de compartir una clave pública compleja como npub1..., puedes compartir algo tan sencillo como tunombre@ejemplo.com. Esto facilita que otros te encuentren y te agreguen.
+                        </p>
+                    </div>
+                    <div>
+                        <p class="font-semibold text-slate-300 mb-1" id="whyBenefit2">Señal de confianza</p>
+                        <p id="whyDesc2" class="leading-relaxed">
+                            Al poseer un NIP-05, obtienes un distintivo de verificación (un "check" o sello) en la mayoría de los clientes de Nostr. Esto es una señal para la comunidad de que eres un usuario real y no un bot o un impostor.
+                        </p>
+                    </div>
+                    <div>
+                        <p class="font-semibold text-slate-300 mb-1" id="whyBenefit3">Protección contra suplantación</p>
+                        <p id="whyDesc3" class="leading-relaxed">
+                            Si eres una persona conocida, una empresa o una marca, tener un NIP-05 en tu propio dominio (ej. ceo@miempresa.com) es la mejor manera de demostrar que la cuenta de Nostr te pertenece auténticamente, blindándola contra la suplantación de identidad.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <form id="registrationForm" class="space-y-6">
+                <div>
+                    <label for="username" class="block text-xs sm:text-sm font-medium text-slate-300 mb-2" id="label-username">
+                        NIP-05 Username
+                    </label>
+                    <div class="relative">
+                        <input
+                            type="text"
+                            id="username"
+                            name="username"
+                            required
+                            pattern="^[a-zA-Z0-9_-]{1,30}$"
+                            class="w-full px-3 sm:px-4 py-2 sm:py-3 bg-slate-900/50 border border-slate-600 rounded-lg text-white text-sm sm:text-base placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all"
+                            placeholder="yourname"
+                        >
+                    </div>
+                    <p class="text-xs text-slate-500 mt-1" id="help-username">1-30 characters, lowercase letters, numbers, _ and -</p>
+                    <p id="availabilityMsg" class="text-xs mt-1 hidden"></p>
+                </div>
+
+                <div>
+                    <div class="flex items-center justify-between mb-2">
+                        <label for="pubkey" class="block text-xs sm:text-sm font-medium text-slate-300" id="label-pubkey">
+                            Public Key (npub)
+                        </label>
+                        <a href="#" id="toggleHex" class="text-xs text-amber-400 hover:text-amber-300 transition-colors">
+                            <i class="fa-solid fa-code mr-1"></i><span id="toggleHexText">Hex</span>
+                        </a>
+                    </div>
+                    <input
+                        type="text"
+                        id="pubkey"
+                        name="pubkey"
+                        required
+                        class="w-full px-3 sm:px-4 py-2 sm:py-3 bg-slate-900/50 border border-slate-600 rounded-lg text-white text-sm sm:text-base placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all"
+                        placeholder="npub1..."
+                    >
+                    <p id="pubkeyStatus" class="text-xs mt-1 hidden"></p>
+                </div>
+
+                <div id="hexSection" class="hidden">
+                    <label for="hexkey" class="block text-xs sm:text-sm font-medium text-slate-300 mb-2" id="label-hexkey">
+                        Hexadecimal Format
+                    </label>
+                    <div class="flex gap-2">
+                        <input
+                            type="text"
+                            id="hexkey"
+                            readonly
+                            class="flex-1 px-3 sm:px-4 py-2 sm:py-3 bg-slate-900/50 border border-slate-600 rounded-lg text-white text-xs sm:text-sm placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all cursor-pointer break-all"
+                            placeholder="Hexadecimal will appear here..."
+                        >
+                        <button
+                            type="button"
+                            id="copyHexBtn"
+                            class="px-3 sm:px-4 py-2 sm:py-3 bg-slate-700 hover:bg-slate-600 text-white text-sm sm:text-base font-semibold rounded-lg transition-all disabled:opacity-50 flex-shrink-0"
+                            disabled
+                        >
+                            <i class="fa-solid fa-copy"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div id="priceInfo" class="bg-slate-700/30 rounded-lg p-3 sm:p-4">
+                    <div class="flex items-center justify-between gap-2">
+                        <span class="text-slate-300 text-sm sm:text-base" id="label-fee">Registration fee</span>
+                        <span class="text-amber-400 font-bold text-sm sm:text-base" id="priceAmount">{{ price_sats }} sats</span>
+                    </div>
+                </div>
+
+                <button
+                    type="submit"
+                    id="submitBtn"
+                    class="w-full py-2 sm:py-3 px-4 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-white text-sm sm:text-base font-semibold rounded-lg transition-all transform hover:scale-[1.02]"
+                >
+                    <span id="btnText">Proceed to Payment</span>
+                    <span id="btnLoading" class="hidden">
+                        <i class="fa-solid fa-circle-notch fa-spin mr-2"></i><span id="btnLoadingText">Processing...</span>
+                    </span>
+                </button>
+            </form>
+
+            <div id="paymentSection" class="hidden mt-4 sm:mt-6">
+                <div class="border-t border-slate-700 pt-4 sm:pt-6">
+                    <h3 class="text-base sm:text-lg font-semibold text-white mb-3 sm:mb-4" id="payment-title">
+                        <i class="fa-brands fa-bitcoin text-amber-400 mr-2"></i>
+                        <span id="payment-title-text">Lightning Payment</span>
+                    </h3>
+                    <div class="bg-slate-900/50 rounded-lg p-3 sm:p-4 mb-3 sm:mb-4">
+                        <p class="text-slate-400 text-xs sm:text-sm mb-3" id="payment-scan">Scan this QR code to pay:</p>
+                        <div id="qrCode" class="flex justify-center mb-3"></div>
+                        <div class="flex items-end gap-2 mt-1">
+                            <p class="text-xs text-slate-500 break-all flex-1" id="invoiceText"></p>
+                            <button
+                                type="button"
+                                id="copyInvoiceBtn"
+                                title="Copy invoice"
+                                class="flex-shrink-0 p-1.5 bg-slate-700 hover:bg-slate-600 text-slate-400 hover:text-white rounded transition-all"
+                            >
+                                <i class="fa-solid fa-copy text-xs"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <button
+                        id="checkPaymentBtn"
+                        class="w-full py-2 sm:py-3 px-4 bg-green-600 hover:bg-green-500 text-white text-sm sm:text-base font-semibold rounded-lg transition-all disabled:opacity-50"
+                        disabled
+                    >
+                        <i class="fa-solid fa-circle-notch fa-spin mr-2"></i>
+                        <span id="checkPaymentText">Waiting for payment...</span>
+                    </button>
+                    <p class="text-xs text-slate-400 mt-2 text-center" id="payment-auto">The verification is automatic. After payment, it will appear here.</p>
+                    <button
+                        type="button"
+                        id="backToFormBtn"
+                        class="w-full mt-3 py-2 sm:py-3 px-4 bg-slate-700 hover:bg-slate-600 text-white text-sm sm:text-base font-semibold rounded-lg transition-all"
+                    >
+                        <i class="fa-solid fa-arrow-left mr-2"></i><span id="backToFormText">Register another NIP-05</span>
+                    </button>
+                </div>
+            </div>
+
+            <div id="successSection" class="hidden mt-4 sm:mt-6">
+                <div class="border-t border-slate-700 pt-4 sm:pt-6">
+                    <div class="text-center">
+                        <div class="inline-flex items-center justify-center w-12 sm:w-16 h-12 sm:h-16 rounded-full bg-green-500/20 mb-3 sm:mb-4">
+                            <i class="fa-solid fa-check text-2xl sm:text-3xl text-green-400"></i>
+                        </div>
+                        <h3 class="text-lg sm:text-xl font-bold text-white mb-2" id="success-title">Registration Complete!</h3>
+                        <p class="text-slate-400 text-sm sm:text-base" id="success-text">Your NIP-05 identifier is:</p>
+                        <p class="text-amber-400 font-mono text-sm sm:text-lg break-all mt-2" id="registeredNip05"></p>
+                        <button
+                            type="button"
+                            id="newRegistrationBtn"
+                            class="mt-4 py-2 sm:py-3 px-6 bg-slate-700 hover:bg-slate-600 text-white text-sm sm:text-base font-semibold rounded-lg transition-all"
+                        >
+                            <i class="fa-solid fa-plus mr-2"></i><span id="newRegistrationText">Register another NIP-05</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="errorSection" class="hidden mt-4 sm:mt-6">
+                <div class="bg-red-500/20 border border-red-500/50 rounded-lg p-3 sm:p-4">
+                    <p class="text-red-400 text-center text-sm sm:text-base break-words" id="errorMsg"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Nostrich mascot -->
+    <img
+        src="/static/images/nostrich.png"
+        alt="Nostrich"
+        class="hidden sm:block fixed bottom-0 right-0 object-contain pointer-events-none z-10 sm:w-[200px] sm:h-[200px] md:w-[300px] md:h-[300px] lg:w-[400px] lg:h-[400px] sm:opacity-70 md:opacity-90 lg:opacity-100"
+    >
+
+    <!-- Footer -->
+    <footer class="fixed bottom-0 left-0 right-0 bg-slate-900/80 backdrop-blur-xl border-t border-slate-700/50 py-3 sm:py-4 px-4">
+        <div class="text-center">
+            <p class="text-slate-400 text-xs sm:text-sm break-words">
+                <span id="footerText">Made with ❤️ by Cuba Bitcoin 2026</span>
+            </p>
+        </div>
+    </footer>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
+    <script>
+        const DOMAIN = "{{ domain }}";
+
+        // Translations
+        const translations = {
+            en: {
+                title: "NIP-05 Register",
+                subtitle: "Get your Nostr identifier",
+                labelUsername: "NIP-05 Username",
+                helpUsername: "1-30 characters, letters, numbers, _ and -",
+                labelPubkey: "Public Key (npub)",
+                labelHexkey: "Public Key (hex)",
+                hexPlaceholder: "Hexadecimal will appear here...",
+                copySuccess: "Copied!",
+                labelFee: "Registration fee",
+                btnProceed: "Proceed to Payment",
+                btnProcessing: "Processing...",
+                availableYes: "✓ Available",
+                availableNo: "✗ Already taken",
+                pubkeyRegistered: "✗ This public key is already registered",
+                pubkeyValid: "✓ Valid public key",
+                toggleHexShow: "Hex",
+                toggleHexHide: "Hide Hex",
+                paymentTitle: "Lightning Payment",
+                paymentScan: "Scan this QR code to pay:",
+                checkPaymentWaiting: "Waiting for payment...",
+                paymentAuto: "The verification is automatic. After payment, it will appear here.",
+                copyInvoice: "Copy invoice",
+                copyInvoiceDone: "Copied!",
+                successTitle: "Registration Complete!",
+                successText: "Your NIP-05 identifier is:",
+                errorTitle: "Error",
+                errorCreateInvoice: "Error creating invoice",
+                errorPaymentFailed: "Payment verification failed",
+                backToForm: "Register another NIP-05",
+                footer: "Made with ❤️ by Cuba Bitcoin 2026",
+                infoTitle: "What is a NIP-05?",
+                infoDesc1: "A NIP-05 is a technical specification (Nostr Implementation Possibility) that allows Nostr users to associate their public key (that long string of numbers and letters starting with \"npub\") with an internet-based identifier, similar to an email address, like ejemplo@cubabitcoin.cu",
+                howTitle: "How does it work?",
+                howDesc: "It's a simple verification process. When you set up a NIP-05 in your profile, Nostr clients (the applications you use) automatically verify that you own that identity. They do this by looking for a special file called nostr.json in the domain you specified. If your public key appears in that file associated with your username, verification is successful!",
+                whyTitle: "Why should you have one?",
+                whyBenefit1: "Readable identity",
+                whyDesc1: "Instead of sharing a complex public key like npub1..., you can share something as simple as yourname@example.com. This makes it easier for others to find you and add you.",
+                whyBenefit2: "Trust signal",
+                whyDesc2: "By having a NIP-05, you get a verification badge (a \"check\" or seal) in most Nostr clients. This is a signal to the community that you are a real user and not a bot or imposter.",
+                whyBenefit3: "Protection against impersonation",
+                whyDesc3: "If you are a well-known person, company or brand, having a NIP-05 on your own domain (e.g. ceo@mycompany.com) is the best way to prove that your Nostr account authentically belongs to you, protecting it against identity theft."
+            },
+            es: {
+                title: "Registro NIP-05",
+                subtitle: "Obtén tu identificador Nostr",
+                labelUsername: "Usuario NIP-05",
+                helpUsername: "1-30 caracteres, letras, números, _ y -",
+                labelPubkey: "Clave Pública (npub)",
+                labelHexkey: "Clave Pública (hex)",
+                hexPlaceholder: "El formato hexadecimal aparecerá aquí...",
+                copySuccess: "¡Copiado!",
+                labelFee: "Tarifa de registro",
+                btnProceed: "Proceder al Pago",
+                btnProcessing: "Procesando...",
+                availableYes: "✓ Disponible",
+                availableNo: "✗ Ya en uso",
+                pubkeyRegistered: "✗ Esta clave pública ya está registrada",
+                pubkeyValid: "✓ Clave pública válida",
+                toggleHexShow: "Hex",
+                toggleHexHide: "Ocultar Hex",
+                paymentTitle: "Pago Lightning",
+                paymentScan: "Escanea este código QR para pagar:",
+                checkPaymentWaiting: "Esperando pago...",
+                paymentAuto: "La verificación es automática. Después de pagar, aparecerá aquí.",
+                copyInvoice: "Copiar factura",
+                copyInvoiceDone: "¡Copiado!",
+                successTitle: "¡Registro completado!",
+                successText: "Tu identificador NIP-05 es:",
+                errorTitle: "Error",
+                errorCreateInvoice: "Error al crear la factura",
+                errorPaymentFailed: "Error en la verificación de pago",
+                backToForm: "Registrar otro NIP-05",
+                footer: "Hecho con ❤️ por Cuba Bitcoin 2026",
+                infoTitle: "¿Qué es un NIP-05?",
+                infoDesc1: "Un NIP-05 es una especificación técnica (Nostr Implementation Possibility) que permite a los usuarios de Nostr asociar su clave pública (esa cadena larga de números y letras que empieza con \"npub\") con un identificador basado en internet, similar a una dirección de correo electrónico, como ejemplo@cubabitcoin.cu",
+                howTitle: "¿Cómo funciona?",
+                howDesc: "Es un proceso de verificación simple. Cuando configuras un NIP-05 en tu perfil, los clientes de Nostr (las aplicaciones que usas) verifican automáticamente que eres el dueño de esa identidad. Lo hacen buscando un archivo especial llamado nostr.json en el dominio que especificaste. Si en ese archivo aparece tu clave pública asociada a tu nombre de usuario, ¡la verificación es exitosa!",
+                whyTitle: "¿Por qué deberías tener uno?",
+                whyBenefit1: "Identidad legible",
+                whyDesc1: "En lugar de compartir una clave pública compleja como npub1..., puedes compartir algo tan sencillo como tunombre@ejemplo.com. Esto facilita que otros te encuentren y te agreguen.",
+                whyBenefit2: "Señal de confianza",
+                whyDesc2: "Al poseer un NIP-05, obtienes un distintivo de verificación (un \"check\" o sello) en la mayoría de los clientes de Nostr. Esto es una señal para la comunidad de que eres un usuario real y no un bot o un impostor.",
+                whyBenefit3: "Protección contra suplantación",
+                whyDesc3: "Si eres una persona conocida, una empresa o una marca, tener un NIP-05 en tu propio dominio (ej. ceo@miempresa.com) es la mejor manera de demostrar que la cuenta de Nostr te pertenece auténticamente, blindándola contra la suplantación de identidad."
+            }
+        };
+
+        let currentLanguage = localStorage.getItem('language') || 'en';
+
+        function setLanguage(lang) {
+            currentLanguage = lang;
+            localStorage.setItem('language', lang);
+
+            document.getElementById('title').textContent = translations[lang].title;
+            document.getElementById('subtitle').textContent = translations[lang].subtitle;
+            document.getElementById('label-username').textContent = translations[lang].labelUsername;
+            document.getElementById('help-username').textContent = translations[lang].helpUsername;
+            document.getElementById('label-pubkey').textContent = translations[lang].labelPubkey;
+            document.getElementById('label-hexkey').textContent = translations[lang].labelHexkey;
+            document.getElementById('hexkey').placeholder = translations[lang].hexPlaceholder;
+            const hexHidden = document.getElementById('hexSection') && document.getElementById('hexSection').classList.contains('hidden');
+            document.getElementById('toggleHexText').textContent = hexHidden ? translations[lang].toggleHexShow : translations[lang].toggleHexHide;
+            document.getElementById('label-fee').textContent = translations[lang].labelFee;
+            document.getElementById('btnText').textContent = translations[lang].btnProceed;
+            document.getElementById('btnLoadingText').textContent = translations[lang].btnProcessing;
+            document.getElementById('payment-title-text').textContent = translations[lang].paymentTitle;
+            document.getElementById('payment-scan').textContent = translations[lang].paymentScan;
+            document.getElementById('checkPaymentText').textContent = translations[lang].checkPaymentWaiting;
+            document.getElementById('payment-auto').textContent = translations[lang].paymentAuto;
+            document.getElementById('success-title').textContent = translations[lang].successTitle;
+            document.getElementById('success-text').textContent = translations[lang].successText;
+            document.getElementById('backToFormText').textContent = translations[lang].backToForm;
+            document.getElementById('newRegistrationText').textContent = translations[lang].backToForm;
+            document.getElementById('footerText').textContent = translations[lang].footer;
+            document.getElementById('infoTitle').textContent = translations[lang].infoTitle;
+            document.getElementById('infoDesc1').textContent = translations[lang].infoDesc1;
+            document.getElementById('howTitle').textContent = translations[lang].howTitle;
+            document.getElementById('howDesc').textContent = translations[lang].howDesc;
+            document.getElementById('whyTitle').textContent = translations[lang].whyTitle;
+            document.getElementById('whyBenefit1').textContent = translations[lang].whyBenefit1;
+            document.getElementById('whyDesc1').textContent = translations[lang].whyDesc1;
+            document.getElementById('whyBenefit2').textContent = translations[lang].whyBenefit2;
+            document.getElementById('whyDesc2').textContent = translations[lang].whyDesc2;
+            document.getElementById('whyBenefit3').textContent = translations[lang].whyBenefit3;
+            document.getElementById('whyDesc3').textContent = translations[lang].whyDesc3;
+
+            // Update language buttons
+            document.getElementById('langEN').className = currentLanguage === 'en' ? 'px-3 py-1 rounded bg-amber-500 text-white text-sm font-semibold' : 'px-3 py-1 rounded bg-slate-600 text-white text-sm font-semibold';
+            document.getElementById('langES').className = currentLanguage === 'es' ? 'px-3 py-1 rounded bg-amber-500 text-white text-sm font-semibold' : 'px-3 py-1 rounded bg-slate-600 text-white text-sm font-semibold';
+        }
+
+        // Initialize language
+        setLanguage(currentLanguage);
+
+        // Language buttons
+        document.getElementById('langEN').addEventListener('click', () => setLanguage('en'));
+        document.getElementById('langES').addEventListener('click', () => setLanguage('es'));
+
+        // NIP-05 information toggle
+        const infoToggle = document.getElementById('infoToggle');
+        const infoContent = document.getElementById('infoContent');
+        const infoIcon = document.getElementById('infoIcon');
+
+        infoToggle.addEventListener('click', function() {
+            infoContent.classList.toggle('hidden');
+            infoIcon.style.transform = infoContent.classList.contains('hidden') ? 'rotate(0deg)' : 'rotate(180deg)';
+        });
+
+        // "How does it work?" toggle
+        const howToggle = document.getElementById('howToggle');
+        const howContent = document.getElementById('howContent');
+        const howIcon = document.getElementById('howIcon');
+
+        howToggle.addEventListener('click', function() {
+            howContent.classList.toggle('hidden');
+            howIcon.style.transform = howContent.classList.contains('hidden') ? 'rotate(0deg)' : 'rotate(180deg)';
+        });
+
+        // "Why should you have one?" toggle
+        const whyToggle = document.getElementById('whyToggle');
+        const whyContent = document.getElementById('whyContent');
+        const whyIcon = document.getElementById('whyIcon');
+
+        whyToggle.addEventListener('click', function() {
+            whyContent.classList.toggle('hidden');
+            whyIcon.style.transform = whyContent.classList.contains('hidden') ? 'rotate(0deg)' : 'rotate(180deg)';
+        });
+
+        const form = document.getElementById('registrationForm');
+        const usernameInput = document.getElementById('username');
+        const pubkeyInput = document.getElementById('pubkey');
+        const hexkeyInput = document.getElementById('hexkey');
+        const copyHexBtn = document.getElementById('copyHexBtn');
+        const submitBtn = document.getElementById('submitBtn');
+        const btnText = document.getElementById('btnText');
+        const btnLoading = document.getElementById('btnLoading');
+        const availabilityMsg = document.getElementById('availabilityMsg');
+        const pubkeyStatus = document.getElementById('pubkeyStatus');
+        const paymentSection = document.getElementById('paymentSection');
+        const successSection = document.getElementById('successSection');
+        const errorSection = document.getElementById('errorSection');
+        const errorMsg = document.getElementById('errorMsg');
+        const checkPaymentBtn = document.getElementById('checkPaymentBtn');
+        const priceAmount = document.getElementById('priceAmount');
+
+        let currentInvoice = null;
+        let username = '';
+        let pubkeyHex = '';
+        let paymentCheckInterval = null;
+        let isChecking = false;
+
+        async function checkAvailability() {
+            const usernameVal = usernameInput.value.toLowerCase().trim();
+            if (usernameVal.length < 1) return;
+
+            try {
+                const res = await fetch('/api/check-availability/' + usernameVal);
+                const data = await res.json();
+                
+                if (data.available) {
+                    availabilityMsg.textContent = translations[currentLanguage].availableYes;
+                    availabilityMsg.className = 'text-xs mt-1 text-green-400';
+                } else {
+                    availabilityMsg.textContent = translations[currentLanguage].availableNo;
+                    availabilityMsg.className = 'text-xs mt-1 text-red-400';
+                }
+                availabilityMsg.classList.remove('hidden');
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        let debounceTimer;
+        usernameInput.addEventListener('input', function() {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(checkAvailability, 300);
+        });
+
+        // Toggle hex section
+        const hexSection = document.getElementById('hexSection');
+        const toggleHex = document.getElementById('toggleHex');
+        const toggleHexText = document.getElementById('toggleHexText');
+
+        toggleHex.addEventListener('click', function(e) {
+            e.preventDefault();
+            const isHidden = hexSection.classList.toggle('hidden');
+            toggleHexText.textContent = isHidden
+                ? translations[currentLanguage].toggleHexShow
+                : translations[currentLanguage].toggleHexHide;
+        });
+
+        // Validate pubkey and convert to hex
+        let debounceHexTimer;
+        let pubkeyIsValid = false;
+
+        pubkeyInput.addEventListener('input', function() {
+            clearTimeout(debounceHexTimer);
+            pubkeyStatus.classList.add('hidden');
+
+            debounceHexTimer = setTimeout(async function() {
+                const pubkeyValue = pubkeyInput.value.trim();
+
+                if (!pubkeyValue) {
+                    hexkeyInput.value = '';
+                    copyHexBtn.disabled = true;
+                    pubkeyStatus.classList.add('hidden');
+                    pubkeyIsValid = false;
+                    return;
+                }
+
+                if (!pubkeyValue.startsWith('npub')) {
+                    hexkeyInput.value = '';
+                    copyHexBtn.disabled = true;
+                    pubkeyIsValid = false;
+                    return;
+                }
+
+                try {
+                    const res = await fetch('/api/check-pubkey', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({ pubkey: pubkeyValue })
+                    });
+
+                    const data = await res.json();
+
+                    if (res.ok && data.hex) {
+                        hexkeyInput.value = data.hex;
+                        copyHexBtn.disabled = false;
+
+                        if (data.registered) {
+                            pubkeyStatus.textContent = translations[currentLanguage].pubkeyRegistered;
+                            pubkeyStatus.className = 'text-xs mt-1 text-red-400';
+                            pubkeyIsValid = false;
+                        } else {
+                            pubkeyStatus.textContent = translations[currentLanguage].pubkeyValid;
+                            pubkeyStatus.className = 'text-xs mt-1 text-green-400';
+                            pubkeyIsValid = true;
+                        }
+                        pubkeyStatus.classList.remove('hidden');
+                    } else {
+                        hexkeyInput.value = '';
+                        copyHexBtn.disabled = true;
+                        pubkeyIsValid = false;
+                    }
+                } catch (err) {
+                    console.error('Error checking pubkey:', err);
+                    hexkeyInput.value = '';
+                    copyHexBtn.disabled = true;
+                    pubkeyIsValid = false;
+                }
+            }, 500);
+        });
+
+        // Copy hexadecimal to clipboard
+        copyHexBtn.addEventListener('click', function() {
+            if (hexkeyInput.value) {
+                navigator.clipboard.writeText(hexkeyInput.value).then(() => {
+                    const originalText = copyHexBtn.innerHTML;
+                    copyHexBtn.innerHTML = '<i class="fa-solid fa-check"></i>';
+                    copyHexBtn.classList.add('bg-green-600');
+                    copyHexBtn.classList.remove('bg-slate-700', 'hover:bg-slate-600');
+
+                    setTimeout(() => {
+                        copyHexBtn.innerHTML = originalText;
+                        copyHexBtn.classList.remove('bg-green-600');
+                        copyHexBtn.classList.add('bg-slate-700', 'hover:bg-slate-600');
+                    }, 2000);
+                }).catch(err => {
+                    console.error('Error copying to clipboard:', err);
+                });
+            }
+        });
+
+        async function verifyPayment() {
+            if (!currentInvoice || isChecking) return;
+
+            isChecking = true;
+            try {
+                const res = await fetch('/api/check-payment', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        payment_hash: currentInvoice.payment_hash,
+                        username: currentInvoice.username,
+                        pubkey: currentInvoice.pubkey
+                    })
+                });
+
+                const data = await res.json();
+
+                if (data.paid) {
+                    clearInterval(paymentCheckInterval);
+                    paymentSection.classList.add('hidden');
+                    successSection.classList.remove('hidden');
+                    document.getElementById('registeredNip05').textContent = currentInvoice.username + '@' + DOMAIN;
+                }
+            } catch (err) {
+                console.error('Payment verification error:', err);
+            } finally {
+                isChecking = false;
+            }
+        }
+
+        function startPaymentVerification() {
+            clearInterval(paymentCheckInterval);
+            document.getElementById('checkPaymentText').textContent = translations[currentLanguage].checkPaymentWaiting;
+            checkPaymentBtn.disabled = true;
+
+            // Check every 2 seconds
+            paymentCheckInterval = setInterval(verifyPayment, 2000);
+            // Check immediately
+            verifyPayment();
+        }
+
+        function stopPaymentVerification() {
+            clearInterval(paymentCheckInterval);
+            paymentCheckInterval = null;
+        }
+
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            if (!pubkeyIsValid) {
+                pubkeyStatus.textContent = translations[currentLanguage].pubkeyRegistered;
+                pubkeyStatus.className = 'text-xs mt-1 text-red-400';
+                pubkeyStatus.classList.remove('hidden');
+                return;
+            }
+
+            submitBtn.disabled = true;
+            btnText.classList.add('hidden');
+            btnLoading.classList.remove('hidden');
+
+            username = usernameInput.value.toLowerCase().trim();
+            pubkeyHex = pubkeyInput.value.trim();
+
+            try {
+                const res = await fetch('/api/create-invoice', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        username: username,
+                        pubkey: pubkeyHex
+                    })
+                });
+
+                const data = await res.json();
+
+                if (!res.ok) {
+                    throw new Error(data.detail || translations[currentLanguage].errorCreateInvoice);
+                }
+
+                currentInvoice = data;
+                priceAmount.textContent = data.amount_sats + ' sats';
+
+                const qrContainer = document.getElementById('qrCode');
+                qrContainer.innerHTML = '<canvas id="qrCanvas" width="200" height="200"></canvas>';
+
+                const invoiceText = document.getElementById('invoiceText');
+                console.log('Payment Request:', data.payment_request);
+                console.log('Payment Hash:', data.payment_hash);
+
+                if (!data.payment_request) {
+                    invoiceText.textContent = 'ERROR: No payment request received. Response: ' + JSON.stringify(data);
+                    throw new Error('Empty payment request received');
+                }
+
+                const canvas = document.getElementById('qrCanvas');
+                const qr = new QRious({
+                    element: canvas,
+                    value: data.payment_request,
+                    size: 200,
+                    level: 'H',
+                    mime: 'image/png'
+                });
+
+                invoiceText.textContent = data.payment_request;
+                form.classList.add('hidden');
+                document.getElementById('infoSection').classList.add('hidden');
+                document.getElementById('howSection').classList.add('hidden');
+                document.getElementById('whySection').classList.add('hidden');
+                paymentSection.classList.remove('hidden');
+
+                // Start automatic payment verification
+                startPaymentVerification();
+
+            } catch (err) {
+                errorMsg.textContent = err.message;
+                errorSection.classList.remove('hidden');
+            } finally {
+                submitBtn.disabled = false;
+                btnText.classList.remove('hidden');
+                btnLoading.classList.add('hidden');
+            }
+        });
+
+        checkPaymentBtn.addEventListener('click', async function() {
+            stopPaymentVerification();
+            await verifyPayment();
+            if (paymentSection.classList.contains('hidden')) {
+                return;
+            }
+            startPaymentVerification();
+        });
+
+        function resetToForm() {
+            stopPaymentVerification();
+            currentInvoice = null;
+            pubkeyIsValid = false;
+            usernameInput.value = '';
+            pubkeyInput.value = '';
+            hexkeyInput.value = '';
+            copyHexBtn.disabled = true;
+            availabilityMsg.classList.add('hidden');
+            pubkeyStatus.classList.add('hidden');
+            paymentSection.classList.add('hidden');
+            successSection.classList.add('hidden');
+            errorSection.classList.add('hidden');
+            form.classList.remove('hidden');
+            document.getElementById('infoSection').classList.remove('hidden');
+            document.getElementById('howSection').classList.remove('hidden');
+            document.getElementById('whySection').classList.remove('hidden');
+        }
+
+        document.getElementById('copyInvoiceBtn').addEventListener('click', function() {
+            const invoice = document.getElementById('invoiceText').textContent;
+            if (!invoice) return;
+            navigator.clipboard.writeText(invoice).then(() => {
+                const btn = document.getElementById('copyInvoiceBtn');
+                const icon = btn.querySelector('i');
+                icon.className = 'fa-solid fa-check text-xs';
+                btn.classList.add('bg-green-600', 'text-white');
+                btn.classList.remove('bg-slate-700', 'text-slate-400');
+                setTimeout(() => {
+                    icon.className = 'fa-solid fa-copy text-xs';
+                    btn.classList.remove('bg-green-600', 'text-white');
+                    btn.classList.add('bg-slate-700', 'text-slate-400');
+                }, 2000);
+            }).catch(err => console.error('Error copying invoice:', err));
+        });
+
+        document.getElementById('backToFormBtn').addEventListener('click', resetToForm);
+        document.getElementById('newRegistrationBtn').addEventListener('click', resetToForm);
+    </script>
+</body>
+</html>

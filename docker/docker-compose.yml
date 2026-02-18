@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  nip05-app:
+    build:
+      context: ..  # Context is the parent directory (project root)
+      dockerfile: docker/Dockerfile
+    container_name: nip05-app
+    ports:
+      - "8000:8000"
+    environment:
+      # Load variables from the .env file
+      - LNBITS_URL=${LNBITS_URL}
+      - LNBITS_API_KEY=${LNBITS_API_KEY}
+      - INVOICE_AMOUNT_SATS=${INVOICE_AMOUNT_SATS:-100}
+      - DOMAIN=${DOMAIN:-example.com}
+      - PYTHONUNBUFFERED=1
+    volumes:
+      # Allow data persistence (paths relative from project root)
+      - ../data/.well-known:/app/.well-known
+      - ../static:/app/static
+      - ../templates:/app/templates
+    restart: unless-stopped
+    networks:
+      - nip05-network
+    # Resource limits (optional)
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+
+networks:
+  nip05-network:
+    driver: bridge
+
+volumes:
+  nip05-data:
+    driver: local

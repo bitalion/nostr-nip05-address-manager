@@ -1,0 +1,17 @@
+#!/bin/bash
+
+# Script para detener Docker desde la raíz del proyecto
+# Automáticamente navega al directorio docker y ejecuta el script
+
+set -e
+
+PROJECT_ROOT="$(dirname "$(readlink -f "$0")")"
+DOCKER_DIR="$PROJECT_ROOT/docker"
+
+if [ ! -d "$DOCKER_DIR" ]; then
+    echo "❌ Error: Directorio docker no encontrado en $PROJECT_ROOT"
+    exit 1
+fi
+
+cd "$DOCKER_DIR"
+./scripts/docker-stop.sh

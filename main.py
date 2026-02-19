@@ -31,6 +31,7 @@ LNURL = os.getenv("LNBITS_URL", "")
 LNKEY = os.getenv("LNBITS_API_KEY", "")
 INVOICE_AMOUNT_SATS = int(os.getenv("INVOICE_AMOUNT_SATS", "100"))
 DOMAIN = os.getenv("DOMAIN", "example.com")
+ADMIN_API_KEY = os.getenv("ADMIN_API_KEY", "")
 
 WELL_KNOWN_DIR.mkdir(exist_ok=True)
 
@@ -271,7 +272,14 @@ async def check_payment(data: CheckPaymentRequest):
 
 
 @app.post("/api/register")
-async def register_nip05(data: NIP05Request):
+async def register_nip05(data: NIP05Request, request: Request):
+    if not ADMIN_API_KEY:
+        raise HTTPException(status_code=501, detail="Direct registration is disabled")
+
+    provided_key = request.headers.get("X-Admin-Key")
+    if provided_key != ADMIN_API_KEY:
+        raise HTTPException(status_code=401, detail="Invalid admin API key")
+
     username = data.username.strip()
     pubkey_hex = convert_npub_to_hex(data.pubkey)
 

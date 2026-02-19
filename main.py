@@ -1,19 +1,40 @@
+import logging
 import os
 import json
 import re
+import tempfile
+import shutil
 from pathlib import Path
 from dotenv import load_dotenv
 from fastapi import FastAPI, Request, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, validator
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 import bech32
 import httpx
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+limiter = Limiter(key_func=get_remote_address)
 
 load_dotenv()
 
 app = FastAPI(title="NIP-05 Nostr Identifier")
+app.state.limiter = limiter
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 templates = Jinja2Templates(directory=str(Path(__file__).parent / "templates"))
 
 BASE_DIR = Path(__file__).parent
@@ -68,8 +89,10 @@ def load_nostr_json() -> dict:
 
 
 def save_nostr_json(data: dict) -> None:
-    with open(NOSTR_JSON_PATH, "w") as f:
-        json.dump(data, f, indent=2)
+    with tempfile.NamedTemporaryFile(mode='w', dir=NOSTR_JSON_PATH.parent, delete=False, suffix='.json') as tmp:
+        json.dump(data, tmp, indent=2)
+        tmp_path = tmp.name
+    shutil.move(tmp_path, NOSTR_JSON_PATH)
 
 
 def check_nip05_available(nip05: str) -> bool:
@@ -117,6 +140,12 @@ class CheckPaymentRequest(BaseModel):
     pubkey: str
     payment_hash: str
 
+    @validator('payment_hash')
+    def validate_payment_hash(cls, v):
+        if not re.match(r'^[a-fA-F0-9]{1,128}$', v):
+            raise ValueError('Invalid payment hash format')
+        return v
+
     @validator('username')
     def validate_username(cls, v):
         if not re.match(r'^[a-zA-Z0-9_-]{1,30}$', v):
@@ -146,7 +175,8 @@ async def get_nostr_json():
 
 
 @app.post("/api/convert-pubkey")
-async def convert_pubkey(data: ConvertPubkeyRequest):
+@limiter.limit("20/minute")
+async def convert_pubkey(request: Request, data: ConvertPubkeyRequest):
     """Converts a pubkey (npub or hex) to hexadecimal format"""
     try:
         hex_key = convert_npub_to_hex(data.pubkey)
@@ -183,7 +213,8 @@ if DEBUG:
 
 
 @app.post("/api/create-invoice")
-async def create_invoice(data: NIP05Request):
+@limiter.limit("10/minute")
+async def create_invoice(request: Request, data: NIP05Request):
     try:
         username = data.username.strip()
         pubkey_hex = convert_npub_to_hex(data.pubkey)
@@ -212,7 +243,7 @@ async def create_invoice(data: NIP05Request):
                 raise HTTPException(status_code=500, detail=f"Failed to create invoice: {response.status_code} {response.text}")
 
             invoice_data = response.json()
-            print(f"DEBUG - LN Bits response: {invoice_data}")
+            logger.info(f"LN Bits invoice created for {username}@{DOMAIN}")
 
             # Search for payment_request in multiple possible field names
             payment_request = (
@@ -242,7 +273,8 @@ async def create_invoice(data: NIP05Request):
 
 
 @app.post("/api/check-payment")
-async def check_payment(data: CheckPaymentRequest):
+@limiter.limit("30/minute")
+async def check_payment(request: Request, data: CheckPaymentRequest):
     if not LNURL or not LNKEY:
         raise HTTPException(status_code=500, detail="Lightning payment not configured")
 
@@ -298,13 +330,15 @@ async def register_nip05(data: NIP05Request, request: Request):
 
 
 @app.get("/api/check-availability/{username}")
-async def check_availability(username: str):
+@limiter.limit("30/minute")
+async def check_availability(request: Request, username: str):
     available = check_nip05_available(username.strip())
     return {"available": available}
 
 
 @app.post("/api/check-pubkey")
-async def check_pubkey(data: ConvertPubkeyRequest):
+@limiter.limit("20/minute")
+async def check_pubkey(request: Request, data: ConvertPubkeyRequest):
     """Checks if a pubkey is already registered in nostr.json"""
     try:
         hex_key = convert_npub_to_hex(data.pubkey)

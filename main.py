@@ -162,24 +162,24 @@ if DEBUG:
         if not LNURL or not LNKEY:
             return {"error": "Lightning payment not configured"}
 
-    async with httpx.AsyncClient() as client:
-        try:
-            response = await client.post(
-                f"{LNURL}/api/v1/payments",
-                headers={"X-Api-Key": LNKEY, "Content-Type": "application/json"},
-                json={
-                    "out": False,
-                    "amount": 1,
-                    "memo": "Debug test",
-                },
-                timeout=30.0
-            )
-            return {
-                "status_code": response.status_code,
-                "response": response.json() if response.status_code in (200, 201) else response.text
-            }
-        except Exception as e:
-            return {"error": str(e)}
+        async with httpx.AsyncClient() as client:
+            try:
+                response = await client.post(
+                    f"{LNURL}/api/v1/payments",
+                    headers={"X-Api-Key": LNKEY, "Content-Type": "application/json"},
+                    json={
+                        "out": False,
+                        "amount": 1,
+                        "memo": "Debug test",
+                    },
+                    timeout=30.0
+                )
+                return {
+                    "status_code": response.status_code,
+                    "response": response.json() if response.status_code in (200, 201) else response.text
+                }
+            except Exception as e:
+                return {"error": str(e)}
 
 
 @app.post("/api/create-invoice")

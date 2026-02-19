@@ -12,7 +12,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY requirements.txt .
 
 # Install Python dependencies
-RUN pip install --user --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt --prefix=/install
 
 # Stage 2: Runtime
 FROM python:3.11-slim
@@ -25,7 +25,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy Python dependencies from the builder stage
-COPY --from=builder /root/.local /root/.local
+COPY --from=builder /install /usr/local
 
 # Copy application (top-level files)
 COPY main.py .
@@ -34,8 +34,7 @@ COPY static/ static/
 COPY .well-known/ .well-known/
 
 # Set environment variables
-ENV PATH=/root/.local/bin:$PATH \
-    PYTHONUNBUFFERED=1 \
+ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1
 
 # Create non-root user

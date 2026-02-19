@@ -32,6 +32,7 @@ LNKEY = os.getenv("LNBITS_API_KEY", "")
 INVOICE_AMOUNT_SATS = int(os.getenv("INVOICE_AMOUNT_SATS", "100"))
 DOMAIN = os.getenv("DOMAIN", "example.com")
 ADMIN_API_KEY = os.getenv("ADMIN_API_KEY", "")
+DEBUG = os.getenv("DEBUG", "false").lower() == "true"
 
 WELL_KNOWN_DIR.mkdir(exist_ok=True)
 
@@ -154,11 +155,12 @@ async def convert_pubkey(data: ConvertPubkeyRequest):
         raise HTTPException(status_code=422, detail=str(e))
 
 
-@app.get("/api/debug/lnbits-test")
-async def debug_lnbits_test():
-    """Test endpoint to verify connectivity with LN Bits"""
-    if not LNURL or not LNKEY:
-        return {"error": "Lightning payment not configured"}
+if DEBUG:
+    @app.get("/api/debug/lnbits-test")
+    async def debug_lnbits_test():
+        """Test endpoint to verify connectivity with LN Bits"""
+        if not LNURL or not LNKEY:
+            return {"error": "Lightning payment not configured"}
 
     async with httpx.AsyncClient() as client:
         try:

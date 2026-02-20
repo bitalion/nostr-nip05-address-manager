@@ -1,4 +1,4 @@
-.PHONY: help docker-build docker-start docker-stop docker-logs docker-ps docker-clean docker-rebuild
+.PHONY: help docker-build docker-start docker-stop docker-logs docker-ps docker-clean docker-purge docker-rebuild
 
 # Colors for output
 GREEN := \033[0;32m
@@ -39,10 +39,17 @@ docker-restart: ## Restart containers
 	@echo "$(BLUE)🔄 Restarting...$(NC)"
 	docker-compose restart
 
-docker-clean: ## Delete containers and volumes (CAUTION)
-	@echo "$(YELLOW)⚠️  Deleting containers and volumes...$(NC)"
+docker-clean: ## Delete containers (preserves volumes/data)
+	@echo "$(BLUE)Stopping and removing containers...$(NC)"
+	docker-compose down
+	@echo "$(GREEN)Cleanup completed (volumes preserved)$(NC)"
+
+docker-purge: ## DELETE containers AND volumes (DESTROYS ALL DATA)
+	@echo "$(YELLOW)WARNING: This will DELETE all data including nostr.json registrations!$(NC)"
+	@echo "Press Ctrl+C to cancel, or wait 5 seconds to continue..."
+	@sleep 5
 	docker-compose down -v
-	@echo "$(GREEN)✅ Cleanup completed$(NC)"
+	@echo "$(YELLOW)All containers and volumes have been removed$(NC)"
 
 docker-rebuild: ## Rebuild from scratch (without cache)
 	@echo "$(BLUE)🔨 Rebuilding image (without cache)...$(NC)"

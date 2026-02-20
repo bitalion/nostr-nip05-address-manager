@@ -4,6 +4,8 @@ import json
 import re
 import tempfile
 import shutil
+import threading
+import fcntl
 from pathlib import Path
 from dotenv import load_dotenv
 from fastapi import FastAPI, Request, HTTPException
@@ -59,7 +61,15 @@ WELL_KNOWN_DIR.mkdir(exist_ok=True)
 
 if not NOSTR_JSON_PATH.exists():
     with open(NOSTR_JSON_PATH, "w") as f:
-        json.dump({}, f)
+        json.dump({"names": {}}, f)
+
+# Clean orphan temp files from previous crashed writes
+for tmp_file in WELL_KNOWN_DIR.glob("*.tmp.json"):
+    try:
+        tmp_file.unlink()
+        logger.info(f"Cleaned orphan temp file: {tmp_file}")
+    except OSError:
+        pass
 
 
 def convert_npub_to_hex(npub: str) -> str:
@@ -80,19 +90,68 @@ def convert_npub_to_hex(npub: str) -> str:
         raise ValueError("Key must be npub or 64-character hex")
 
 
+NOSTR_JSON_BACKUP = NOSTR_JSON_PATH.with_suffix(".json.bak")
+
+
 def load_nostr_json() -> dict:
     try:
         with open(NOSTR_JSON_PATH, "r") as f:
-            return json.load(f)
-    except (json.JSONDecodeError, FileNotFoundError):
-        return {}
+            data = json.load(f)
+            logger.info(f"Loaded nostr.json with {len(data.get('names', {}))} entries")
+            return data
+    except FileNotFoundError:
+        logger.warning(f"nostr.json not found at {NOSTR_JSON_PATH}")
+    except json.JSONDecodeError as e:
+        logger.error(f"nostr.json is corrupt: {e}")
+        if NOSTR_JSON_BACKUP.exists():
+            try:
+                with open(NOSTR_JSON_BACKUP, "r") as f:
+                    data = json.load(f)
+                logger.info(f"Recovered {len(data.get('names', {}))} entries from backup")
+                return data
+            except (json.JSONDecodeError, OSError) as backup_err:
+                logger.error(f"Backup is also corrupt: {backup_err}")
+    except OSError as e:
+        logger.error(f"Error reading nostr.json: {e}")
+    return {"names": {}}
 
 
 def save_nostr_json(data: dict) -> None:
-    with tempfile.NamedTemporaryFile(mode='w', dir=NOSTR_JSON_PATH.parent, delete=False, suffix='.json') as tmp:
-        json.dump(data, tmp, indent=2)
-        tmp_path = tmp.name
-    shutil.move(tmp_path, NOSTR_JSON_PATH)
+    if NOSTR_JSON_PATH.exists():
+        shutil.copy2(NOSTR_JSON_PATH, NOSTR_JSON_BACKUP)
+
+    tmp_path = None
+    try:
+        with tempfile.NamedTemporaryFile(mode='w', dir=NOSTR_JSON_PATH.parent, delete=False, suffix='.tmp.json') as tmp:
+            json.dump(data, tmp, indent=2)
+            tmp.flush()
+            os.fsync(tmp.fileno())
+            tmp_path = tmp.name
+        shutil.move(tmp_path, NOSTR_JSON_PATH)
+        logger.info(f"Saved nostr.json with {len(data.get('names', {}))} entries")
+    except Exception:
+        if tmp_path and os.path.exists(tmp_path):
+            os.unlink(tmp_path)
+        raise
+
+
+_nostr_json_lock = threading.Lock()
+
+
+def add_nip05_entry(username: str, pubkey_hex: str) -> None:
+    with _nostr_json_lock:
+        lock_path = NOSTR_JSON_PATH.with_suffix(".lock")
+        with open(lock_path, "w") as lock_file:
+            fcntl.flock(lock_file, fcntl.LOCK_EX)
+            try:
+                data = load_nostr_json()
+                if "names" not in data:
+                    data["names"] = {}
+                data["names"][username] = pubkey_hex
+                save_nostr_json(data)
+                logger.info(f"Added NIP-05 entry: {username} -> {pubkey_hex[:16]}...")
+            finally:
+                fcntl.flock(lock_file, fcntl.LOCK_UN)
 
 
 def check_nip05_available(nip05: str) -> bool:
@@ -294,11 +353,7 @@ async def check_payment(request: Request, data: CheckPaymentRequest):
 
             payment_data = response.json()
             if payment_data.get("paid"):
-                nip05_data = load_nostr_json()
-                if "names" not in nip05_data:
-                    nip05_data["names"] = {}
-                nip05_data["names"][username] = pubkey_hex
-                save_nostr_json(nip05_data)
+                add_nip05_entry(username, pubkey_hex)
                 return {"paid": True}
             return {"paid": False}
         except httpx.RequestError:
@@ -320,11 +375,7 @@ async def register_nip05(data: NIP05Request, request: Request):
     if not check_nip05_available(username):
         raise HTTPException(status_code=400, detail="This NIP-05 identifier is already in use")
 
-    data_json = load_nostr_json()
-    if "names" not in data_json:
-        data_json["names"] = {}
-    data_json["names"][username] = pubkey_hex
-    save_nostr_json(data_json)
+    add_nip05_entry(username, pubkey_hex)
 
     return {"success": True, "nip05": f"{username}@{DOMAIN}"}
 

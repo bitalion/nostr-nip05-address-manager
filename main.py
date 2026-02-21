@@ -7,6 +7,7 @@ import tempfile
 import shutil
 import fcntl
 import signal
+import threading
 import sys
 from pathlib import Path
 from dotenv import load_dotenv
@@ -448,7 +449,7 @@ async def check_pubkey(request: Request, data: ConvertPubkeyRequest):
     return {"hex": hex_key, "registered": False}
 
 
-shutdown_event = signal.Event()
+shutdown_event = threading.Event()
 
 
 def signal_handler(signum, frame):

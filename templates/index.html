@@ -30,6 +30,9 @@
             padding: 4px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.3);
         }
+        #invoiceWrapper {
+            -webkit-tap-highlight-color: transparent;
+        }
     </style>
 </head>
 <body class="min-h-screen flex items-center justify-center p-3 sm:p-4">
@@ -197,17 +200,21 @@
                     </h3>
                     <div class="bg-slate-900/50 rounded-lg p-3 sm:p-4 mb-3 sm:mb-4">
                         <p class="text-slate-400 text-xs sm:text-sm mb-3" id="payment-scan">Scan this QR code to pay:</p>
-                        <div id="qrCode" class="flex justify-center mb-3"></div>
-                        <div class="flex items-end gap-2 mt-1">
-                            <p class="text-xs text-slate-500 break-all flex-1" id="invoiceText"></p>
-                            <button
-                                type="button"
-                                id="copyInvoiceBtn"
-                                title="Copy invoice"
-                                class="flex-shrink-0 p-1.5 bg-slate-700 hover:bg-slate-600 text-slate-400 hover:text-white rounded transition-all"
-                            >
-                                <i class="fa-solid fa-copy text-xs"></i>
-                            </button>
+                        <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                            <div id="qrCode" class="flex justify-center"></div>
+                            <div class="flex-1 w-full">
+                                <p class="text-xs text-slate-400 mb-2" id="invoiceLabel">Invoice:</p>
+                                <div 
+                                    id="invoiceWrapper" 
+                                    class="cursor-pointer bg-slate-800 hover:bg-slate-700 rounded-lg p-2 transition-colors"
+                                    onclick="copyInvoice()"
+                                >
+                                    <p class="text-xs text-slate-500 break-all font-mono" id="invoiceText"></p>
+                                </div>
+                                <p class="text-xs text-slate-500 mt-2 hidden" id="copyHint">
+                                    <i class="fa-solid fa-copy mr-1"></i>Tap to copy
+                                </p>
+                            </div>
                         </div>
                     </div>
                     <button
@@ -301,8 +308,9 @@
                 paymentScan: "Scan this QR code to pay:",
                 checkPaymentWaiting: "Waiting for payment...",
                 paymentAuto: "The verification is automatic. After payment, it will appear here.",
-                copyInvoice: "Copy invoice",
+                copyInvoice: "Tap to copy",
                 copyInvoiceDone: "Copied!",
+                tapToCopy: "Tap to copy",
                 successTitle: "Registration Complete!",
                 successText: "Your NIP-05 identifier is:",
                 errorTitle: "Error",
@@ -344,8 +352,9 @@
                 paymentScan: "Escanea este código QR para pagar:",
                 checkPaymentWaiting: "Esperando pago...",
                 paymentAuto: "La verificación es automática. Después de pagar, aparecerá aquí.",
-                copyInvoice: "Copiar factura",
+                copyInvoice: "Toca para copiar",
                 copyInvoiceDone: "¡Copiado!",
+                tapToCopy: "Toca para copiar",
                 successTitle: "¡Registro completado!",
                 successText: "Tu identificador NIP-05 es:",
                 errorTitle: "Error",
@@ -703,6 +712,11 @@
                 document.getElementById('howSection').classList.add('hidden');
                 document.getElementById('whySection').classList.add('hidden');
                 paymentSection.classList.remove('hidden');
+                
+                // Show copy hint
+                const copyHint = document.getElementById('copyHint');
+                copyHint.innerHTML = '<i class="fa-solid fa-copy mr-1"></i>' + (translations[currentLanguage].copyInvoice || 'Tap to copy');
+                copyHint.classList.remove('hidden');
 
                 // Start automatic payment verification
                 startPaymentVerification();
@@ -743,27 +757,44 @@
             document.getElementById('infoSection').classList.remove('hidden');
             document.getElementById('howSection').classList.remove('hidden');
             document.getElementById('whySection').classList.remove('hidden');
+            document.getElementById('copyHint').classList.add('hidden');
         }
-
-        document.getElementById('copyInvoiceBtn').addEventListener('click', function() {
-            const invoice = document.getElementById('invoiceText').textContent;
-            if (!invoice) return;
-            navigator.clipboard.writeText(invoice).then(() => {
-                const btn = document.getElementById('copyInvoiceBtn');
-                const icon = btn.querySelector('i');
-                icon.className = 'fa-solid fa-check text-xs';
-                btn.classList.add('bg-green-600', 'text-white');
-                btn.classList.remove('bg-slate-700', 'text-slate-400');
-                setTimeout(() => {
-                    icon.className = 'fa-solid fa-copy text-xs';
-                    btn.classList.remove('bg-green-600', 'text-white');
-                    btn.classList.add('bg-slate-700', 'text-slate-400');
-                }, 2000);
-            }).catch(err => console.error('Error copying invoice:', err));
-        });
 
         document.getElementById('backToFormBtn').addEventListener('click', resetToForm);
         document.getElementById('newRegistrationBtn').addEventListener('click', resetToForm);
+
+        window.copyInvoice = function() {
+            const invoiceElement = document.getElementById('invoiceText');
+            if (!invoiceElement || !invoiceElement.textContent) {
+                console.error('Invoice not found');
+                return;
+            }
+            
+            const invoice = invoiceElement.textContent;
+            const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+            
+            if (isMobile) {
+                const encodedInvoice = encodeURIComponent(invoice);
+                window.location.href = `lightning:${encodedInvoice}`;
+            } else {
+                navigator.clipboard.writeText(invoice).then(() => {
+                    showCopySuccess();
+                }).catch(err => {
+                    console.error('Error copying invoice:', err);
+                    alert('Error copying to clipboard');
+                });
+            }
+        };
+
+        function showCopySuccess() {
+            const hint = document.getElementById('copyHint');
+            const originalText = hint.innerHTML;
+            hint.innerHTML = '<i class="fa-solid fa-check mr-1"></i>' + (translations[currentLanguage].copyInvoiceDone || 'Copied!');
+            hint.classList.remove('hidden');
+            setTimeout(() => {
+                hint.innerHTML = originalText;
+            }, 2000);
+        }
     </script>
 </body>
 </html>

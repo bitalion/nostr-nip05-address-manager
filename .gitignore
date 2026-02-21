@@ -63,6 +63,7 @@ logs/
 *.tmp
 *.bak
 *.swp
+*.lock
 
 # OS
 .DS_Store

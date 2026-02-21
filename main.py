@@ -6,6 +6,8 @@ import secrets
 import tempfile
 import shutil
 import fcntl
+import signal
+import sys
 from pathlib import Path
 from dotenv import load_dotenv
 from fastapi import FastAPI, Request, HTTPException
@@ -165,7 +167,7 @@ def add_nip05_entry(username: str, pubkey_hex: str) -> None:
                 data["names"] = {}
             data["names"][username] = pubkey_hex
             save_nostr_json(data)
-            logger.info(f"Added NIP-05 entry: {username} -> {pubkey_hex[:16]}...")
+            logger.info(f"Added NIP-05 entry for user: {username}")
         finally:
             fcntl.flock(lock_fd, fcntl.LOCK_UN)
     finally:
@@ -209,7 +211,7 @@ def check_and_add_nip05_entry(username: str, pubkey_hex: str) -> bool:
             
             data["names"][username] = pubkey_hex
             save_nostr_json(data)
-            logger.info(f"Added NIP-05 entry: {username} -> {pubkey_hex[:16]}...")
+            logger.info(f"Added NIP-05 entry for user: {username}")
             return True
         finally:
             fcntl.flock(lock_fd, fcntl.LOCK_UN)
@@ -444,3 +446,36 @@ async def check_pubkey(request: Request, data: ConvertPubkeyRequest):
         if existing_hex.lower() == hex_key.lower():
             return {"hex": hex_key, "registered": True}
     return {"hex": hex_key, "registered": False}
+
+
+shutdown_event = signal.Event()
+
+
+def signal_handler(signum, frame):
+    logger.info(f"Received signal {signum}, initiating graceful shutdown...")
+    shutdown_event.set()
+
+
+signal.signal(signal.SIGTERM, signal_handler)
+signal.signal(signal.SIGINT, signal_handler)
+
+
+if __name__ == "__main__":
+    import uvicorn
+    
+    logger.info("Starting NIP-05 Nostr Identifier server...")
+    logger.info(f"Domain: {DOMAIN}")
+    logger.info(f"Invoice amount: {INVOICE_AMOUNT_SATS} sats")
+    
+    config = uvicorn.Config(
+        app=app,
+        host="0.0.0.0",
+        port=8000,
+        reload=False,
+        log_level="info",
+    )
+    server = uvicorn.Server(config)
+    
+    server.run()
+    
+    logger.info("Server stopped gracefully")

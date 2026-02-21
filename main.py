@@ -380,16 +380,19 @@ async def check_payment(request: Request, data: CheckPaymentRequest):
             payment_data = response.json()
             
             if payment_data.get("paid"):
-                memo = payment_data.get("memo", "")
-                expected_memo = f"NIP-05: {username}@{DOMAIN}"
+                memo = payment_data.get("memo") or payment_data.get("description") or ""
                 
-                if not memo.startswith("NIP-05:"):
-                    logger.warning(f"Payment hash {payment_hash[:16]}... has unexpected memo: {memo}")
-                    return {"paid": False}
-                
-                if memo != expected_memo:
-                    logger.warning(f"Payment memo mismatch: expected '{expected_memo}', got '{memo}'")
-                    return {"paid": False}
+                if memo:
+                    expected_memo = f"NIP-05: {username}@{DOMAIN}"
+                    if not memo.startswith("NIP-05:"):
+                        logger.warning(f"Payment hash {payment_hash[:16]}... has unexpected memo: {memo}")
+                        return {"paid": False}
+                    
+                    if memo != expected_memo:
+                        logger.warning(f"Payment memo mismatch: expected '{expected_memo}', got '{memo}'")
+                        return {"paid": False}
+                else:
+                    logger.info(f"Payment hash {payment_hash[:16]}... has no memo, accepting (LNbits may not support memo in payment response)")
                 
                 success = check_and_add_nip05_entry(username, pubkey_hex)
                 if success:

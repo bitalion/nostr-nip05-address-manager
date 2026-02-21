@@ -6,9 +6,6 @@ import secrets
 import tempfile
 import shutil
 import fcntl
-import signal
-import threading
-import sys
 from pathlib import Path
 from dotenv import load_dotenv
 from fastapi import FastAPI, Request, HTTPException
@@ -449,18 +446,6 @@ async def check_pubkey(request: Request, data: ConvertPubkeyRequest):
     return {"hex": hex_key, "registered": False}
 
 
-shutdown_event = threading.Event()
-
-
-def signal_handler(signum, frame):
-    logger.info(f"Received signal {signum}, initiating graceful shutdown...")
-    shutdown_event.set()
-
-
-signal.signal(signal.SIGTERM, signal_handler)
-signal.signal(signal.SIGINT, signal_handler)
-
-
 if __name__ == "__main__":
     import uvicorn
     
@@ -468,15 +453,11 @@ if __name__ == "__main__":
     logger.info(f"Domain: {DOMAIN}")
     logger.info(f"Invoice amount: {INVOICE_AMOUNT_SATS} sats")
     
-    config = uvicorn.Config(
-        app=app,
+    uvicorn.run(
+        app,
         host="0.0.0.0",
         port=8000,
-        reload=False,
         log_level="info",
     )
-    server = uvicorn.Server(config)
-    
-    server.run()
     
     logger.info("Server stopped gracefully")

@@ -2,14 +2,15 @@ import logging
 import os
 import json
 import re
+import secrets
 import tempfile
 import shutil
-import threading
 import fcntl
 from pathlib import Path
 from dotenv import load_dotenv
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.base import BaseHTTPMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
@@ -29,14 +30,6 @@ load_dotenv()
 app = FastAPI(title="NIP-05 Nostr Identifier")
 app.state.limiter = limiter
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
 templates = Jinja2Templates(directory=str(Path(__file__).parent / "templates"))
 
 BASE_DIR = Path(__file__).parent
@@ -44,10 +37,8 @@ STATIC_DIR = BASE_DIR / "static"
 WELL_KNOWN_DIR = BASE_DIR / ".well-known"
 NOSTR_JSON_PATH = WELL_KNOWN_DIR / "nostr.json"
 
-# Create static directory if it does not exist
 STATIC_DIR.mkdir(exist_ok=True)
 
-# Mount static files directory
 app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 
 LNURL = os.getenv("LNBITS_URL", "")
@@ -55,7 +46,33 @@ LNKEY = os.getenv("LNBITS_API_KEY", "")
 INVOICE_AMOUNT_SATS = int(os.getenv("INVOICE_AMOUNT_SATS", "100"))
 DOMAIN = os.getenv("DOMAIN", "example.com")
 ADMIN_API_KEY = os.getenv("ADMIN_API_KEY", "")
-DEBUG = os.getenv("DEBUG", "false").lower() == "true"
+
+ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "").split(",") if os.getenv("ALLOWED_ORIGINS") else []
+if not ALLOWED_ORIGINS:
+    ALLOWED_ORIGINS = [f"https://{DOMAIN}"] if DOMAIN != "example.com" else []
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=ALLOWED_ORIGINS,
+    allow_credentials=True,
+    allow_methods=["GET", "POST"],
+    allow_headers=["Content-Type"],
+)
+
+
+class SecurityHeadersMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        response = await call_next(request)
+        response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["X-Frame-Options"] = "DENY"
+        response.headers["X-XSS-Protection"] = "1; mode=block"
+        response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+        response.headers["Content-Security-Policy"] = "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; img-src 'self' data:; font-src 'self' https://cdnjs.cloudflare.com; connect-src 'self';"
+        return response
+
+
+app.add_middleware(SecurityHeadersMiddleware)
 
 WELL_KNOWN_DIR.mkdir(exist_ok=True)
 
@@ -63,7 +80,6 @@ if not NOSTR_JSON_PATH.exists():
     with open(NOSTR_JSON_PATH, "w") as f:
         json.dump({"names": {}}, f)
 
-# Clean orphan temp files from previous crashed writes
 for tmp_file in WELL_KNOWN_DIR.glob("*.tmp.json"):
     try:
         tmp_file.unlink()
@@ -135,32 +151,71 @@ def save_nostr_json(data: dict) -> None:
         raise
 
 
-_nostr_json_lock = threading.Lock()
+LOCK_FILE = NOSTR_JSON_PATH.with_suffix(".lock")
 
 
 def add_nip05_entry(username: str, pubkey_hex: str) -> None:
-    with _nostr_json_lock:
-        lock_path = NOSTR_JSON_PATH.with_suffix(".lock")
-        with open(lock_path, "w") as lock_file:
-            fcntl.flock(lock_file, fcntl.LOCK_EX)
-            try:
-                data = load_nostr_json()
-                if "names" not in data:
-                    data["names"] = {}
-                data["names"][username] = pubkey_hex
-                save_nostr_json(data)
-                logger.info(f"Added NIP-05 entry: {username} -> {pubkey_hex[:16]}...")
-            finally:
-                fcntl.flock(lock_file, fcntl.LOCK_UN)
+    lock_fd = None
+    try:
+        lock_fd = os.open(str(LOCK_FILE), os.O_CREAT | os.O_RDWR)
+        fcntl.flock(lock_fd, fcntl.LOCK_EX)
+        try:
+            data = load_nostr_json()
+            if "names" not in data:
+                data["names"] = {}
+            data["names"][username] = pubkey_hex
+            save_nostr_json(data)
+            logger.info(f"Added NIP-05 entry: {username} -> {pubkey_hex[:16]}...")
+        finally:
+            fcntl.flock(lock_fd, fcntl.LOCK_UN)
+    finally:
+        if lock_fd is not None:
+            os.close(lock_fd)
 
 
 def check_nip05_available(nip05: str) -> bool:
-    data = load_nostr_json()
-    nip05_lower = nip05.lower().strip()
-    for existing_nip05 in data.get("names", {}).keys():
-        if existing_nip05.lower() == nip05_lower:
-            return False
-    return True
+    lock_fd = None
+    try:
+        lock_fd = os.open(str(LOCK_FILE), os.O_CREAT | os.O_RDWR)
+        fcntl.flock(lock_fd, fcntl.LOCK_EX)
+        try:
+            data = load_nostr_json()
+            nip05_lower = nip05.lower().strip()
+            for existing_nip05 in data.get("names", {}).keys():
+                if existing_nip05.lower() == nip05_lower:
+                    return False
+            return True
+        finally:
+            fcntl.flock(lock_fd, fcntl.LOCK_UN)
+    finally:
+        if lock_fd is not None:
+            os.close(lock_fd)
+
+
+def check_and_add_nip05_entry(username: str, pubkey_hex: str) -> bool:
+    lock_fd = None
+    try:
+        lock_fd = os.open(str(LOCK_FILE), os.O_CREAT | os.O_RDWR)
+        fcntl.flock(lock_fd, fcntl.LOCK_EX)
+        try:
+            data = load_nostr_json()
+            if "names" not in data:
+                data["names"] = {}
+            
+            username_lower = username.lower().strip()
+            for existing_nip05 in data.get("names", {}).keys():
+                if existing_nip05.lower() == username_lower:
+                    return False
+            
+            data["names"][username] = pubkey_hex
+            save_nostr_json(data)
+            logger.info(f"Added NIP-05 entry: {username} -> {pubkey_hex[:16]}...")
+            return True
+        finally:
+            fcntl.flock(lock_fd, fcntl.LOCK_UN)
+    finally:
+        if lock_fd is not None:
+            os.close(lock_fd)
 
 
 class NIP05Request(BaseModel):
@@ -236,39 +291,11 @@ async def get_nostr_json():
 @app.post("/api/convert-pubkey")
 @limiter.limit("20/minute")
 async def convert_pubkey(request: Request, data: ConvertPubkeyRequest):
-    """Converts a pubkey (npub or hex) to hexadecimal format"""
     try:
         hex_key = convert_npub_to_hex(data.pubkey)
         return {"hex": hex_key}
     except Exception as e:
         raise HTTPException(status_code=422, detail=str(e))
-
-
-if DEBUG:
-    @app.get("/api/debug/lnbits-test")
-    async def debug_lnbits_test():
-        """Test endpoint to verify connectivity with LN Bits"""
-        if not LNURL or not LNKEY:
-            return {"error": "Lightning payment not configured"}
-
-        async with httpx.AsyncClient() as client:
-            try:
-                response = await client.post(
-                    f"{LNURL}/api/v1/payments",
-                    headers={"X-Api-Key": LNKEY, "Content-Type": "application/json"},
-                    json={
-                        "out": False,
-                        "amount": 1,
-                        "memo": "Debug test",
-                    },
-                    timeout=30.0
-                )
-                return {
-                    "status_code": response.status_code,
-                    "response": response.json() if response.status_code in (200, 201) else response.text
-                }
-            except Exception as e:
-                return {"error": str(e)}
 
 
 @app.post("/api/create-invoice")
@@ -304,7 +331,6 @@ async def create_invoice(request: Request, data: NIP05Request):
             invoice_data = response.json()
             logger.info(f"LN Bits invoice created for {username}@{DOMAIN}")
 
-            # Search for payment_request in multiple possible field names
             payment_request = (
                 invoice_data.get("payment_request") or
                 invoice_data.get("bolt11") or
@@ -352,30 +378,43 @@ async def check_payment(request: Request, data: CheckPaymentRequest):
                 return {"paid": False}
 
             payment_data = response.json()
+            
             if payment_data.get("paid"):
-                add_nip05_entry(username, pubkey_hex)
-                return {"paid": True}
+                memo = payment_data.get("memo", "")
+                expected_memo = f"NIP-05: {username}@{DOMAIN}"
+                
+                if not memo.startswith("NIP-05:"):
+                    logger.warning(f"Payment hash {payment_hash[:16]}... has unexpected memo: {memo}")
+                    return {"paid": False}
+                
+                if memo != expected_memo:
+                    logger.warning(f"Payment memo mismatch: expected '{expected_memo}', got '{memo}'")
+                    return {"paid": False}
+                
+                success = check_and_add_nip05_entry(username, pubkey_hex)
+                if success:
+                    return {"paid": True}
+                return {"paid": False, "error": "Username already registered"}
             return {"paid": False}
         except httpx.RequestError:
             return {"paid": False}
 
 
 @app.post("/api/register")
+@limiter.limit("5/minute")
 async def register_nip05(data: NIP05Request, request: Request):
     if not ADMIN_API_KEY:
         raise HTTPException(status_code=501, detail="Direct registration is disabled")
 
     provided_key = request.headers.get("X-Admin-Key")
-    if provided_key != ADMIN_API_KEY:
+    if not secrets.compare_digest(provided_key, ADMIN_API_KEY):
         raise HTTPException(status_code=401, detail="Invalid admin API key")
 
     username = data.username.strip()
     pubkey_hex = convert_npub_to_hex(data.pubkey)
 
-    if not check_nip05_available(username):
+    if not check_and_add_nip05_entry(username, pubkey_hex):
         raise HTTPException(status_code=400, detail="This NIP-05 identifier is already in use")
-
-    add_nip05_entry(username, pubkey_hex)
 
     return {"success": True, "nip05": f"{username}@{DOMAIN}"}
 
@@ -383,6 +422,8 @@ async def register_nip05(data: NIP05Request, request: Request):
 @app.get("/api/check-availability/{username}")
 @limiter.limit("30/minute")
 async def check_availability(request: Request, username: str):
+    if not re.match(r'^[a-zA-Z0-9_-]{1,30}$', username):
+        raise HTTPException(status_code=400, detail="Invalid username format")
     available = check_nip05_available(username.strip())
     return {"available": available}
 
@@ -390,7 +431,6 @@ async def check_availability(request: Request, username: str):
 @app.post("/api/check-pubkey")
 @limiter.limit("20/minute")
 async def check_pubkey(request: Request, data: ConvertPubkeyRequest):
-    """Checks if a pubkey is already registered in nostr.json"""
     try:
         hex_key = convert_npub_to_hex(data.pubkey)
     except ValueError as e:

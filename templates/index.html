@@ -11,6 +11,25 @@
             background: radial-gradient(ellipse at bottom right, #7c3aed 0%, #581c87 25%, #1e1b4b 50%, #0f172a 80%);
             background-attachment: fixed;
         }
+        #qrCode {
+            position: relative;
+            display: inline-block;
+        }
+        #qrCanvas {
+            display: block;
+        }
+        #qrLogo {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 50px;
+            height: 50px;
+            background: white;
+            border-radius: 8px;
+            padding: 4px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        }
     </style>
 </head>
 <body class="min-h-screen flex items-center justify-center p-3 sm:p-4">
@@ -658,7 +677,7 @@
                 priceAmount.textContent = data.amount_sats + ' sats';
 
                 const qrContainer = document.getElementById('qrCode');
-                qrContainer.innerHTML = '<canvas id="qrCanvas" width="200" height="200"></canvas>';
+                qrContainer.innerHTML = '<canvas id="qrCanvas" width="200" height="200"></canvas><img id="qrLogo" src="/static/images/nostr-logo-black.svg" alt="Nostr" class="qr-logo">';
 
                 const invoiceText = document.getElementById('invoiceText');
                 console.log('Payment Request:', data.payment_request);

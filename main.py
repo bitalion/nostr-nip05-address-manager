@@ -6,6 +6,7 @@ import secrets
 import tempfile
 import shutil
 import fcntl
+import uuid
 from pathlib import Path
 from dotenv import load_dotenv
 from fastapi import FastAPI, Request, HTTPException
@@ -14,7 +15,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, field_validator
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 import bech32
@@ -72,7 +73,19 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         return response
 
 
+class RequestIDMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        request_id = str(uuid.uuid4())[:8]
+        request.state.request_id = request_id
+        
+        response = await call_next(request)
+        response.headers["X-Request-ID"] = request_id
+        
+        return response
+
+
 app.add_middleware(SecurityHeadersMiddleware)
+app.add_middleware(RequestIDMiddleware)
 
 WELL_KNOWN_DIR.mkdir(exist_ok=True)
 
@@ -118,7 +131,7 @@ def load_nostr_json() -> dict:
     except FileNotFoundError:
         logger.warning(f"nostr.json not found at {NOSTR_JSON_PATH}")
     except json.JSONDecodeError as e:
-        logger.error(f"nostr.json is corrupt: {e}")
+        logger.error(f"nostr.json is corrupt: invalid JSON at position {e.pos}")
         if NOSTR_JSON_BACKUP.exists():
             try:
                 with open(NOSTR_JSON_BACKUP, "r") as f:
@@ -126,9 +139,9 @@ def load_nostr_json() -> dict:
                 logger.info(f"Recovered {len(data.get('names', {}))} entries from backup")
                 return data
             except (json.JSONDecodeError, OSError) as backup_err:
-                logger.error(f"Backup is also corrupt: {backup_err}")
+                logger.error(f"Backup is also corrupt")
     except OSError as e:
-        logger.error(f"Error reading nostr.json: {e}")
+        logger.error(f"Error reading nostr.json: {e.filename or 'unknown file'}")
     return {"names": {}}
 
 
@@ -176,8 +189,8 @@ def add_nip05_entry(username: str, pubkey_hex: str) -> None:
 def check_nip05_available(nip05: str) -> bool:
     lock_fd = None
     try:
-        lock_fd = os.open(str(LOCK_FILE), os.O_CREAT | os.O_RDWR)
-        fcntl.flock(lock_fd, fcntl.LOCK_EX)
+        lock_fd = os.open(str(LOCK_FILE), os.O_CREAT | os.O_RDONLY)
+        fcntl.flock(lock_fd, fcntl.LOCK_SH)
         try:
             data = load_nostr_json()
             nip05_lower = nip05.lower().strip()
@@ -218,18 +231,19 @@ def check_and_add_nip05_entry(username: str, pubkey_hex: str) -> bool:
             os.close(lock_fd)
 
 
-class NIP05Request(BaseModel):
-    username: str
-    pubkey: str
-
-    @validator('username')
-    def validate_username(cls, v):
+class ValidatedUsernameMixin:
+    @field_validator('username')
+    @classmethod
+    def validate_username(cls, v: str) -> str:
         if not re.match(r'^[a-zA-Z0-9_-]{1,30}$', v):
             raise ValueError('Username must be 1-30 characters, letters, numbers, underscores or hyphens only')
         return v
 
-    @validator('pubkey')
-    def validate_pubkey(cls, v):
+
+class ValidatedPubkeyMixin:
+    @field_validator('pubkey')
+    @classmethod
+    def validate_pubkey(cls, v: str) -> str:
         try:
             convert_npub_to_hex(v)
         except ValueError as e:
@@ -237,41 +251,25 @@ class NIP05Request(BaseModel):
         return v
 
 
-class ConvertPubkeyRequest(BaseModel):
+class NIP05Request(ValidatedUsernameMixin, ValidatedPubkeyMixin, BaseModel):
+    username: str
     pubkey: str
 
-    @validator('pubkey')
-    def validate_pubkey(cls, v):
-        try:
-            convert_npub_to_hex(v)
-        except ValueError as e:
-            raise ValueError(str(e))
-        return v
+
+class ConvertPubkeyRequest(ValidatedPubkeyMixin, BaseModel):
+    pubkey: str
 
 
-class CheckPaymentRequest(BaseModel):
+class CheckPaymentRequest(ValidatedPubkeyMixin, ValidatedUsernameMixin, BaseModel):
     username: str
     pubkey: str
     payment_hash: str
 
-    @validator('payment_hash')
-    def validate_payment_hash(cls, v):
+    @field_validator('payment_hash')
+    @classmethod
+    def validate_payment_hash(cls, v: str) -> str:
         if not re.match(r'^[a-fA-F0-9]{1,128}$', v):
             raise ValueError('Invalid payment hash format')
-        return v
-
-    @validator('username')
-    def validate_username(cls, v):
-        if not re.match(r'^[a-zA-Z0-9_-]{1,30}$', v):
-            raise ValueError('Username must be 1-30 characters, letters, numbers, underscores or hyphens only')
-        return v
-
-    @validator('pubkey')
-    def validate_pubkey(cls, v):
-        try:
-            convert_npub_to_hex(v)
-        except ValueError as e:
-            raise ValueError(str(e))
         return v
 
 
@@ -281,6 +279,28 @@ async def index(request: Request):
         return templates.TemplateResponse("index.html", {"request": request, "domain": DOMAIN, "price_sats": INVOICE_AMOUNT_SATS})
     except Exception as e:
         return HTMLResponse(content=f"Error: {str(e)}", status_code=500)
+
+
+@app.get("/health")
+async def health():
+    health_status = {
+        "status": "healthy",
+        "domain": DOMAIN,
+    }
+    
+    if NOSTR_JSON_PATH.exists():
+        try:
+            data = load_nostr_json()
+            health_status["registered_users"] = len(data.get("names", {}))
+        except Exception:
+            health_status["status"] = "degraded"
+            health_status["nostr_json"] = "error"
+    else:
+        health_status["status"] = "degraded"
+        health_status["nostr_json"] = "not_found"
+    
+    status_code = 200 if health_status["status"] == "healthy" else 503
+    return JSONResponse(content=health_status, status_code=status_code)
 
 
 @app.get("/.well-known/nostr.json")
@@ -306,9 +326,6 @@ async def create_invoice(request: Request, data: NIP05Request):
         pubkey_hex = convert_npub_to_hex(data.pubkey)
     except Exception as e:
         raise HTTPException(status_code=422, detail=str(e))
-
-    if not check_nip05_available(username):
-        raise HTTPException(status_code=400, detail="This NIP-05 identifier is already in use")
 
     if not LNURL or not LNKEY:
         raise HTTPException(status_code=500, detail="Lightning payment not configured")

@@ -237,4 +237,4 @@ Los clientes Nostr consultan `https://dominio.com/.well-known/nostr.json?name=al
 
 ## Licencia
 
-MIT — Cuba Bitcoin 2026
+MIT

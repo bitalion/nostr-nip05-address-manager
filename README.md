@@ -237,4 +237,4 @@ Nostr clients query `https://domain.com/.well-known/nostr.json?name=alice` to ve
 
 ## License
 
-MIT — Cuba Bitcoin 2026
+MIT

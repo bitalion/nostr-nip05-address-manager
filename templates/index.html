@@ -6,9 +6,33 @@
     <title>NIP-05 Registration</title>
     <link rel="icon" type="image/x-icon" href="/static/images/favicon.ico">
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
+        @font-face {
+            font-family: 'Inter';
+            src: url('/static/fonts/Inter-Regular.ttf') format('truetype');
+            font-weight: 400;
+            font-style: normal;
+        }
+        @font-face {
+            font-family: 'Inter';
+            src: url('/static/fonts/Inter-Medium.ttf') format('truetype');
+            font-weight: 500;
+            font-style: normal;
+        }
+        @font-face {
+            font-family: 'Inter';
+            src: url('/static/fonts/Inter-SemiBold.ttf') format('truetype');
+            font-weight: 600;
+            font-style: normal;
+        }
+        @font-face {
+            font-family: 'Inter';
+            src: url('/static/fonts/Inter-Bold.ttf') format('truetype');
+            font-weight: 700;
+            font-style: normal;
+        }
         body {
+            font-family: 'Inter', sans-serif;
             background: radial-gradient(ellipse at bottom right, #7c3aed 0%, #581c87 25%, #1e1b4b 50%, #0f172a 80%);
             background-attachment: fixed;
         }
@@ -38,16 +62,15 @@
 </head>
 <body class="min-h-screen flex items-center justify-center p-3 sm:p-4">
     <!-- Language Selector - Top Right -->
-    <div class="fixed top-4 right-4 sm:top-6 sm:right-6 z-50">
+    <div class="fixed top-3 right-3 sm:top-6 sm:right-6 z-50">
         <div class="relative">
-            <button id="langDropdown" class="px-2 sm:px-3 py-1 rounded text-xs sm:text-sm bg-slate-600 text-white font-semibold flex items-center gap-1 sm:gap-2 hover:bg-slate-500 transition-colors">
+            <button id="langDropdown" class="px-1.5 sm:px-3 py-1 rounded text-xs sm:text-sm bg-slate-600 text-white font-semibold flex items-center gap-1 hover:bg-slate-500 transition-colors">
                 <i class="fa-solid fa-globe"></i>
                 <span id="currentLang">EN</span>
-                <i class="fa-solid fa-chevron-down text-[10px] sm:text-xs"></i>
             </button>
-            <div id="langMenu" class="hidden absolute right-0 mt-1 sm:mt-2 bg-slate-700 rounded-lg shadow-xl border border-slate-600 py-1 min-w-[80px] sm:min-w-[90px] z-50">
-                <button id="langEN" class="w-full px-3 py-1.5 sm:py-2 text-xs sm:text-sm text-left hover:bg-slate-600 transition-colors text-white" data-lang="en">EN</button>
-                <button id="langES" class="w-full px-3 py-1.5 sm:py-2 text-xs sm:text-sm text-left hover:bg-slate-600 transition-colors text-white" data-lang="es">ES</button>
+            <div id="langMenu" class="hidden absolute right-0 mt-1 sm:mt-2 bg-slate-700 rounded-lg shadow-xl border border-slate-600 py-1 min-w-[70px] sm:min-w-[90px] z-50">
+                <button id="langEN" class="w-full px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm text-left hover:bg-slate-600 transition-colors text-white" data-lang="en">EN</button>
+                <button id="langES" class="w-full px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm text-left hover:bg-slate-600 transition-colors text-white" data-lang="es">ES</button>
             </div>
         </div>
     </div>
@@ -66,7 +89,7 @@
             <div id="infoSection" class="mb-6 bg-slate-700/30 rounded-lg p-4 border border-slate-600/50">
                 <button id="infoToggle" type="button" class="w-full flex items-center justify-between text-left hover:text-[#6C27FF] transition-colors">
                     <span class="text-slate-300 font-semibold flex items-center gap-2">
-                    <span class="text-white font-bold text-lg mr-2">1</span>
+                    <span class="text-white font-semibold text-sm mr-2">1</span>
                         <span id="infoTitle">¿Qué es un NIP-05?</span>
                     </span>
                     <i id="infoIcon" class="fa-solid fa-chevron-down text-slate-400 transition-transform"></i>
@@ -82,7 +105,7 @@
             <div id="howSection" class="mb-6 bg-slate-700/30 rounded-lg p-4 border border-slate-600/50">
                 <button id="howToggle" type="button" class="w-full flex items-center justify-between text-left hover:text-[#6C27FF] transition-colors">
                     <span class="text-slate-300 font-semibold flex items-center gap-2">
-                    <span class="text-white font-bold text-lg mr-2">2</span>
+                    <span class="text-white font-semibold text-sm mr-2">2</span>
                         <span id="howTitle">¿Cómo funciona?</span>
                     </span>
                     <i id="howIcon" class="fa-solid fa-chevron-down text-slate-400 transition-transform"></i>
@@ -98,7 +121,7 @@
             <div id="whySection" class="mb-6 bg-slate-700/30 rounded-lg p-4 border border-slate-600/50">
                 <button id="whyToggle" type="button" class="w-full flex items-center justify-between text-left hover:text-[#6C27FF] transition-colors">
                     <span class="text-slate-300 font-semibold flex items-center gap-2">
-                    <span class="text-white font-bold text-lg mr-2">3</span>
+                    <span class="text-white font-semibold text-sm mr-2">3</span>
                         <span id="whyTitle">¿Por qué deberías tener uno?</span>
                     </span>
                     <i id="whyIcon" class="fa-solid fa-chevron-down text-slate-400 transition-transform"></i>
@@ -137,13 +160,13 @@
                             name="username"
                             required
                             maxlength="30"
-                            class="flex-1 px-3 sm:px-4 py-2 sm:py-3 bg-slate-900/50 border border-slate-600 rounded-l-lg text-white text-sm sm:text-base placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#6C27FF] focus:border-transparent transition-all"
+                            class="flex-1 min-w-0 px-2 sm:px-4 py-2 sm:py-3 bg-slate-900/50 border border-slate-600 rounded-l-lg text-white text-xs sm:text-base placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#6C27FF] focus:border-transparent transition-all"
                             placeholder="username"
                         >
-                        <span class="px-3 sm:px-4 py-2 sm:py-3 bg-[#6C27FF] border border-slate-600 border-l-0 text-white text-sm sm:text-base font-semibold whitespace-nowrap">
+                        <span class="px-1 sm:px-4 py-2 sm:py-3 bg-[#6C27FF] border border-slate-600 border-l-0 text-white text-xs sm:text-base font-semibold whitespace-nowrap flex-shrink-0">
                             @{{ domain }}
                         </span>
-                        <span class="px-3 sm:px-4 py-2 sm:py-3 bg-[#6C27FF] border border-slate-600 border-l-0 rounded-r-lg text-white text-sm sm:text-base font-semibold whitespace-nowrap">
+                        <span class="px-1 sm:px-4 py-2 sm:py-3 bg-[#6C27FF] border border-slate-600 border-l-0 rounded-r-lg text-white text-xs sm:text-base font-semibold whitespace-nowrap flex-shrink-0">
                             {{ price_sats }} ⚡️
                         </span>
                     </div>
@@ -288,10 +311,15 @@
 
     <!-- Footer -->
     <footer class="fixed bottom-0 left-0 right-0 bg-slate-900/80 backdrop-blur-xl border-t border-slate-700/50 py-3 sm:py-4 px-4">
-        <div class="text-center">
-            <p class="text-slate-400 text-xs sm:text-sm break-words">
+        <div class="text-center flex flex-wrap items-center justify-center gap-2 sm:gap-4">
+            <span class="text-slate-400 text-xs sm:text-sm">
                 <span id="footerText">Made with ❤️ by Cuba Bitcoin 2026</span>
-            </p>
+            </span>
+            <span class="hidden sm:inline text-slate-600">|</span>
+            <a href="https://github.com/bitalion/nostr-nip05-address-manager" target="_blank" class="text-slate-400 text-xs sm:text-sm hover:text-[#6C27FF] transition-colors flex items-center gap-1">
+                <i class="fa-brands fa-github"></i>
+                <span id="sourceCodeText">Source Code</span>
+            </a>
         </div>
     </footer>
 
@@ -333,6 +361,7 @@
                 errorPaymentFailed: "Payment verification failed",
                 backToForm: "Register another NIP-05",
                 footer: "Made with ❤️ by Cuba Bitcoin 2026",
+                sourceCode: "Source Code",
                 infoTitle: "What is a NIP-05?",
                 infoDesc1: "A NIP-05 is a technical specification (Nostr Implementation Possibility) that allows Nostr users to associate their public key (that long string of numbers and letters starting with \"npub\") with an internet-based identifier, similar to an email address, like user@example.com",
                 howTitle: "How does it work?",
@@ -377,6 +406,7 @@
                 errorPaymentFailed: "Error en la verificación de pago",
                 backToForm: "Registrar otro NIP-05",
                 footer: "Hecho con ❤️ por Cuba Bitcoin 2026",
+                sourceCode: "Código Fuente",
                 infoTitle: "¿Qué es un NIP-05?",
                 infoDesc1: "Un NIP-05 es una especificación técnica (Nostr Implementation Possibility) que permite a los usuarios de Nostr asociar su clave pública (esa cadena larga de números y letras que empieza con \"npub\") con un identificador basado en internet, similar a una dirección de correo electrónico, como ejemplo@dominio.com",
                 howTitle: "¿Cómo funciona?",
@@ -425,6 +455,7 @@
             document.getElementById('backToFormText').textContent = translations[lang].backToForm;
             document.getElementById('newRegistrationText').textContent = translations[lang].backToForm;
             document.getElementById('footerText').textContent = translations[lang].footer;
+            document.getElementById('sourceCodeText').textContent = translations[lang].sourceCode;
             document.getElementById('infoTitle').textContent = translations[lang].infoTitle;
             document.getElementById('infoDesc1').textContent = translations[lang].infoDesc1;
             document.getElementById('howTitle').textContent = translations[lang].howTitle;

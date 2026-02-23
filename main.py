@@ -346,7 +346,7 @@ async def create_invoice(request: Request, data: NIP05Request):
                 raise HTTPException(status_code=500, detail=f"Failed to create invoice: {response.status_code} {response.text}")
 
             invoice_data = response.json()
-            logger.info(f"LN Bits invoice created for {username}@{DOMAIN}")
+            logger.info(f"LNbits invoice created for {username}@{DOMAIN}")
 
             payment_request = (
                 invoice_data.get("payment_request") or

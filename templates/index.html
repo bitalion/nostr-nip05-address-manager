@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NIP-05 Registration</title>
+    <link rel="icon" type="image/x-icon" href="/static/images/favicon.ico">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
@@ -36,22 +37,36 @@
     </style>
 </head>
 <body class="min-h-screen flex items-center justify-center p-3 sm:p-4">
-    <div class="w-full max-w-2xl mb-20 sm:mb-24">
-        <div class="bg-slate-800/80 backdrop-blur-xl rounded-xl sm:rounded-2xl shadow-2xl border border-slate-700/50 p-4 sm:p-6 md:p-8">
+    <!-- Language Selector - Top Right -->
+    <div class="fixed top-4 right-4 sm:top-6 sm:right-6 z-50">
+        <div class="relative">
+            <button id="langDropdown" class="px-2 sm:px-3 py-1 rounded text-xs sm:text-sm bg-slate-600 text-white font-semibold flex items-center gap-1 sm:gap-2 hover:bg-slate-500 transition-colors">
+                <i class="fa-solid fa-globe"></i>
+                <span id="currentLang">EN</span>
+                <i class="fa-solid fa-chevron-down text-[10px] sm:text-xs"></i>
+            </button>
+            <div id="langMenu" class="hidden absolute right-0 mt-1 sm:mt-2 bg-slate-700 rounded-lg shadow-xl border border-slate-600 py-1 min-w-[80px] sm:min-w-[90px] z-50">
+                <button id="langEN" class="w-full px-3 py-1.5 sm:py-2 text-xs sm:text-sm text-left hover:bg-slate-600 transition-colors text-white" data-lang="en">EN</button>
+                <button id="langES" class="w-full px-3 py-1.5 sm:py-2 text-xs sm:text-sm text-left hover:bg-slate-600 transition-colors text-white" data-lang="es">ES</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="w-full max-w-2xl mb-20 sm:mb-24 relative">
+        <div class="bg-slate-800/50 backdrop-blur-xl rounded-xl sm:rounded-2xl shadow-2xl border border-slate-700/50 p-4 sm:p-6 md:p-8">
             <div class="text-center mb-6 sm:mb-8">
-                <div class="flex justify-end gap-2 mb-4">
-                    <button id="langEN" class="px-2 sm:px-3 py-1 rounded text-xs sm:text-sm bg-amber-500 text-white font-semibold">EN</button>
-                    <button id="langES" class="px-2 sm:px-3 py-1 rounded text-xs sm:text-sm bg-slate-600 text-white font-semibold">ES</button>
-                </div>
                 <h1 class="text-xl sm:text-2xl md:text-3xl font-bold text-white" id="title">NIP-05 Registration</h1>
                 <p class="text-slate-400 mt-2 text-sm sm:text-base" id="subtitle">Get your Nostr identifier</p>
             </div>
 
+            <!-- FAQ Section -->
+            <h2 class="text-lg sm:text-xl font-bold text-white mb-4" id="faqTitle">FAQ</h2>
+
             <!-- NIP-05 Information Section -->
             <div id="infoSection" class="mb-6 bg-slate-700/30 rounded-lg p-4 border border-slate-600/50">
-                <button id="infoToggle" type="button" class="w-full flex items-center justify-between text-left hover:text-amber-400 transition-colors">
+                <button id="infoToggle" type="button" class="w-full flex items-center justify-between text-left hover:text-[#6C27FF] transition-colors">
                     <span class="text-slate-300 font-semibold flex items-center gap-2">
-                        <i class="fa-solid fa-circle-question text-amber-400"></i>
+                    <span class="text-white font-bold text-lg mr-2">1</span>
                         <span id="infoTitle">¿Qué es un NIP-05?</span>
                     </span>
                     <i id="infoIcon" class="fa-solid fa-chevron-down text-slate-400 transition-transform"></i>
@@ -65,9 +80,9 @@
 
             <!-- Section: How does it work? -->
             <div id="howSection" class="mb-6 bg-slate-700/30 rounded-lg p-4 border border-slate-600/50">
-                <button id="howToggle" type="button" class="w-full flex items-center justify-between text-left hover:text-amber-400 transition-colors">
+                <button id="howToggle" type="button" class="w-full flex items-center justify-between text-left hover:text-[#6C27FF] transition-colors">
                     <span class="text-slate-300 font-semibold flex items-center gap-2">
-                        <i class="fa-solid fa-circle-question text-amber-400"></i>
+                    <span class="text-white font-bold text-lg mr-2">2</span>
                         <span id="howTitle">¿Cómo funciona?</span>
                     </span>
                     <i id="howIcon" class="fa-solid fa-chevron-down text-slate-400 transition-transform"></i>
@@ -81,9 +96,9 @@
 
             <!-- Section: Why should you have one -->
             <div id="whySection" class="mb-6 bg-slate-700/30 rounded-lg p-4 border border-slate-600/50">
-                <button id="whyToggle" type="button" class="w-full flex items-center justify-between text-left hover:text-amber-400 transition-colors">
+                <button id="whyToggle" type="button" class="w-full flex items-center justify-between text-left hover:text-[#6C27FF] transition-colors">
                     <span class="text-slate-300 font-semibold flex items-center gap-2">
-                        <i class="fa-solid fa-circle-question text-amber-400"></i>
+                    <span class="text-white font-bold text-lg mr-2">3</span>
                         <span id="whyTitle">¿Por qué deberías tener uno?</span>
                     </span>
                     <i id="whyIcon" class="fa-solid fa-chevron-down text-slate-400 transition-transform"></i>
@@ -115,18 +130,23 @@
                     <label for="username" class="block text-xs sm:text-sm font-medium text-slate-300 mb-2" id="label-username">
                         NIP-05 Username
                     </label>
-                    <div class="relative">
+                    <div class="relative flex">
                         <input
                             type="text"
                             id="username"
                             name="username"
                             required
-                            pattern="^[a-zA-Z0-9_-]{1,30}$"
-                            class="w-full px-3 sm:px-4 py-2 sm:py-3 bg-slate-900/50 border border-slate-600 rounded-lg text-white text-sm sm:text-base placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all"
-                            placeholder="yourname"
+                            maxlength="30"
+                            class="flex-1 px-3 sm:px-4 py-2 sm:py-3 bg-slate-900/50 border border-slate-600 rounded-l-lg text-white text-sm sm:text-base placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#6C27FF] focus:border-transparent transition-all"
+                            placeholder="username"
                         >
+                        <span class="px-3 sm:px-4 py-2 sm:py-3 bg-[#6C27FF] border border-slate-600 border-l-0 text-white text-sm sm:text-base font-semibold whitespace-nowrap">
+                            @{{ domain }}
+                        </span>
+                        <span class="px-3 sm:px-4 py-2 sm:py-3 bg-[#6C27FF] border border-slate-600 border-l-0 rounded-r-lg text-white text-sm sm:text-base font-semibold whitespace-nowrap">
+                            {{ price_sats }} ⚡️
+                        </span>
                     </div>
-                    <p class="text-xs text-slate-500 mt-1" id="help-username">1-30 characters, lowercase letters, numbers, _ and -</p>
                     <p id="availabilityMsg" class="text-xs mt-1 hidden"></p>
                 </div>
 
@@ -135,7 +155,7 @@
                         <label for="pubkey" class="block text-xs sm:text-sm font-medium text-slate-300" id="label-pubkey">
                             Public Key (npub)
                         </label>
-                        <a href="#" id="toggleHex" class="text-xs text-amber-400 hover:text-amber-300 transition-colors">
+                        <a href="#" id="toggleHex" class="text-xs text-white hover:text-[#6C27FF] transition-colors">
                             <i class="fa-solid fa-code mr-1"></i><span id="toggleHexText">Hex</span>
                         </a>
                     </div>
@@ -144,7 +164,7 @@
                         id="pubkey"
                         name="pubkey"
                         required
-                        class="w-full px-3 sm:px-4 py-2 sm:py-3 bg-slate-900/50 border border-slate-600 rounded-lg text-white text-sm sm:text-base placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all"
+                        class="w-full px-3 sm:px-4 py-2 sm:py-3 bg-slate-900/50 border border-slate-600 rounded-lg text-white text-sm sm:text-base placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#6C27FF] focus:border-transparent transition-all"
                         placeholder="npub1..."
                     >
                     <p id="pubkeyStatus" class="text-xs mt-1 hidden"></p>
@@ -159,7 +179,7 @@
                             type="text"
                             id="hexkey"
                             readonly
-                            class="flex-1 px-3 sm:px-4 py-2 sm:py-3 bg-slate-900/50 border border-slate-600 rounded-lg text-white text-xs sm:text-sm placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all cursor-pointer break-all"
+                            class="flex-1 px-3 sm:px-4 py-2 sm:py-3 bg-slate-900/50 border border-slate-600 rounded-lg text-white text-xs sm:text-sm placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#6C27FF] focus:border-transparent transition-all cursor-pointer break-all"
                             placeholder="Hexadecimal will appear here..."
                         >
                         <button
@@ -173,17 +193,12 @@
                     </div>
                 </div>
 
-                <div id="priceInfo" class="bg-slate-700/30 rounded-lg p-3 sm:p-4">
-                    <div class="flex items-center justify-between gap-2">
-                        <span class="text-slate-300 text-sm sm:text-base" id="label-fee">Registration fee</span>
-                        <span class="text-amber-400 font-bold text-sm sm:text-base" id="priceAmount">{{ price_sats }} sats</span>
-                    </div>
-                </div>
+                <hr class="border-slate-600">
 
                 <button
                     type="submit"
                     id="submitBtn"
-                    class="w-full py-2 sm:py-3 px-4 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-white text-sm sm:text-base font-semibold rounded-lg transition-all transform hover:scale-[1.02]"
+                    class="w-full py-2 sm:py-3 px-4 bg-gradient-to-r from-[#6C27FF] to-[#8B5CF6] hover:from-[#7C3AED] hover:to-[#A78BFA] text-white text-sm sm:text-base font-semibold rounded-lg transition-all transform hover:scale-[1.02]"
                 >
                     <span id="btnText">Proceed to Payment</span>
                     <span id="btnLoading" class="hidden">
@@ -195,7 +210,7 @@
             <div id="paymentSection" class="hidden mt-4 sm:mt-6">
                 <div class="border-t border-slate-700 pt-4 sm:pt-6">
                     <h3 class="text-base sm:text-lg font-semibold text-white mb-3 sm:mb-4" id="payment-title">
-                        <i class="fa-brands fa-bitcoin text-amber-400 mr-2"></i>
+                        <i class="fa-brands fa-bitcoin text-[#6C27FF] mr-2"></i>
                         <span id="payment-title-text">Lightning Payment</span>
                     </h3>
                     <div class="bg-slate-900/50 rounded-lg p-3 sm:p-4 mb-3 sm:mb-4">
@@ -244,7 +259,7 @@
                         </div>
                         <h3 class="text-lg sm:text-xl font-bold text-white mb-2" id="success-title">Registration Complete!</h3>
                         <p class="text-slate-400 text-sm sm:text-base" id="success-text">Your NIP-05 identifier is:</p>
-                        <p class="text-amber-400 font-mono text-sm sm:text-lg break-all mt-2" id="registeredNip05"></p>
+                        <p class="text-[#6C27FF] font-mono text-sm sm:text-lg break-all mt-2" id="registeredNip05"></p>
                         <button
                             type="button"
                             id="newRegistrationBtn"
@@ -289,13 +304,13 @@
             en: {
                 title: "NIP-05 Register",
                 subtitle: "Get your Nostr identifier",
+                faqTitle: "FAQ",
                 labelUsername: "NIP-05 Username",
-                helpUsername: "1-30 characters, letters, numbers, _ and -",
+                usernamePlaceholder: "username",
                 labelPubkey: "Public Key (npub)",
                 labelHexkey: "Public Key (hex)",
                 hexPlaceholder: "Hexadecimal will appear here...",
                 copySuccess: "Copied!",
-                labelFee: "Registration fee",
                 btnProceed: "Proceed to Payment",
                 btnProcessing: "Processing...",
                 availableYes: "✓ Available",
@@ -333,13 +348,13 @@
             es: {
                 title: "Registro NIP-05",
                 subtitle: "Obtén tu identificador Nostr",
+                faqTitle: "FAQ",
                 labelUsername: "Usuario NIP-05",
-                helpUsername: "1-30 caracteres, letras, números, _ y -",
+                usernamePlaceholder: "nombre de usuario",
                 labelPubkey: "Clave Pública (npub)",
                 labelHexkey: "Clave Pública (hex)",
                 hexPlaceholder: "El formato hexadecimal aparecerá aquí...",
                 copySuccess: "¡Copiado!",
-                labelFee: "Tarifa de registro",
                 btnProceed: "Proceder al Pago",
                 btnProcessing: "Procesando...",
                 availableYes: "✓ Disponible",
@@ -376,7 +391,14 @@
             }
         };
 
-        let currentLanguage = localStorage.getItem('language') || 'en';
+        let currentLanguage = localStorage.getItem('language') || (navigator.language || navigator.userLanguage || 'en').split('-')[0];
+        if (!['en', 'es'].includes(currentLanguage)) {
+            currentLanguage = 'en';
+        }
+
+        const langDropdown = document.getElementById('langDropdown');
+        const langMenu = document.getElementById('langMenu');
+        const currentLangSpan = document.getElementById('currentLang');
 
         function setLanguage(lang) {
             currentLanguage = lang;
@@ -384,14 +406,14 @@
 
             document.getElementById('title').textContent = translations[lang].title;
             document.getElementById('subtitle').textContent = translations[lang].subtitle;
+            document.getElementById('faqTitle').textContent = translations[lang].faqTitle;
             document.getElementById('label-username').textContent = translations[lang].labelUsername;
-            document.getElementById('help-username').textContent = translations[lang].helpUsername;
+            document.getElementById('username').placeholder = translations[lang].usernamePlaceholder;
             document.getElementById('label-pubkey').textContent = translations[lang].labelPubkey;
             document.getElementById('label-hexkey').textContent = translations[lang].labelHexkey;
             document.getElementById('hexkey').placeholder = translations[lang].hexPlaceholder;
             const hexHidden = document.getElementById('hexSection') && document.getElementById('hexSection').classList.contains('hidden');
             document.getElementById('toggleHexText').textContent = hexHidden ? translations[lang].toggleHexShow : translations[lang].toggleHexHide;
-            document.getElementById('label-fee').textContent = translations[lang].labelFee;
             document.getElementById('btnText').textContent = translations[lang].btnProceed;
             document.getElementById('btnLoadingText').textContent = translations[lang].btnProcessing;
             document.getElementById('payment-title-text').textContent = translations[lang].paymentTitle;
@@ -415,17 +437,34 @@
             document.getElementById('whyBenefit3').textContent = translations[lang].whyBenefit3;
             document.getElementById('whyDesc3').textContent = translations[lang].whyDesc3;
 
-            // Update language buttons
-            document.getElementById('langEN').className = currentLanguage === 'en' ? 'px-3 py-1 rounded bg-amber-500 text-white text-sm font-semibold' : 'px-3 py-1 rounded bg-slate-600 text-white text-sm font-semibold';
-            document.getElementById('langES').className = currentLanguage === 'es' ? 'px-3 py-1 rounded bg-amber-500 text-white text-sm font-semibold' : 'px-3 py-1 rounded bg-slate-600 text-white text-sm font-semibold';
+            // Update language dropdown
+            currentLangSpan.textContent = lang.toUpperCase();
+            document.getElementById('langEN').className = lang === 'en' ? 'w-full px-3 py-1.5 sm:py-2 text-xs sm:text-sm text-left hover:bg-slate-600 transition-colors text-white bg-[#6C27FF]' : 'w-full px-3 py-1.5 sm:py-2 text-xs sm:text-sm text-left hover:bg-slate-600 transition-colors text-white';
+            document.getElementById('langES').className = lang === 'es' ? 'w-full px-3 py-1.5 sm:py-2 text-xs sm:text-sm text-left hover:bg-slate-600 transition-colors text-white bg-[#6C27FF]' : 'w-full px-3 py-1.5 sm:py-2 text-xs sm:text-sm text-left hover:bg-slate-600 transition-colors text-white';
         }
 
         // Initialize language
         setLanguage(currentLanguage);
 
-        // Language buttons
-        document.getElementById('langEN').addEventListener('click', () => setLanguage('en'));
-        document.getElementById('langES').addEventListener('click', () => setLanguage('es'));
+        // Language dropdown
+        langDropdown.addEventListener('click', function(e) {
+            e.stopPropagation();
+            langMenu.classList.toggle('hidden');
+        });
+
+        document.addEventListener('click', function() {
+            langMenu.classList.add('hidden');
+        });
+
+        document.getElementById('langEN').addEventListener('click', function() {
+            setLanguage('en');
+            langMenu.classList.add('hidden');
+        });
+
+        document.getElementById('langES').addEventListener('click', function() {
+            setLanguage('es');
+            langMenu.classList.add('hidden');
+        });
 
         // NIP-05 information toggle
         const infoToggle = document.getElementById('infoToggle');
@@ -472,7 +511,6 @@
         const errorSection = document.getElementById('errorSection');
         const errorMsg = document.getElementById('errorMsg');
         const checkPaymentBtn = document.getElementById('checkPaymentBtn');
-        const priceAmount = document.getElementById('priceAmount');
 
         let currentInvoice = null;
         let username = '';
@@ -683,7 +721,6 @@
                 }
 
                 currentInvoice = data;
-                priceAmount.textContent = data.amount_sats + ' sats';
 
                 const qrContainer = document.getElementById('qrCode');
                 qrContainer.innerHTML = '<canvas id="qrCanvas" width="200" height="200"></canvas><img id="qrLogo" src="/static/images/nostr-logo-black.svg" alt="Nostr" class="qr-logo">';
@@ -708,6 +745,7 @@
 
                 invoiceText.textContent = data.payment_request;
                 form.classList.add('hidden');
+                document.getElementById('faqTitle').classList.add('hidden');
                 document.getElementById('infoSection').classList.add('hidden');
                 document.getElementById('howSection').classList.add('hidden');
                 document.getElementById('whySection').classList.add('hidden');
@@ -754,6 +792,7 @@
             successSection.classList.add('hidden');
             errorSection.classList.add('hidden');
             form.classList.remove('hidden');
+            document.getElementById('faqTitle').classList.remove('hidden');
             document.getElementById('infoSection').classList.remove('hidden');
             document.getElementById('howSection').classList.remove('hidden');
             document.getElementById('whySection').classList.remove('hidden');

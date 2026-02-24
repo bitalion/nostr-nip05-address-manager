@@ -7,7 +7,9 @@ import tempfile
 import shutil
 import fcntl
 import uuid
+import time
 from pathlib import Path
+import aiosqlite
 from dotenv import load_dotenv
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -37,6 +39,7 @@ BASE_DIR = Path(__file__).parent
 STATIC_DIR = BASE_DIR / "static"
 WELL_KNOWN_DIR = BASE_DIR / ".well-known"
 NOSTR_JSON_PATH = WELL_KNOWN_DIR / "nostr.json"
+DB_PATH = BASE_DIR / "registro.sqlite"
 
 STATIC_DIR.mkdir(exist_ok=True)
 
@@ -89,16 +92,94 @@ app.add_middleware(RequestIDMiddleware)
 
 WELL_KNOWN_DIR.mkdir(exist_ok=True)
 
-if not NOSTR_JSON_PATH.exists():
-    with open(NOSTR_JSON_PATH, "w") as f:
-        json.dump({"names": {}}, f)
-
 for tmp_file in WELL_KNOWN_DIR.glob("*.tmp.json"):
     try:
         tmp_file.unlink()
         logger.info(f"Cleaned orphan temp file: {tmp_file}")
     except OSError:
         pass
+
+
+async def init_db() -> None:
+    async with aiosqlite.connect(DB_PATH) as db:
+        await db.execute("""
+            CREATE TABLE IF NOT EXISTS registros (
+                id               INTEGER PRIMARY KEY AUTOINCREMENT,
+                nip05            TEXT    NOT NULL,
+                npub             TEXT    NOT NULL,
+                pubkey_hex       TEXT    NOT NULL,
+                lightning_invoice TEXT,
+                payment_hash     TEXT    UNIQUE,
+                pago_completado  INTEGER NOT NULL DEFAULT 0,
+                fecha_registro   INTEGER NOT NULL,
+                en_nostr_json    INTEGER NOT NULL DEFAULT 0
+            )
+        """)
+        await db.execute("CREATE INDEX IF NOT EXISTS idx_payment_hash ON registros(payment_hash)")
+        await db.execute("CREATE INDEX IF NOT EXISTS idx_nip05 ON registros(nip05)")
+        await db.commit()
+    logger.info(f"Database initialized at {DB_PATH}")
+
+
+async def db_insert_registro(
+    nip05: str,
+    npub: str,
+    pubkey_hex: str,
+    lightning_invoice: str | None = None,
+    payment_hash: str | None = None,
+    pago_completado: bool = False,
+    en_nostr_json: bool = False,
+) -> int:
+    async with aiosqlite.connect(DB_PATH) as db:
+        cursor = await db.execute(
+            """INSERT INTO registros
+               (nip05, npub, pubkey_hex, lightning_invoice, payment_hash,
+                pago_completado, fecha_registro, en_nostr_json)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
+            (
+                nip05, npub, pubkey_hex, lightning_invoice, payment_hash,
+                1 if pago_completado else 0,
+                int(time.time()),
+                1 if en_nostr_json else 0,
+            ),
+        )
+        await db.commit()
+        logger.info(f"DB insert registro id={cursor.lastrowid} nip05={nip05}")
+        return cursor.lastrowid
+
+
+async def db_update_pago(payment_hash: str, en_nostr_json: bool = True) -> None:
+    async with aiosqlite.connect(DB_PATH) as db:
+        await db.execute(
+            """UPDATE registros
+               SET pago_completado = 1, en_nostr_json = ?
+               WHERE payment_hash = ?""",
+            (1 if en_nostr_json else 0, payment_hash),
+        )
+        await db.commit()
+    logger.info(f"DB pago actualizado payment_hash={payment_hash[:16]}… en_nostr_json={en_nostr_json}")
+
+
+http_client: httpx.AsyncClient | None = None
+
+
+@app.on_event("startup")
+async def startup() -> None:
+    global http_client
+    http_client = httpx.AsyncClient(timeout=30.0)
+    await init_db()
+    # Initialize nostr.json only after the DB is ready to avoid a partially
+    # functional state if DB initialization fails
+    if not NOSTR_JSON_PATH.exists():
+        with open(NOSTR_JSON_PATH, "w") as f:
+            json.dump({"names": {}}, f)
+
+
+@app.on_event("shutdown")
+async def shutdown() -> None:
+    global http_client
+    if http_client:
+        await http_client.aclose()
 
 
 def convert_npub_to_hex(npub: str) -> str:
@@ -119,7 +200,7 @@ def convert_npub_to_hex(npub: str) -> str:
         raise ValueError("Key must be npub or 64-character hex")
 
 
-NOSTR_JSON_BACKUP = NOSTR_JSON_PATH.with_suffix(".json.bak")
+NOSTR_JSON_BACKUP = BASE_DIR / "nostr.json.bak"  # outside .well-known to avoid public exposure
 
 
 def load_nostr_json() -> dict:
@@ -146,6 +227,9 @@ def load_nostr_json() -> dict:
 
 
 def save_nostr_json(data: dict) -> None:
+    if not isinstance(data.get("names"), dict):
+        raise ValueError("Invalid nostr.json structure: 'names' must be a dict")
+
     if NOSTR_JSON_PATH.exists():
         shutil.copy2(NOSTR_JSON_PATH, NOSTR_JSON_BACKUP)
 
@@ -167,29 +251,11 @@ def save_nostr_json(data: dict) -> None:
 LOCK_FILE = NOSTR_JSON_PATH.with_suffix(".lock")
 
 
-def add_nip05_entry(username: str, pubkey_hex: str) -> None:
-    lock_fd = None
-    try:
-        lock_fd = os.open(str(LOCK_FILE), os.O_CREAT | os.O_RDWR)
-        fcntl.flock(lock_fd, fcntl.LOCK_EX)
-        try:
-            data = load_nostr_json()
-            if "names" not in data:
-                data["names"] = {}
-            data["names"][username] = pubkey_hex
-            save_nostr_json(data)
-            logger.info(f"Added NIP-05 entry for user: {username}")
-        finally:
-            fcntl.flock(lock_fd, fcntl.LOCK_UN)
-    finally:
-        if lock_fd is not None:
-            os.close(lock_fd)
-
 
 def check_nip05_available(nip05: str) -> bool:
     lock_fd = None
     try:
-        lock_fd = os.open(str(LOCK_FILE), os.O_CREAT | os.O_RDONLY)
+        lock_fd = os.open(str(LOCK_FILE), os.O_CREAT | os.O_RDWR)
         fcntl.flock(lock_fd, fcntl.LOCK_SH)
         try:
             data = load_nostr_json()
@@ -268,7 +334,7 @@ class CheckPaymentRequest(ValidatedPubkeyMixin, ValidatedUsernameMixin, BaseMode
     @field_validator('payment_hash')
     @classmethod
     def validate_payment_hash(cls, v: str) -> str:
-        if not re.match(r'^[a-fA-F0-9]{1,128}$', v):
+        if not re.match(r'^[a-fA-F0-9]{64}$', v):
             raise ValueError('Invalid payment hash format')
         return v
 
@@ -330,48 +396,56 @@ async def create_invoice(request: Request, data: NIP05Request):
     if not LNURL or not LNKEY:
         raise HTTPException(status_code=500, detail="Lightning payment not configured")
 
-    async with httpx.AsyncClient() as client:
-        try:
-            response = await client.post(
-                f"{LNURL}/api/v1/payments",
-                headers={"X-Api-Key": LNKEY, "Content-Type": "application/json"},
-                json={
-                    "out": False,
-                    "amount": INVOICE_AMOUNT_SATS,
-                    "memo": f"NIP-05: {username}@{DOMAIN}",
-                },
-                timeout=30.0
-            )
-            if response.status_code not in (200, 201):
-                raise HTTPException(status_code=500, detail=f"Failed to create invoice: {response.status_code} {response.text}")
+    try:
+        response = await http_client.post(
+            f"{LNURL}/api/v1/payments",
+            headers={"X-Api-Key": LNKEY, "Content-Type": "application/json"},
+            json={
+                "out": False,
+                "amount": INVOICE_AMOUNT_SATS,
+                "memo": f"NIP-05: {username}@{DOMAIN}",
+            },
+        )
+        if response.status_code not in (200, 201):
+            logger.error(f"LNbits invoice creation failed: status={response.status_code}")
+            raise HTTPException(status_code=500, detail="Failed to create invoice")
 
-            invoice_data = response.json()
-            logger.info(f"LNbits invoice created for {username}@{DOMAIN}")
+        invoice_data = response.json()
+        logger.info(f"LNbits invoice created for {username}@{DOMAIN}")
 
-            payment_request = (
-                invoice_data.get("payment_request") or
-                invoice_data.get("bolt11") or
-                invoice_data.get("pr")
-            )
+        payment_request = (
+            invoice_data.get("payment_request") or
+            invoice_data.get("bolt11") or
+            invoice_data.get("pr")
+        )
 
-            payment_hash = (
-                invoice_data.get("payment_hash") or
-                invoice_data.get("checking_id") or
-                invoice_data.get("id")
-            )
+        payment_hash = (
+            invoice_data.get("payment_hash") or
+            invoice_data.get("checking_id") or
+            invoice_data.get("id")
+        )
 
-            if not payment_request:
-                raise HTTPException(status_code=500, detail="No payment request in invoice data")
+        if not payment_request:
+            raise HTTPException(status_code=500, detail="No payment request in invoice data")
 
-            return {
-                "payment_request": payment_request,
-                "payment_hash": payment_hash,
-                "amount_sats": INVOICE_AMOUNT_SATS,
-                "username": username,
-                "pubkey": pubkey_hex
-            }
-        except httpx.RequestError as e:
-            raise HTTPException(status_code=500, detail=f"Connection error: {str(e)}")
+        await db_insert_registro(
+            nip05=f"{username}@{DOMAIN}",
+            npub=data.pubkey,
+            pubkey_hex=pubkey_hex,
+            lightning_invoice=payment_request,
+            payment_hash=payment_hash,
+        )
+
+        return {
+            "payment_request": payment_request,
+            "payment_hash": payment_hash,
+            "amount_sats": INVOICE_AMOUNT_SATS,
+            "username": username,
+            "pubkey": pubkey_hex
+        }
+    except httpx.RequestError as e:
+        logger.error(f"LNbits connection error in create_invoice: {e}")
+        raise HTTPException(status_code=500, detail="Connection error communicating with payment provider")
 
 
 @app.post("/api/check-payment")
@@ -384,40 +458,40 @@ async def check_payment(request: Request, data: CheckPaymentRequest):
     pubkey_hex = convert_npub_to_hex(data.pubkey)
     payment_hash = data.payment_hash
 
-    async with httpx.AsyncClient() as client:
-        try:
-            response = await client.get(
-                f"{LNURL}/api/v1/payments/{payment_hash}",
-                headers={"X-Api-Key": LNKEY},
-                timeout=30.0
-            )
-            if response.status_code != 200:
-                return {"paid": False}
+    try:
+        response = await http_client.get(
+            f"{LNURL}/api/v1/payments/{payment_hash}",
+            headers={"X-Api-Key": LNKEY},
+        )
+        if response.status_code != 200:
+            return {"paid": False}
 
-            payment_data = response.json()
-            
-            if payment_data.get("paid"):
-                memo = payment_data.get("memo") or payment_data.get("description") or ""
-                
-                if memo:
-                    expected_memo = f"NIP-05: {username}@{DOMAIN}"
-                    if not memo.startswith("NIP-05:"):
-                        logger.warning(f"Payment hash {payment_hash[:16]}... has unexpected memo: {memo}")
-                        return {"paid": False}
-                    
-                    if memo != expected_memo:
-                        logger.warning(f"Payment memo mismatch: expected '{expected_memo}', got '{memo}'")
-                        return {"paid": False}
-                else:
-                    logger.info(f"Payment hash {payment_hash[:16]}... has no memo, accepting (LNbits may not support memo in payment response)")
-                
-                success = check_and_add_nip05_entry(username, pubkey_hex)
-                if success:
-                    return {"paid": True}
-                return {"paid": False, "error": "Username already registered"}
-            return {"paid": False}
-        except httpx.RequestError:
-            return {"paid": False}
+        payment_data = response.json()
+
+        if payment_data.get("paid"):
+            memo = payment_data.get("memo") or payment_data.get("description") or ""
+
+            if memo:
+                expected_memo = f"NIP-05: {username}@{DOMAIN}"
+                if not memo.startswith("NIP-05:"):
+                    logger.warning(f"Payment hash {payment_hash[:16]}... has unexpected memo: {memo}")
+                    return {"paid": False}
+
+                if memo != expected_memo:
+                    logger.warning(f"Payment memo mismatch: expected '{expected_memo}', got '{memo}'")
+                    return {"paid": False}
+            else:
+                logger.info(f"Payment hash {payment_hash[:16]}... has no memo, accepting (LNbits may not support memo in payment response)")
+
+            success = check_and_add_nip05_entry(username, pubkey_hex)
+            if success:
+                await db_update_pago(payment_hash, en_nostr_json=True)
+                return {"paid": True}
+            return {"paid": False, "error": "Username already registered"}
+        return {"paid": False}
+    except httpx.RequestError as e:
+        logger.error(f"LNbits connection error in check_payment: {e}")
+        return {"paid": False}
 
 
 @app.post("/api/register")
@@ -436,7 +510,35 @@ async def register_nip05(data: NIP05Request, request: Request):
     if not check_and_add_nip05_entry(username, pubkey_hex):
         raise HTTPException(status_code=400, detail="This NIP-05 identifier is already in use")
 
+    await db_insert_registro(
+        nip05=f"{username}@{DOMAIN}",
+        npub=data.pubkey,
+        pubkey_hex=pubkey_hex,
+        pago_completado=True,
+        en_nostr_json=True,
+    )
+
     return {"success": True, "nip05": f"{username}@{DOMAIN}"}
+
+
+@app.get("/api/ultimos-registros")
+@limiter.limit("30/minute")
+async def ultimos_registros(request: Request):
+    async with aiosqlite.connect(DB_PATH) as db:
+        db.row_factory = aiosqlite.Row
+        cursor = await db.execute(
+            "SELECT nip05, npub, pago_completado, en_nostr_json FROM registros ORDER BY id DESC LIMIT 5"
+        )
+        rows = await cursor.fetchall()
+    return [
+        {
+            "nip05": row["nip05"],
+            "npub": row["npub"],
+            "en_nostr_json": bool(row["en_nostr_json"]),
+            "pago_completado": bool(row["pago_completado"]),
+        }
+        for row in rows
+    ]
 
 
 @app.get("/api/check-availability/{username}")

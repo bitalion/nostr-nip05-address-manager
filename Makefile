@@ -1,4 +1,4 @@
-.PHONY: help docker-start docker-stop docker-logs docker-ps docker-clean docker-rebuild
+.PHONY: help css-build css-watch docker-start docker-stop docker-logs docker-ps docker-clean docker-rebuild
 
 # Colors
 GREEN := \033[0;32m
@@ -13,6 +13,12 @@ help: ## Show this help
 	@grep -E '^docker-' Makefile | grep '##' | awk 'BEGIN {FS = ":.*?## "}; {printf "$(GREEN)%-20s$(NC) %s\n", $$1, $$2}'
 	@echo ""
 	@echo "Ex: make docker-start"
+
+css-build: ## Compile Tailwind CSS v4 (requires tailwindcss binary in PATH or TAILWINDCSS env var)
+	${TAILWINDCSS:-tailwindcss} -i static/css/input.css -o static/css/tailwind.css --minify
+
+css-watch: ## Watch and recompile Tailwind CSS on changes
+	${TAILWINDCSS:-tailwindcss} -i static/css/input.css -o static/css/tailwind.css --watch
 
 docker-start: ## Start Docker container
 	cd docker && make docker-start

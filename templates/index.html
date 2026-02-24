@@ -5,36 +5,59 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NIP-05 Registration</title>
     <link rel="icon" type="image/x-icon" href="/static/images/favicon.ico">
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+    <link rel="stylesheet" href="/static/css/tailwind.css">
     <style>
         @font-face {
             font-family: 'Inter';
-            src: url('/static/fonts/Inter-Regular.ttf') format('truetype');
-            font-weight: 400;
             font-style: normal;
+            font-weight: 100 900;
+            font-display: swap;
+            src: url('/static/fonts/inter-v20-latin-ext.woff2') format('woff2');
+            unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
         }
         @font-face {
             font-family: 'Inter';
-            src: url('/static/fonts/Inter-Medium.ttf') format('truetype');
-            font-weight: 500;
             font-style: normal;
+            font-weight: 100 900;
+            font-display: swap;
+            src: url('/static/fonts/inter-v20-latin.woff2') format('woff2');
+            unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
         }
-        @font-face {
-            font-family: 'Inter';
-            src: url('/static/fonts/Inter-SemiBold.ttf') format('truetype');
-            font-weight: 600;
-            font-style: normal;
-        }
-        @font-face {
-            font-family: 'Inter';
-            src: url('/static/fonts/Inter-Bold.ttf') format('truetype');
-            font-weight: 700;
-            font-style: normal;
+        html {
+            height: 100%;
         }
         body {
             font-family: 'Inter', sans-serif;
-            background: radial-gradient(ellipse at bottom right, #7c3aed 0%, #581c87 25%, #1e1b4b 50%, #0f172a 80%);
-            background-attachment: fixed;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            font-feature-settings: "cv02", "cv03", "cv11", "ss01";
+            background-color: #08080f;
+            height: 100%;
+            overflow: hidden;
+        }
+        #snapContainer {
+            height: 100%;
+            overflow-y: scroll;
+            scroll-snap-type: y mandatory;
+            scroll-behavior: smooth;
+        }
+        .snap-section {
+            min-height: 100vh;
+            scroll-snap-align: start;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+        .glow-orb {
+            position: fixed;
+            bottom: -120px;
+            right: -120px;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(109,40,255,0.18) 0%, rgba(109,40,255,0.06) 45%, transparent 70%);
+            pointer-events: none;
+            z-index: 0;
         }
         #qrCode {
             position: relative;
@@ -60,122 +83,97 @@
         }
     </style>
 </head>
-<body class="min-h-screen flex items-center justify-center p-3 sm:p-4">
-    <!-- Language Selector - Top Right -->
-    <div class="fixed top-3 right-3 sm:top-6 sm:right-6 z-50">
-        <div class="relative">
-            <button id="langDropdown" class="px-1.5 sm:px-3 py-1 rounded text-xs sm:text-sm bg-slate-600 text-white font-semibold flex items-center gap-1 hover:bg-slate-500 transition-colors">
-                <i class="fa-solid fa-globe"></i>
-                <span id="currentLang">EN</span>
-            </button>
-            <div id="langMenu" class="hidden absolute right-0 mt-1 sm:mt-2 bg-slate-700 rounded-lg shadow-xl border border-slate-600 py-1 min-w-[70px] sm:min-w-[90px] z-50">
-                <button id="langEN" class="w-full px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm text-left hover:bg-slate-600 transition-colors text-white" data-lang="en">EN</button>
-                <button id="langES" class="w-full px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm text-left hover:bg-slate-600 transition-colors text-white" data-lang="es">ES</button>
+<body>
+    <!-- Background glow -->
+    <div class="glow-orb" aria-hidden="true"></div>
+
+    <!-- Top Menu -->
+    <nav class="fixed top-0 left-0 right-0 z-50 bg-black/30 backdrop-blur-2xl border-b border-white/[0.06]">
+        <div class="w-full px-3 sm:px-6 py-2 sm:py-3 flex items-center justify-end gap-5 sm:gap-7">
+
+            <!-- Desktop menu items (hidden on mobile) -->
+            <a href="#" class="hidden sm:inline text-slate-400 text-sm font-medium hover:text-white transition-colors duration-200" id="menuNip05">NIP-05</a>
+            <a href="#" class="hidden sm:inline text-slate-400 text-sm font-medium hover:text-white transition-colors duration-200" id="menuFaq"><span id="menuFaqLabel">FAQ</span></a>
+            <a href="#" class="hidden sm:inline text-slate-400 text-sm font-medium hover:text-white transition-colors duration-200" id="menuSupport"><span id="menuSupportLabel">Soporte</span></a>
+
+            <!-- Status Indicator -->
+            <div class="flex items-center gap-1.5" id="statusContainer">
+                <span id="statusDot" class="w-2 h-2 flex-shrink-0 rounded-full bg-red-500 animate-pulse"></span>
+                <span id="statusText" class="text-xs text-slate-400 hidden sm:inline">Checking...</span>
             </div>
+
+            <!-- Language Selector -->
+            <div class="flex items-center gap-1.5">
+                <button id="langEN" class="text-xs font-semibold text-white transition-colors duration-200" data-lang="en">EN</button>
+                <span class="text-slate-600 text-xs select-none">/</span>
+                <button id="langES" class="text-xs font-semibold text-slate-500 hover:text-white transition-colors duration-200" data-lang="es">ES</button>
+            </div>
+
+            <!-- Hamburger button (mobile only) -->
+            <button id="mobileMenuBtn" class="sm:hidden flex items-center justify-center w-8 h-8 text-white hover:text-[#6C27FF] transition-colors">
+                <i id="hamburgerIcon" class="fa-solid fa-bars text-base"></i>
+            </button>
         </div>
+
+        <!-- Mobile dropdown -->
+        <div id="mobileMenu" class="hidden sm:hidden border-t border-white/[0.06] bg-black/60 backdrop-blur-2xl px-4 py-2">
+            <a href="#" id="menuNip05M" class="flex items-center gap-3 text-white text-sm font-medium hover:text-[#6C27FF] transition-colors py-2.5 border-b border-slate-700/40">
+                <i class="fa-solid fa-at w-4 text-center text-[#6C27FF]"></i><span>NIP-05</span>
+            </a>
+            <a href="#" id="menuFaqM" class="flex items-center gap-3 text-white text-sm font-medium hover:text-[#6C27FF] transition-colors py-2.5 border-b border-slate-700/40">
+                <i class="fa-solid fa-circle-question w-4 text-center text-slate-400"></i><span id="menuFaqLabelM">FAQ</span>
+            </a>
+            <a href="#" id="menuSupportM" class="flex items-center gap-3 text-white text-sm font-medium hover:text-[#6C27FF] transition-colors py-2.5">
+                <i class="fa-solid fa-headset w-4 text-center text-slate-400"></i><span id="menuSupportLabelM">Soporte</span>
+            </a>
+        </div>
+    </nav>
+
+    <div id="snapContainer">
+
+        <!-- Sección 1: Registro NIP-05 -->
+        <section id="section-nip05" class="snap-section justify-center pt-14 sm:pt-16">
+
+    <div class="w-full max-w-2xl mx-auto px-4">
+    <!-- Hero text -->
+    <div id="heroSection" class="text-center mb-6 sm:mb-8">
+        <p class="text-2xl sm:text-3xl md:text-4xl font-light text-slate-400 tracking-tight leading-[1.15]">
+            <span id="heroPrefix">Registra tu </span><span class="bg-gradient-to-r from-violet-400 to-violet-200 bg-clip-text text-transparent font-extrabold">NIP-05</span>
+        </p>
+        <p class="mt-1 sm:mt-2">
+            <span id="heroMid" class="text-sm sm:text-base font-light text-slate-500 tracking-wide">en el dominio </span><span class="text-white text-lg sm:text-xl md:text-2xl font-bold tracking-tight">{{ domain }}</span>
+        </p>
     </div>
 
-    <div class="w-full max-w-2xl mb-20 sm:mb-24 relative">
-        <div class="bg-slate-800/50 backdrop-blur-xl rounded-xl sm:rounded-2xl shadow-2xl border border-slate-700/50 p-4 sm:p-6 md:p-8">
-            <div class="text-center mb-6 sm:mb-8">
-                <h1 class="text-xl sm:text-2xl md:text-3xl font-bold text-white" id="title">NIP-05 Registration</h1>
-                <p class="text-slate-400 mt-2 text-sm sm:text-base" id="subtitle">Get your Nostr identifier</p>
-            </div>
-
-            <!-- FAQ Section -->
-            <h2 class="text-lg sm:text-xl font-bold text-white mb-4" id="faqTitle">FAQ</h2>
-
-            <!-- NIP-05 Information Section -->
-            <div id="infoSection" class="mb-6 bg-slate-700/30 rounded-lg p-4 border border-slate-600/50">
-                <button id="infoToggle" type="button" class="w-full flex items-center justify-between text-left hover:text-[#6C27FF] transition-colors">
-                    <span class="text-slate-300 font-semibold flex items-center gap-2">
-                    <span class="text-white font-semibold text-sm mr-2">1</span>
-                        <span id="infoTitle">¿Qué es un NIP-05?</span>
-                    </span>
-                    <i id="infoIcon" class="fa-solid fa-chevron-down text-slate-400 transition-transform"></i>
-                </button>
-                <div id="infoContent" class="hidden mt-3 space-y-3 text-slate-400 text-sm">
-                    <p id="infoDesc1" class="leading-relaxed">
-                         Un NIP-05 es una especificación técnica (Nostr Implementation Possibility) que permite a los usuarios de Nostr asociar su clave pública (esa cadena larga de números y letras que empieza con "npub") con un identificador basado en internet, similar a una dirección de correo electrónico, como ejemplo@dominio.com
-                    </p>
-                </div>
-            </div>
-
-            <!-- Section: How does it work? -->
-            <div id="howSection" class="mb-6 bg-slate-700/30 rounded-lg p-4 border border-slate-600/50">
-                <button id="howToggle" type="button" class="w-full flex items-center justify-between text-left hover:text-[#6C27FF] transition-colors">
-                    <span class="text-slate-300 font-semibold flex items-center gap-2">
-                    <span class="text-white font-semibold text-sm mr-2">2</span>
-                        <span id="howTitle">¿Cómo funciona?</span>
-                    </span>
-                    <i id="howIcon" class="fa-solid fa-chevron-down text-slate-400 transition-transform"></i>
-                </button>
-                <div id="howContent" class="hidden mt-3 space-y-3 text-slate-400 text-sm">
-                    <p id="howDesc" class="leading-relaxed">
-                        Es un proceso de verificación simple. Cuando configuras un NIP-05 en tu perfil, los clientes de Nostr (las aplicaciones que usas) verifican automáticamente que eres el dueño de esa identidad. Lo hacen buscando un archivo especial llamado nostr.json en el dominio que especificaste. Si en ese archivo aparece tu clave pública asociada a tu nombre de usuario, ¡la verificación es exitosa!
-                    </p>
-                </div>
-            </div>
-
-            <!-- Section: Why should you have one -->
-            <div id="whySection" class="mb-6 bg-slate-700/30 rounded-lg p-4 border border-slate-600/50">
-                <button id="whyToggle" type="button" class="w-full flex items-center justify-between text-left hover:text-[#6C27FF] transition-colors">
-                    <span class="text-slate-300 font-semibold flex items-center gap-2">
-                    <span class="text-white font-semibold text-sm mr-2">3</span>
-                        <span id="whyTitle">¿Por qué deberías tener uno?</span>
-                    </span>
-                    <i id="whyIcon" class="fa-solid fa-chevron-down text-slate-400 transition-transform"></i>
-                </button>
-                <div id="whyContent" class="hidden mt-3 space-y-4 text-slate-400 text-sm">
-                    <div>
-                        <p class="font-semibold text-slate-300 mb-1" id="whyBenefit1">Identidad legible</p>
-                        <p id="whyDesc1" class="leading-relaxed">
-                            En lugar de compartir una clave pública compleja como npub1..., puedes compartir algo tan sencillo como tunombre@ejemplo.com. Esto facilita que otros te encuentren y te agreguen.
-                        </p>
-                    </div>
-                    <div>
-                        <p class="font-semibold text-slate-300 mb-1" id="whyBenefit2">Señal de confianza</p>
-                        <p id="whyDesc2" class="leading-relaxed">
-                            Al poseer un NIP-05, obtienes un distintivo de verificación (un "check" o sello) en la mayoría de los clientes de Nostr. Esto es una señal para la comunidad de que eres un usuario real y no un bot o un impostor.
-                        </p>
-                    </div>
-                    <div>
-                        <p class="font-semibold text-slate-300 mb-1" id="whyBenefit3">Protección contra suplantación</p>
-                        <p id="whyDesc3" class="leading-relaxed">
-                            Si eres una persona conocida, una empresa o una marca, tener un NIP-05 en tu propio dominio (ej. ceo@miempresa.com) es la mejor manera de demostrar que la cuenta de Nostr te pertenece auténticamente, blindándola contra la suplantación de identidad.
-                        </p>
-                    </div>
-                </div>
-            </div>
-
-            <form id="registrationForm" class="space-y-6">
+            <!-- Registration Section -->
+            <div id="registrationSection" class="mb-6">
+                
+                <form id="registrationForm" class="space-y-6">
                 <div>
-                    <label for="username" class="block text-xs sm:text-sm font-medium text-slate-300 mb-2" id="label-username">
-                        NIP-05 Username
-                    </label>
-                    <div class="relative flex">
+                    <div class="flex items-center justify-between mb-2">
+                        <label for="username" class="block text-[10px] sm:text-xs font-semibold text-slate-400 uppercase tracking-widest" id="label-username">
+                            NIP-05 Username
+                        </label>
+                        <span class="text-[10px] font-medium text-slate-500 tracking-wide">{{ price_sats }} ⚡</span>
+                    </div>
+                    <div class="relative">
                         <input
                             type="text"
                             id="username"
                             name="username"
                             required
                             maxlength="30"
-                            class="flex-1 min-w-0 px-2 sm:px-4 py-2 sm:py-3 bg-slate-900/50 border border-slate-600 rounded-l-lg text-white text-xs sm:text-base placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#6C27FF] focus:border-transparent transition-all"
+                            class="w-full pl-4 pr-40 py-2.5 sm:py-3 bg-white/5 border border-white/10 rounded-xl text-white text-sm placeholder-slate-500 focus:outline-none focus:border-violet-500/50 focus:bg-white/[0.08] transition-all"
                             placeholder="username"
                         >
-                        <span class="px-1 sm:px-4 py-2 sm:py-3 bg-[#6C27FF] border border-slate-600 border-l-0 text-white text-xs sm:text-base font-semibold whitespace-nowrap flex-shrink-0">
-                            @{{ domain }}
-                        </span>
-                        <span class="px-1 sm:px-4 py-2 sm:py-3 bg-[#6C27FF] border border-slate-600 border-l-0 rounded-r-lg text-white text-xs sm:text-base font-semibold whitespace-nowrap flex-shrink-0">
-                            {{ price_sats }} ⚡️
-                        </span>
+                        <span class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 text-sm pointer-events-none select-none whitespace-nowrap">@{{ domain }}</span>
                     </div>
                     <p id="availabilityMsg" class="text-xs mt-1 hidden"></p>
                 </div>
 
                 <div>
                     <div class="flex items-center justify-between mb-2">
-                        <label for="pubkey" class="block text-xs sm:text-sm font-medium text-slate-300" id="label-pubkey">
+                        <label for="pubkey" class="block text-[10px] sm:text-xs font-semibold text-slate-400 uppercase tracking-widest" id="label-pubkey">
                             Public Key (npub)
                         </label>
                         <a href="#" id="toggleHex" class="text-xs text-white hover:text-[#6C27FF] transition-colors">
@@ -187,14 +185,14 @@
                         id="pubkey"
                         name="pubkey"
                         required
-                        class="w-full px-3 sm:px-4 py-2 sm:py-3 bg-slate-900/50 border border-slate-600 rounded-lg text-white text-sm sm:text-base placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#6C27FF] focus:border-transparent transition-all"
+                        class="w-full px-4 py-2.5 sm:py-3 bg-white/5 border border-white/10 rounded-xl text-white text-sm placeholder-slate-500 focus:outline-none focus:border-violet-500/50 focus:bg-white/[0.08] transition-all"
                         placeholder="npub1..."
                     >
                     <p id="pubkeyStatus" class="text-xs mt-1 hidden"></p>
                 </div>
 
                 <div id="hexSection" class="hidden">
-                    <label for="hexkey" class="block text-xs sm:text-sm font-medium text-slate-300 mb-2" id="label-hexkey">
+                    <label for="hexkey" class="block text-[10px] sm:text-xs font-semibold text-slate-400 uppercase tracking-widest mb-2" id="label-hexkey">
                         Hexadecimal Format
                     </label>
                     <div class="flex gap-2">
@@ -202,13 +200,13 @@
                             type="text"
                             id="hexkey"
                             readonly
-                            class="flex-1 px-3 sm:px-4 py-2 sm:py-3 bg-slate-900/50 border border-slate-600 rounded-lg text-white text-xs sm:text-sm placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#6C27FF] focus:border-transparent transition-all cursor-pointer break-all"
+                            class="flex-1 px-4 py-2.5 sm:py-3 bg-white/5 border border-white/10 rounded-xl text-white text-xs sm:text-sm placeholder-slate-500 focus:outline-none focus:border-violet-500/50 transition-all cursor-pointer break-all"
                             placeholder="Hexadecimal will appear here..."
                         >
                         <button
                             type="button"
                             id="copyHexBtn"
-                            class="px-3 sm:px-4 py-2 sm:py-3 bg-slate-700 hover:bg-slate-600 text-white text-sm sm:text-base font-semibold rounded-lg transition-all disabled:opacity-50 flex-shrink-0"
+                            class="px-3 sm:px-4 py-2.5 sm:py-3 bg-white/5 hover:bg-white/10 border border-white/10 text-slate-400 hover:text-white rounded-xl transition-all disabled:opacity-30 flex-shrink-0"
                             disabled
                         >
                             <i class="fa-solid fa-copy"></i>
@@ -216,12 +214,12 @@
                     </div>
                 </div>
 
-                <hr class="border-slate-600">
+                <hr class="border-white/10">
 
                 <button
                     type="submit"
                     id="submitBtn"
-                    class="w-full py-2 sm:py-3 px-4 bg-gradient-to-r from-[#6C27FF] to-[#8B5CF6] hover:from-[#7C3AED] hover:to-[#A78BFA] text-white text-sm sm:text-base font-semibold rounded-lg transition-all transform hover:scale-[1.02]"
+                    class="block mx-auto w-52 py-3 px-4 bg-violet-600 hover:bg-violet-500 text-white text-sm font-semibold tracking-wide rounded-xl transition-colors duration-200"
                 >
                     <span id="btnText">Proceed to Payment</span>
                     <span id="btnLoading" class="hidden">
@@ -231,43 +229,41 @@
             </form>
 
             <div id="paymentSection" class="hidden mt-4 sm:mt-6">
-                <div class="border-t border-slate-700 pt-4 sm:pt-6">
-                    <h3 class="text-base sm:text-lg font-semibold text-white mb-3 sm:mb-4" id="payment-title">
-                        <i class="fa-brands fa-bitcoin text-[#6C27FF] mr-2"></i>
+                <div class="border-t border-white/10 pt-4 sm:pt-6">
+                    <h3 class="text-base sm:text-lg font-semibold tracking-tight text-white mb-4 sm:mb-5" id="payment-title">
+                        <i class="fa-brands fa-bitcoin text-violet-400 mr-2"></i>
                         <span id="payment-title-text">Lightning Payment</span>
                     </h3>
-                    <div class="bg-slate-900/50 rounded-lg p-3 sm:p-4 mb-3 sm:mb-4">
-                        <p class="text-slate-400 text-xs sm:text-sm mb-3" id="payment-scan">Scan this QR code to pay:</p>
-                        <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-                            <div id="qrCode" class="flex justify-center"></div>
-                            <div class="flex-1 w-full">
-                                <p class="text-xs text-slate-400 mb-2" id="invoiceLabel">Invoice:</p>
-                                <div 
-                                    id="invoiceWrapper" 
-                                    class="cursor-pointer bg-slate-800 hover:bg-slate-700 rounded-lg p-2 transition-colors"
-                                    onclick="copyInvoice()"
-                                >
-                                    <p class="text-xs text-slate-500 break-all font-mono" id="invoiceText"></p>
-                                </div>
-                                <p class="text-xs text-slate-500 mt-2 hidden" id="copyHint">
-                                    <i class="fa-solid fa-copy mr-1"></i>Tap to copy
-                                </p>
+                    <p class="text-slate-500 text-xs font-medium tracking-wide mb-4" id="payment-scan">Scan this QR code to pay:</p>
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-4 sm:mb-5">
+                        <div id="qrCode" class="flex justify-center"></div>
+                        <div class="flex-1 w-full">
+                            <p class="text-[10px] font-semibold text-slate-500 uppercase tracking-widest mb-2" id="invoiceLabel">Invoice:</p>
+                            <div
+                                id="invoiceWrapper"
+                                class="cursor-pointer bg-white/5 hover:bg-white/[0.08] border border-white/10 rounded-xl p-3 transition-colors"
+                                onclick="copyInvoice()"
+                            >
+                                <p class="text-xs text-slate-500 break-all font-mono" id="invoiceText"></p>
                             </div>
+                            <p class="text-xs text-slate-600 mt-2 hidden" id="copyHint">
+                                <i class="fa-solid fa-copy mr-1"></i>Tap to copy
+                            </p>
                         </div>
                     </div>
                     <button
                         id="checkPaymentBtn"
-                        class="w-full py-2 sm:py-3 px-4 bg-green-600 hover:bg-green-500 text-white text-sm sm:text-base font-semibold rounded-lg transition-all disabled:opacity-50"
+                        class="block mx-auto w-52 py-2.5 sm:py-3 px-4 bg-green-600 hover:bg-green-500 text-white text-sm font-semibold rounded-xl transition-colors duration-200 disabled:opacity-40"
                         disabled
                     >
                         <i class="fa-solid fa-circle-notch fa-spin mr-2"></i>
                         <span id="checkPaymentText">Waiting for payment...</span>
                     </button>
-                    <p class="text-xs text-slate-400 mt-2 text-center" id="payment-auto">The verification is automatic. After payment, it will appear here.</p>
+                    <p class="text-[11px] text-slate-500 mt-2 text-center leading-relaxed" id="payment-auto">The verification is automatic. After payment, it will appear here.</p>
                     <button
                         type="button"
                         id="backToFormBtn"
-                        class="w-full mt-3 py-2 sm:py-3 px-4 bg-slate-700 hover:bg-slate-600 text-white text-sm sm:text-base font-semibold rounded-lg transition-all"
+                        class="block mx-auto w-52 mt-3 py-2.5 sm:py-3 px-4 bg-white/5 hover:bg-white/10 border border-white/10 text-slate-300 text-sm font-semibold rounded-xl transition-colors duration-200"
                     >
                         <i class="fa-solid fa-arrow-left mr-2"></i><span id="backToFormText">Register another NIP-05</span>
                     </button>
@@ -280,13 +276,13 @@
                         <div class="inline-flex items-center justify-center w-12 sm:w-16 h-12 sm:h-16 rounded-full bg-green-500/20 mb-3 sm:mb-4">
                             <i class="fa-solid fa-check text-2xl sm:text-3xl text-green-400"></i>
                         </div>
-                        <h3 class="text-lg sm:text-xl font-bold text-white mb-2" id="success-title">Registration Complete!</h3>
-                        <p class="text-slate-400 text-sm sm:text-base" id="success-text">Your NIP-05 identifier is:</p>
-                        <p class="text-[#6C27FF] font-mono text-sm sm:text-lg break-all mt-2" id="registeredNip05"></p>
+                        <h3 class="text-xl sm:text-2xl font-bold tracking-tight text-white mb-2" id="success-title">Registration Complete!</h3>
+                        <p class="text-slate-400 text-xs sm:text-sm font-medium tracking-wide" id="success-text">Your NIP-05 identifier is:</p>
+                        <p class="text-violet-400 font-mono text-base sm:text-xl font-medium break-all mt-3 tracking-tight" id="registeredNip05"></p>
                         <button
                             type="button"
                             id="newRegistrationBtn"
-                            class="mt-4 py-2 sm:py-3 px-6 bg-slate-700 hover:bg-slate-600 text-white text-sm sm:text-base font-semibold rounded-lg transition-all"
+                            class="block mx-auto w-52 mt-4 py-2.5 sm:py-3 px-6 bg-white/5 hover:bg-white/10 border border-white/10 text-slate-300 text-sm font-semibold rounded-xl transition-colors duration-200"
                         >
                             <i class="fa-solid fa-plus mr-2"></i><span id="newRegistrationText">Register another NIP-05</span>
                         </button>
@@ -299,6 +295,88 @@
                     <p class="text-red-400 text-center text-sm sm:text-base break-words" id="errorMsg"></p>
                 </div>
             </div>
+            </div>
+
+            <!-- Support Section -->
+            <div id="supportSection">
+                <!-- Support content goes here -->
+            </div>
+    </div><!-- end centered wrapper -->
+
+        </section><!-- fin section-nip05 -->
+
+        <!-- Sección 2: Últimos registros -->
+        <section id="section-registrations" class="snap-section justify-center pt-14 sm:pt-16">
+    <div class="w-full max-w-2xl sm:max-w-4xl mx-auto px-3 sm:px-6">
+        <h2 class="text-base font-semibold tracking-tight text-slate-300 mb-4" id="lastRegsTitle">Últimos registros</h2>
+        <!-- Column headers -->
+        <div class="grid grid-cols-[1fr_1fr_2.5rem_2.5rem] sm:grid-cols-[1fr_2fr_2.5rem_2.5rem] gap-3 sm:gap-6 pb-2">
+            <p class="text-[10px] sm:text-[11px] font-semibold text-slate-400 uppercase tracking-widest" id="colHeaderNip05">NIP-05</p>
+            <p class="text-[10px] sm:text-[11px] font-semibold text-slate-400 uppercase tracking-widest" id="colHeaderPubkey">Clave pública</p>
+            <p class="text-[10px] sm:text-[11px] font-semibold text-slate-400 uppercase tracking-widest text-center" id="colHeaderPaid">Pagado</p>
+            <p class="text-[10px] sm:text-[11px] font-semibold text-slate-400 uppercase tracking-widest text-center" id="colHeaderStatus">Estado</p>
+        </div>
+        <!-- Rows -->
+        <div id="ultimosRegistros" class="divide-y divide-slate-700/50">
+            <div class="flex items-center gap-2 py-4 text-slate-500 text-sm">
+                <i class="fa-solid fa-circle-notch fa-spin text-slate-600 text-xs"></i>
+                <span>Cargando…</span>
+            </div>
+        </div>
+    </div>
+
+        </section><!-- fin section-registrations -->
+
+        <!-- Sección 3: FAQ -->
+        <section id="section-faq" class="snap-section pt-14 sm:pt-16">
+    <div class="flex-1 flex flex-col justify-center w-full max-w-2xl sm:max-w-4xl mx-auto px-3 sm:px-6 py-6 sm:py-8">
+        <h2 class="text-base font-semibold tracking-tight text-slate-300 mb-1" id="faqTitle">FAQ</h2>
+        <div class="divide-y divide-slate-700/50">
+
+            <!-- Question 1 -->
+            <div>
+                <button id="infoToggle" type="button" class="w-full flex items-center justify-between text-left py-4 group">
+                    <span class="text-white text-sm sm:text-base font-semibold group-hover:text-[#6C27FF] transition-colors pr-4 tracking-tight" id="infoTitle">¿Qué es un NIP-05?</span>
+                    <i id="infoIcon" class="fa-solid fa-chevron-down text-slate-400 text-xs flex-shrink-0 transition-transform duration-200"></i>
+                </button>
+                <div id="infoContent" class="hidden pb-5 text-slate-400 text-sm leading-7">
+                    <p id="infoDesc1">Un NIP-05 es una especificación técnica que permite a los usuarios de Nostr asociar su clave pública con un identificador basado en internet, similar a una dirección de correo electrónico.</p>
+                </div>
+            </div>
+
+            <!-- Question 2 -->
+            <div>
+                <button id="howToggle" type="button" class="w-full flex items-center justify-between text-left py-4 group">
+                    <span class="text-white text-sm sm:text-base font-semibold group-hover:text-[#6C27FF] transition-colors pr-4 tracking-tight" id="howTitle">¿Cómo funciona?</span>
+                    <i id="howIcon" class="fa-solid fa-chevron-down text-slate-400 text-xs flex-shrink-0 transition-transform duration-200"></i>
+                </button>
+                <div id="howContent" class="hidden pb-5 text-slate-400 text-sm leading-7">
+                    <p id="howDesc">Es un proceso de verificación simple. Los clientes de Nostr verifican automáticamente buscando un archivo especial llamado nostr.json en el dominio especificado.</p>
+                </div>
+            </div>
+
+            <!-- Question 3 -->
+            <div>
+                <button id="whyToggle" type="button" class="w-full flex items-center justify-between text-left py-4 group">
+                    <span class="text-white text-sm sm:text-base font-semibold group-hover:text-[#6C27FF] transition-colors pr-4 tracking-tight" id="whyTitle">¿Por qué deberías tener uno?</span>
+                    <i id="whyIcon" class="fa-solid fa-chevron-down text-slate-400 text-xs flex-shrink-0 transition-transform duration-200"></i>
+                </button>
+                <div id="whyContent" class="hidden pb-5 text-slate-400 text-sm space-y-4">
+                    <div>
+                        <p class="text-[10px] sm:text-[11px] font-semibold text-slate-400 uppercase tracking-widest mb-1" id="whyBenefit1">Identidad legible</p>
+                        <p id="whyDesc1" class="text-slate-400 text-sm leading-7">Puedes compartir algo tan sencillo como tunombre@ejemplo.com en lugar de una clave pública compleja.</p>
+                    </div>
+                    <div>
+                        <p class="text-[10px] sm:text-[11px] font-semibold text-slate-400 uppercase tracking-widest mb-1" id="whyBenefit2">Señal de confianza</p>
+                        <p id="whyDesc2" class="text-slate-400 text-sm leading-7">Obtienes un distintivo de verificación en la mayoría de los clientes de Nostr.</p>
+                    </div>
+                    <div>
+                        <p class="text-[10px] sm:text-[11px] font-semibold text-slate-400 uppercase tracking-widest mb-1" id="whyBenefit3">Protección contra suplantación</p>
+                        <p id="whyDesc3" class="text-slate-400 text-sm leading-7">Es la mejor manera de demostrar que tu cuenta de Nostr te pertenece auténticamente.</p>
+                    </div>
+                </div>
+            </div>
+
         </div>
     </div>
 
@@ -306,22 +384,26 @@
     <img
         src="/static/images/nostrich.png"
         alt="Nostrich"
-        class="hidden sm:block fixed bottom-0 right-0 object-contain pointer-events-none z-10 sm:w-[200px] sm:h-[200px] md:w-[300px] md:h-[300px] lg:w-[400px] lg:h-[400px] sm:opacity-70 md:opacity-90 lg:opacity-100"
+        class="hidden md:block fixed bottom-0 right-0 object-contain pointer-events-none z-10 w-[300px] h-[300px] opacity-80"
     >
 
     <!-- Footer -->
-    <footer class="fixed bottom-0 left-0 right-0 bg-slate-900/80 backdrop-blur-xl border-t border-slate-700/50 py-3 sm:py-4 px-4">
+    <footer class="border-t border-white/10 py-6 px-4 mt-auto">
         <div class="text-center flex flex-wrap items-center justify-center gap-2 sm:gap-4">
-            <span class="text-slate-400 text-xs sm:text-sm">
+            <span class="text-slate-600 text-xs">
                 <span id="footerText">Made with ❤️ by Cuba Bitcoin 2026</span>
             </span>
-            <span class="hidden sm:inline text-slate-600">|</span>
-            <a href="https://github.com/bitalion/nostr-nip05-address-manager" target="_blank" class="text-slate-400 text-xs sm:text-sm hover:text-[#6C27FF] transition-colors flex items-center gap-1">
+            <span class="text-slate-700 text-xs">·</span>
+            <a href="https://github.com/bitalion/nostr-nip05-address-manager" target="_blank" class="text-slate-600 text-xs hover:text-slate-400 transition-colors flex items-center gap-1">
                 <i class="fa-brands fa-github"></i>
                 <span id="sourceCodeText">Source Code</span>
             </a>
         </div>
     </footer>
+
+        </section><!-- fin section-faq -->
+
+    </div><!-- fin #snapContainer -->
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
     <script>
@@ -333,6 +415,10 @@
                 title: "NIP-05 Register",
                 subtitle: "Get your Nostr identifier",
                 faqTitle: "FAQ",
+                menuDirectory: "Directorio",
+                menuSupport: "Support",
+                statusOnline: "Online",
+                statusOffline: "Offline",
                 labelUsername: "NIP-05 Username",
                 usernamePlaceholder: "username",
                 labelPubkey: "Public Key (npub)",
@@ -359,6 +445,7 @@
                 errorTitle: "Error",
                 errorCreateInvoice: "Error creating invoice",
                 errorPaymentFailed: "Payment verification failed",
+                paymentExpired: "Invoice expired. Please start again.",
                 backToForm: "Register another NIP-05",
                 footer: "Made with ❤️ by Cuba Bitcoin 2026",
                 sourceCode: "Source Code",
@@ -372,12 +459,23 @@
                 whyBenefit2: "Trust signal",
                 whyDesc2: "By having a NIP-05, you get a verification badge (a \"check\" or seal) in most Nostr clients. This is a signal to the community that you are a real user and not a bot or imposter.",
                 whyBenefit3: "Protection against impersonation",
-                whyDesc3: "If you are a well-known person, company or brand, having a NIP-05 on your own domain (e.g. ceo@mycompany.com) is the best way to prove that your Nostr account authentically belongs to you, protecting it against identity theft."
+                whyDesc3: "If you are a well-known person, company or brand, having a NIP-05 on your own domain (e.g. ceo@mycompany.com) is the best way to prove that your Nostr account authentically belongs to you, protecting it against identity theft.",
+                heroPrefix: "Register your",
+                heroMid: "on the domain",
+                lastRegsTitle: "Latest registrations",
+                colPubkey: "Public key",
+                colStatus: "Status",
+                colPaid: "Paid",
+                noRegs: "No registrations yet."
             },
             es: {
                 title: "Registro NIP-05",
                 subtitle: "Obtén tu identificador Nostr",
                 faqTitle: "FAQ",
+                menuDirectory: "Directorio",
+                menuSupport: "Soporte",
+                statusOnline: "En línea",
+                statusOffline: "Sin conexión",
                 labelUsername: "Usuario NIP-05",
                 usernamePlaceholder: "nombre de usuario",
                 labelPubkey: "Clave Pública (npub)",
@@ -404,6 +502,7 @@
                 errorTitle: "Error",
                 errorCreateInvoice: "Error al crear la factura",
                 errorPaymentFailed: "Error en la verificación de pago",
+                paymentExpired: "Factura expirada. Por favor, comienza de nuevo.",
                 backToForm: "Registrar otro NIP-05",
                 footer: "Hecho con ❤️ por Cuba Bitcoin 2026",
                 sourceCode: "Código Fuente",
@@ -417,7 +516,14 @@
                 whyBenefit2: "Señal de confianza",
                 whyDesc2: "Al poseer un NIP-05, obtienes un distintivo de verificación (un \"check\" o sello) en la mayoría de los clientes de Nostr. Esto es una señal para la comunidad de que eres un usuario real y no un bot o un impostor.",
                 whyBenefit3: "Protección contra suplantación",
-                whyDesc3: "Si eres una persona conocida, una empresa o una marca, tener un NIP-05 en tu propio dominio (ej. ceo@miempresa.com) es la mejor manera de demostrar que la cuenta de Nostr te pertenece auténticamente, blindándola contra la suplantación de identidad."
+                whyDesc3: "Si eres una persona conocida, una empresa o una marca, tener un NIP-05 en tu propio dominio (ej. ceo@miempresa.com) es la mejor manera de demostrar que la cuenta de Nostr te pertenece auténticamente, blindándola contra la suplantación de identidad.",
+                heroPrefix: "Registra tu",
+                heroMid: "en el dominio",
+                lastRegsTitle: "Últimos registros",
+                colPubkey: "Clave pública",
+                colStatus: "Estado",
+                colPaid: "Pagado",
+                noRegs: "No hay registros aún."
             }
         };
 
@@ -426,16 +532,11 @@
             currentLanguage = 'en';
         }
 
-        const langDropdown = document.getElementById('langDropdown');
-        const langMenu = document.getElementById('langMenu');
-        const currentLangSpan = document.getElementById('currentLang');
 
         function setLanguage(lang) {
             currentLanguage = lang;
             localStorage.setItem('language', lang);
 
-            document.getElementById('title').textContent = translations[lang].title;
-            document.getElementById('subtitle').textContent = translations[lang].subtitle;
             document.getElementById('faqTitle').textContent = translations[lang].faqTitle;
             document.getElementById('label-username').textContent = translations[lang].labelUsername;
             document.getElementById('username').placeholder = translations[lang].usernamePlaceholder;
@@ -468,64 +569,143 @@
             document.getElementById('whyBenefit3').textContent = translations[lang].whyBenefit3;
             document.getElementById('whyDesc3').textContent = translations[lang].whyDesc3;
 
-            // Update language dropdown
-            currentLangSpan.textContent = lang.toUpperCase();
-            document.getElementById('langEN').className = lang === 'en' ? 'w-full px-3 py-1.5 sm:py-2 text-xs sm:text-sm text-left hover:bg-slate-600 transition-colors text-white bg-[#6C27FF]' : 'w-full px-3 py-1.5 sm:py-2 text-xs sm:text-sm text-left hover:bg-slate-600 transition-colors text-white';
-            document.getElementById('langES').className = lang === 'es' ? 'w-full px-3 py-1.5 sm:py-2 text-xs sm:text-sm text-left hover:bg-slate-600 transition-colors text-white bg-[#6C27FF]' : 'w-full px-3 py-1.5 sm:py-2 text-xs sm:text-sm text-left hover:bg-slate-600 transition-colors text-white';
+            // Update language selector
+            document.getElementById('langEN').className = lang === 'en' ? 'text-xs font-semibold text-white transition-colors duration-200' : 'text-xs font-semibold text-slate-500 hover:text-white transition-colors duration-200';
+            document.getElementById('langES').className = lang === 'es' ? 'text-xs font-semibold text-white transition-colors duration-200' : 'text-xs font-semibold text-slate-500 hover:text-white transition-colors duration-200';
+            
+            // Hero text
+            document.getElementById('heroPrefix').textContent = translations[lang].heroPrefix + ' ';
+            document.getElementById('heroMid').textContent = translations[lang].heroMid + ' ';
+
+            // Nav menu labels
+            document.getElementById('menuSupportLabel').textContent = translations[lang].menuSupport;
+            document.getElementById('menuSupportLabelM').textContent = translations[lang].menuSupport;
+
+            // Últimos registros headers
+            document.getElementById('lastRegsTitle').textContent = translations[lang].lastRegsTitle;
+            document.getElementById('colHeaderPubkey').textContent = translations[lang].colPubkey;
+            document.getElementById('colHeaderStatus').textContent = translations[lang].colStatus;
+            document.getElementById('colHeaderPaid').textContent = translations[lang].colPaid;
+
+            // Status
+            document.getElementById('statusText').textContent = translations[lang].statusOnline;
         }
 
         // Initialize language
         setLanguage(currentLanguage);
 
-        // Language dropdown
-        langDropdown.addEventListener('click', function(e) {
-            e.stopPropagation();
-            langMenu.classList.toggle('hidden');
+        // Check nostr.json status
+        const statusDot = document.getElementById('statusDot');
+        const statusText = document.getElementById('statusText');
+        
+        async function checkNostrJsonStatus() {
+            try {
+                const response = await fetch('/.well-known/nostr.json', { method: 'GET' });
+                if (response.ok) {
+                    statusDot.className = 'w-2 h-2 rounded-full bg-green-500';
+                    statusText.textContent = translations[currentLanguage].statusOnline;
+                } else {
+                    statusDot.className = 'w-2 h-2 rounded-full bg-red-500 animate-pulse';
+                    statusText.textContent = translations[currentLanguage].statusOffline;
+                }
+            } catch (error) {
+                statusDot.className = 'w-2 h-2 rounded-full bg-red-500 animate-pulse';
+                statusText.textContent = translations[currentLanguage].statusOffline;
+            }
+        }
+        
+        checkNostrJsonStatus();
+        setInterval(checkNostrJsonStatus, 30000);
+
+        document.addEventListener('click', function(event) {
+            // Close mobile menu when clicking outside
+            const mobileMenu = document.getElementById('mobileMenu');
+            if (!document.getElementById('mobileMenuBtn').contains(event.target)) {
+                mobileMenu.classList.add('hidden');
+                document.getElementById('hamburgerIcon').className = 'fa-solid fa-bars text-base';
+            }
         });
 
-        document.addEventListener('click', function() {
-            langMenu.classList.add('hidden');
+        // Hamburger toggle
+        document.getElementById('mobileMenuBtn').addEventListener('click', function(e) {
+            e.stopPropagation();
+            const mobileMenu = document.getElementById('mobileMenu');
+            const icon = document.getElementById('hamburgerIcon');
+            const isOpen = !mobileMenu.classList.contains('hidden');
+            mobileMenu.classList.toggle('hidden');
+            icon.className = isOpen ? 'fa-solid fa-bars text-base' : 'fa-solid fa-xmark text-base';
         });
+
+        function closeMobileMenu() {
+            document.getElementById('mobileMenu').classList.add('hidden');
+            document.getElementById('hamburgerIcon').className = 'fa-solid fa-bars text-base';
+        }
 
         document.getElementById('langEN').addEventListener('click', function() {
             setLanguage('en');
-            langMenu.classList.add('hidden');
         });
 
         document.getElementById('langES').addEventListener('click', function() {
             setLanguage('es');
-            langMenu.classList.add('hidden');
         });
 
-        // NIP-05 information toggle
-        const infoToggle = document.getElementById('infoToggle');
-        const infoContent = document.getElementById('infoContent');
-        const infoIcon = document.getElementById('infoIcon');
+        // Menu handlers
+        function scrollToSection(sectionId) {
+            const container = document.getElementById('snapContainer');
+            const section = document.getElementById(sectionId);
+            if (section && container) {
+                container.scrollTo({ top: section.offsetTop, behavior: 'smooth' });
+            }
+        }
 
-        infoToggle.addEventListener('click', function() {
-            infoContent.classList.toggle('hidden');
-            infoIcon.style.transform = infoContent.classList.contains('hidden') ? 'rotate(0deg)' : 'rotate(180deg)';
+        document.getElementById('menuNip05').addEventListener('click', function(e) {
+            e.preventDefault();
+            scrollToSection('section-nip05');
+            document.getElementById('username').focus();
         });
 
-        // "How does it work?" toggle
-        const howToggle = document.getElementById('howToggle');
-        const howContent = document.getElementById('howContent');
-        const howIcon = document.getElementById('howIcon');
-
-        howToggle.addEventListener('click', function() {
-            howContent.classList.toggle('hidden');
-            howIcon.style.transform = howContent.classList.contains('hidden') ? 'rotate(0deg)' : 'rotate(180deg)';
+        document.getElementById('menuFaq').addEventListener('click', function(e) {
+            e.preventDefault();
+            scrollToSection('section-faq');
         });
 
-        // "Why should you have one?" toggle
-        const whyToggle = document.getElementById('whyToggle');
-        const whyContent = document.getElementById('whyContent');
-        const whyIcon = document.getElementById('whyIcon');
-
-        whyToggle.addEventListener('click', function() {
-            whyContent.classList.toggle('hidden');
-            whyIcon.style.transform = whyContent.classList.contains('hidden') ? 'rotate(0deg)' : 'rotate(180deg)';
+        document.getElementById('menuSupport').addEventListener('click', function(e) {
+            e.preventDefault();
+            scrollToSection('section-nip05');
         });
+
+        // Mobile menu handlers
+        document.getElementById('menuNip05M').addEventListener('click', function(e) {
+            e.preventDefault();
+            closeMobileMenu();
+            scrollToSection('section-nip05');
+            document.getElementById('username').focus();
+        });
+        document.getElementById('menuSupportM').addEventListener('click', function(e) {
+            e.preventDefault();
+            closeMobileMenu();
+            scrollToSection('section-nip05');
+        });
+        document.getElementById('menuFaqM').addEventListener('click', function(e) {
+            e.preventDefault();
+            closeMobileMenu();
+            scrollToSection('section-faq');
+        });
+
+        // FAQ accordion helper
+        function setupFaqToggle(toggleId, contentId, iconId) {
+            const toggle = document.getElementById(toggleId);
+            const content = document.getElementById(contentId);
+            const icon = document.getElementById(iconId);
+            toggle.addEventListener('click', function() {
+                const isHidden = content.classList.toggle('hidden');
+                icon.style.transform = isHidden ? '' : 'rotate(180deg)';
+            });
+        }
+
+        setupFaqToggle('infoToggle', 'infoContent', 'infoIcon');
+        setupFaqToggle('howToggle',  'howContent',  'howIcon');
+        setupFaqToggle('whyToggle',  'whyContent',  'whyIcon');
 
         const form = document.getElementById('registrationForm');
         const usernameInput = document.getElementById('username');
@@ -547,6 +727,7 @@
         let username = '';
         let pubkeyHex = '';
         let paymentCheckInterval = null;
+        let paymentCheckTimeout = null;
         let isChecking = false;
 
         async function checkAvailability() {
@@ -694,6 +875,7 @@
                     paymentSection.classList.add('hidden');
                     successSection.classList.remove('hidden');
                     document.getElementById('registeredNip05').textContent = currentInvoice.username + '@' + DOMAIN;
+                    loadUltimosRegistros();
                 }
             } catch (err) {
                 console.error('Payment verification error:', err);
@@ -702,20 +884,32 @@
             }
         }
 
+        const PAYMENT_POLL_INTERVAL_MS = 2000;
+        const PAYMENT_POLL_TIMEOUT_MS = 10 * 60 * 1000; // 10 minutes, matches standard Lightning invoice expiry
+
         function startPaymentVerification() {
             clearInterval(paymentCheckInterval);
+            clearTimeout(paymentCheckTimeout);
             document.getElementById('checkPaymentText').textContent = translations[currentLanguage].checkPaymentWaiting;
             checkPaymentBtn.disabled = true;
 
-            // Check every 2 seconds
-            paymentCheckInterval = setInterval(verifyPayment, 2000);
-            // Check immediately
+            paymentCheckInterval = setInterval(verifyPayment, PAYMENT_POLL_INTERVAL_MS);
+
+            paymentCheckTimeout = setTimeout(function() {
+                stopPaymentVerification();
+                const checkPaymentText = document.getElementById('checkPaymentText');
+                checkPaymentText.textContent = translations[currentLanguage].paymentExpired;
+                checkPaymentBtn.disabled = false;
+            }, PAYMENT_POLL_TIMEOUT_MS);
+
             verifyPayment();
         }
 
         function stopPaymentVerification() {
             clearInterval(paymentCheckInterval);
+            clearTimeout(paymentCheckTimeout);
             paymentCheckInterval = null;
+            paymentCheckTimeout = null;
         }
 
         form.addEventListener('submit', async function(e) {
@@ -761,7 +955,7 @@
                 console.log('Payment Hash:', data.payment_hash);
 
                 if (!data.payment_request) {
-                    invoiceText.textContent = 'ERROR: No payment request received. Response: ' + JSON.stringify(data);
+                    invoiceText.textContent = translations[currentLanguage].errorCreateInvoice;
                     throw new Error('Empty payment request received');
                 }
 
@@ -776,10 +970,6 @@
 
                 invoiceText.textContent = data.payment_request;
                 form.classList.add('hidden');
-                document.getElementById('faqTitle').classList.add('hidden');
-                document.getElementById('infoSection').classList.add('hidden');
-                document.getElementById('howSection').classList.add('hidden');
-                document.getElementById('whySection').classList.add('hidden');
                 paymentSection.classList.remove('hidden');
                 
                 // Show copy hint
@@ -823,10 +1013,6 @@
             successSection.classList.add('hidden');
             errorSection.classList.add('hidden');
             form.classList.remove('hidden');
-            document.getElementById('faqTitle').classList.remove('hidden');
-            document.getElementById('infoSection').classList.remove('hidden');
-            document.getElementById('howSection').classList.remove('hidden');
-            document.getElementById('whySection').classList.remove('hidden');
             document.getElementById('copyHint').classList.add('hidden');
         }
 
@@ -844,8 +1030,11 @@
             const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
             
             if (isMobile) {
-                const encodedInvoice = encodeURIComponent(invoice);
-                window.location.href = `lightning:${encodedInvoice}`;
+                const a = document.createElement('a');
+                a.href = `lightning:${invoice}`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
             } else {
                 navigator.clipboard.writeText(invoice).then(() => {
                     showCopySuccess();
@@ -865,6 +1054,87 @@
                 hint.innerHTML = originalText;
             }, 2000);
         }
+
+        function maskNip05(nip05) {
+            const atIndex = nip05.indexOf('@');
+            if (atIndex === -1) return nip05;
+            const username = nip05.substring(0, atIndex);
+            const domain = nip05.substring(atIndex);
+            if (username.length <= 3) return '*'.repeat(username.length) + domain;
+            return '***' + username.substring(3) + domain;
+        }
+
+        function maskPubkey(pubkey) {
+            if (!pubkey || !pubkey.startsWith('npub1') || pubkey.length < 22) return pubkey;
+            const middle = pubkey.substring(13, pubkey.length - 8);
+            return 'npub1********' + middle + '********';
+        }
+
+        async function loadUltimosRegistros() {
+            const container = document.getElementById('ultimosRegistros');
+
+            function clearContainer() {
+                while (container.firstChild) container.removeChild(container.firstChild);
+            }
+
+            function makeStatusDot(active, titleActive, titleInactive) {
+                const span = document.createElement('span');
+                span.className = active
+                    ? 'w-2.5 h-2.5 rounded-full bg-green-500 inline-block flex-shrink-0'
+                    : 'w-2.5 h-2.5 rounded-full bg-red-500 inline-block flex-shrink-0';
+                span.title = active ? titleActive : titleInactive;
+                return span;
+            }
+
+            try {
+                const res = await fetch('/api/ultimos-registros');
+                const data = await res.json();
+                clearContainer();
+
+                if (!data.length) {
+                    const p = document.createElement('p');
+                    p.className = 'text-slate-500 text-sm py-4';
+                    p.textContent = translations[currentLanguage].noRegs;
+                    container.appendChild(p);
+                    return;
+                }
+
+                data.slice(0, 5).forEach(r => {
+                    const row = document.createElement('div');
+                    row.className = 'grid grid-cols-[1fr_1fr_2.5rem_2.5rem] sm:grid-cols-[1fr_2fr_2.5rem_2.5rem] gap-3 sm:gap-6 py-4 items-center';
+
+                    const nip05Cell = document.createElement('p');
+                    nip05Cell.className = 'text-white text-sm font-semibold tracking-tight truncate';
+                    nip05Cell.textContent = maskNip05(r.nip05);
+
+                    const pubkeyCell = document.createElement('p');
+                    pubkeyCell.className = 'text-slate-400 text-xs font-mono truncate sm:overflow-visible sm:whitespace-normal';
+                    pubkeyCell.textContent = maskPubkey(r.npub) || '';
+
+                    const paidCell = document.createElement('div');
+                    paidCell.className = 'flex justify-center';
+                    paidCell.appendChild(makeStatusDot(r.pago_completado, 'Payment completed', 'Payment pending'));
+
+                    const statusCell = document.createElement('div');
+                    statusCell.className = 'flex justify-center';
+                    statusCell.appendChild(makeStatusDot(r.en_nostr_json, 'Active in nostr.json', 'Not active in nostr.json'));
+
+                    row.appendChild(nip05Cell);
+                    row.appendChild(pubkeyCell);
+                    row.appendChild(paidCell);
+                    row.appendChild(statusCell);
+                    container.appendChild(row);
+                });
+            } catch (e) {
+                clearContainer();
+                const p = document.createElement('p');
+                p.className = 'text-slate-500 text-sm py-4';
+                p.textContent = 'Could not load registrations.';
+                container.appendChild(p);
+            }
+        }
+
+        loadUltimosRegistros();
     </script>
 </body>
 </html>

@@ -6,6 +6,7 @@ WORKDIR /app
 # Install required system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements
@@ -13,6 +14,17 @@ COPY requirements.txt .
 
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt --prefix=/install
+
+# Download Tailwind CSS v4 standalone CLI
+RUN curl -fsSL https://github.com/tailwindlabs/tailwindcss/releases/download/v4.2.0/tailwindcss-linux-x64 \
+    -o /usr/local/bin/tailwindcss && chmod +x /usr/local/bin/tailwindcss
+
+# Copy source files needed for Tailwind class scanning
+COPY static/ static/
+COPY templates/ templates/
+
+# Compile Tailwind CSS
+RUN tailwindcss -i static/css/input.css -o static/css/tailwind.css --minify
 
 # Stage 2: Runtime
 FROM python:3.11-slim
@@ -31,7 +43,13 @@ COPY --from=builder /install /usr/local
 COPY main.py .
 COPY templates/ templates/
 COPY static/ static/
-COPY .well-known/ .well-known/
+
+# Create an empty .well-known placeholder — runtime data is injected via volume mount,
+# never baked into the image
+RUN mkdir -p .well-known && echo '{"names":{}}' > .well-known/nostr.json
+
+# Copy compiled Tailwind CSS from builder
+COPY --from=builder /app/static/css/tailwind.css static/css/tailwind.css
 
 # Set environment variables
 ENV PYTHONUNBUFFERED=1 \
@@ -45,7 +63,7 @@ USER appuser
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:8000/ || exit 1
+    CMD curl -f http://localhost:8000/health || exit 1
 
 # Expose port
 EXPOSE 8000

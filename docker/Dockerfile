@@ -15,9 +15,13 @@ COPY requirements.txt .
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt --prefix=/install
 
-# Download Tailwind CSS v4 standalone CLI
+# Download Tailwind CSS v4 standalone CLI and verify SHA256 checksum
+# Hash pinned to v4.2.0 tailwindcss-linux-x64 — update alongside the version tag
 RUN curl -fsSL https://github.com/tailwindlabs/tailwindcss/releases/download/v4.2.0/tailwindcss-linux-x64 \
-    -o /usr/local/bin/tailwindcss && chmod +x /usr/local/bin/tailwindcss
+    -o /usr/local/bin/tailwindcss && \
+    echo "8f65e2d21c675f1e8d265219979d17d10634c1f553a2f583265b7edb28726432  /usr/local/bin/tailwindcss" \
+    | sha256sum -c - && \
+    chmod +x /usr/local/bin/tailwindcss
 
 # Copy source files needed for Tailwind class scanning
 COPY static/ static/

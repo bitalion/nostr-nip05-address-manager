@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NIP-05 Registration</title>
-    <link rel="icon" type="image/x-icon" href="/static/images/favicon.ico">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="stylesheet" href="/static/css/vendor/all.min.css">
     <link rel="stylesheet" href="/static/css/tailwind.css">
     <style>
         @font-face {
@@ -94,7 +94,7 @@
             <!-- Desktop menu items (hidden on mobile) -->
             <a href="#" class="hidden sm:inline text-slate-400 text-sm font-medium hover:text-white transition-colors duration-200" id="menuNip05">NIP-05</a>
             <a href="#" class="hidden sm:inline text-slate-400 text-sm font-medium hover:text-white transition-colors duration-200" id="menuFaq"><span id="menuFaqLabel">FAQ</span></a>
-            <a href="#" class="hidden sm:inline text-slate-400 text-sm font-medium hover:text-white transition-colors duration-200" id="menuSupport"><span id="menuSupportLabel">Soporte</span></a>
+            <a href="#" class="hidden sm:inline text-slate-400 text-sm font-medium hover:text-white transition-colors duration-200" id="menuSupport"><span id="menuSupportLabel">Contacto</span></a>
 
             <!-- Status Indicator -->
             <div class="flex items-center gap-1.5" id="statusContainer">
@@ -124,7 +124,7 @@
                 <i class="fa-solid fa-circle-question w-4 text-center text-slate-400"></i><span id="menuFaqLabelM">FAQ</span>
             </a>
             <a href="#" id="menuSupportM" class="flex items-center gap-3 text-white text-sm font-medium hover:text-[#6C27FF] transition-colors py-2.5">
-                <i class="fa-solid fa-headset w-4 text-center text-slate-400"></i><span id="menuSupportLabelM">Soporte</span>
+                <i class="fa-solid fa-paper-plane w-4 text-center text-slate-400"></i><span id="menuSupportLabelM">Contacto</span>
             </a>
         </div>
     </nav>
@@ -242,7 +242,6 @@
                             <div
                                 id="invoiceWrapper"
                                 class="cursor-pointer bg-white/5 hover:bg-white/[0.08] border border-white/10 rounded-xl p-3 transition-colors"
-                                onclick="copyInvoice()"
                             >
                                 <p class="text-xs text-slate-500 break-all font-mono" id="invoiceText"></p>
                             </div>
@@ -377,6 +376,18 @@
                 </div>
             </div>
 
+            <!-- Question 4 -->
+            <div>
+                <button id="activationToggle" type="button" class="w-full flex items-center justify-between text-left py-4 group">
+                    <span class="text-white text-sm sm:text-base font-semibold group-hover:text-[#6C27FF] transition-colors pr-4 tracking-tight" id="activationTitle">¿Qué tiempo tarda en activarse mi NIP-05?</span>
+                    <i id="activationIcon" class="fa-solid fa-chevron-down text-slate-400 text-xs flex-shrink-0 transition-transform duration-200"></i>
+                </button>
+                <div id="activationContent" class="hidden pb-5 text-slate-400 text-sm leading-7">
+                    <p id="activationDesc">La activación de tu NIP-05 suele ser casi instantánea tras confirmar el pago. Sin embargo, debido a la propagación en la red, podría tardar unos minutos en reflejarse.</p>
+                    <p class="mt-3" id="activationDesc2">Si no lo ves activo de inmediato, verifica que tu cliente de Nostr esté correctamente conectado a los relays, ya que ellos son los encargados de validar la identidad. Si después de unos minutos el problema persiste, no dudes en contactarnos.</p>
+                </div>
+            </div>
+
         </div>
     </div>
 
@@ -387,25 +398,81 @@
         class="hidden md:block fixed bottom-0 right-0 object-contain pointer-events-none z-10 w-[300px] h-[300px] opacity-80"
     >
 
-    <!-- Footer -->
-    <footer class="border-t border-white/10 py-6 px-4 mt-auto">
-        <div class="text-center flex flex-wrap items-center justify-center gap-2 sm:gap-4">
-            <span class="text-slate-600 text-xs">
-                <span id="footerText">Made with ❤️ by Cuba Bitcoin 2026</span>
-            </span>
-            <span class="text-slate-700 text-xs">·</span>
-            <a href="https://github.com/bitalion/nostr-nip05-address-manager" target="_blank" class="text-slate-600 text-xs hover:text-slate-400 transition-colors flex items-center gap-1">
-                <i class="fa-brands fa-github"></i>
-                <span id="sourceCodeText">Source Code</span>
-            </a>
-        </div>
-    </footer>
-
         </section><!-- fin section-faq -->
+
+        <!-- Sección de Contacto -->
+        <section id="section-contact" class="snap-section pt-14 sm:pt-16 pb-8">
+            <div class="flex-1 flex flex-col justify-center w-full max-w-2xl sm:max-w-4xl mx-auto px-3 sm:px-6 py-6 sm:py-8">
+                <h2 class="text-base font-semibold tracking-tight text-slate-300 mb-6" id="contactTitle">Contacto</h2>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <!-- Nostr -->
+                    <a href="https://nostr.com/npub1huyn6ru55pv6l7p0sxvlu3vfpq7pan958sl4weft0kte6lvdvvksd5s34t" target="_blank" class="group relative flex flex-col items-center justify-center p-6 bg-gradient-to-br from-orange-500/20 to-orange-500/5 border border-orange-500/30 rounded-2xl hover:border-orange-500/60 hover:from-orange-500/30 hover:to-orange-500/10 transition-all duration-300">
+                        <div class="absolute inset-0 bg-orange-500/5 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                        <div class="relative z-10 flex items-center justify-center w-16 h-16 mb-4 bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl shadow-lg shadow-orange-500/20 group-hover:scale-110 group-hover:shadow-xl group-hover:shadow-orange-500/30 transition-all duration-300">
+                            <i class="fa-brands fa-nfc-directional text-3xl text-white"></i>
+                        </div>
+                        <div class="relative z-10 text-center">
+                            <p class="text-white font-bold text-base mb-1">Nostr</p>
+                            <p class="text-orange-400 text-sm font-medium">@Cuba_Bitcoin</p>
+                        </div>
+                    </a>
+                    
+                    <!-- Telegram -->
+                    <a href="https://t.me/Cuba_Bitcoin" target="_blank" class="group relative flex flex-col items-center justify-center p-6 bg-gradient-to-br from-[#229ED9]/20 to-[#229ED9]/5 border border-[#229ED9]/30 rounded-2xl hover:border-[#229ED9]/60 hover:from-[#229ED9]/30 hover:to-[#229ED9]/10 transition-all duration-300">
+                        <div class="absolute inset-0 bg-[#229ED9]/5 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                        <div class="relative z-10 flex items-center justify-center w-16 h-16 mb-4 bg-[#229ED9] rounded-2xl shadow-lg shadow-[#229ED9]/20 group-hover:scale-110 group-hover:shadow-xl group-hover:shadow-[#229ED9]/30 transition-all duration-300">
+                            <i class="fa-brands fa-telegram text-3xl text-white"></i>
+                        </div>
+                        <div class="relative z-10 text-center">
+                            <p class="text-white font-bold text-base mb-1">Telegram</p>
+                            <p class="text-[#229ED9] text-sm font-medium">@Cuba_Bitcoin</p>
+                        </div>
+                    </a>
+                    
+                    <!-- X / Twitter -->
+                    <a href="https://x.com/Cuba_BTC" target="_blank" class="group relative flex flex-col items-center justify-center p-6 bg-gradient-to-br from-white/10 to-white/5 border border-white/20 rounded-2xl hover:border-white/40 hover:from-white/15 hover:to-white/5 transition-all duration-300">
+                        <div class="absolute inset-0 bg-white/5 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                        <div class="relative z-10 flex items-center justify-center w-16 h-16 mb-4 bg-black rounded-2xl shadow-lg group-hover:scale-110 group-hover:shadow-xl transition-all duration-300">
+                            <i class="fa-brands fa-x-twitter text-3xl text-white"></i>
+                        </div>
+                        <div class="relative z-10 text-center">
+                            <p class="text-white font-bold text-base mb-1">X</p>
+                            <p class="text-slate-300 text-sm font-medium">@Cuba_BTC</p>
+                        </div>
+                    </a>
+                    
+                    <!-- Email -->
+                    <a href="mailto:cubabitcoin@gmail.com" class="group relative flex flex-col items-center justify-center p-6 bg-gradient-to-br from-violet-500/20 to-violet-500/5 border border-violet-500/30 rounded-2xl hover:border-violet-500/60 hover:from-violet-500/30 hover:to-violet-500/10 transition-all duration-300">
+                        <div class="absolute inset-0 bg-violet-500/5 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                        <div class="relative z-10 flex items-center justify-center w-16 h-16 mb-4 bg-gradient-to-br from-violet-500 to-violet-600 rounded-2xl shadow-lg shadow-violet-500/20 group-hover:scale-110 group-hover:shadow-xl group-hover:shadow-violet-500/30 transition-all duration-300">
+                            <i class="fa-regular fa-envelope text-3xl text-white"></i>
+                        </div>
+                        <div class="relative z-10 text-center">
+                            <p class="text-white font-bold text-base mb-1">Email</p>
+                            <p class="text-violet-400 text-sm font-medium">cubabitcoin@gmail.com</p>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="border-t border-white/10 py-6 px-4 bg-black/20">
+            <div class="text-center flex flex-wrap items-center justify-center gap-2 sm:gap-4">
+                <span class="text-slate-600 text-xs">
+                    <span id="footerText">Made with ❤️ by Cuba Bitcoin 2026</span>
+                </span>
+                <span class="text-slate-700 text-xs">·</span>
+                <a href="https://github.com/bitalion/nostr-nip05-address-manager" target="_blank" class="text-slate-600 text-xs hover:text-slate-400 transition-colors flex items-center gap-1">
+                    <i class="fa-brands fa-github"></i>
+                    <span id="sourceCodeText">Source Code</span>
+                </a>
+            </div>
+        </footer>
 
     </div><!-- fin #snapContainer -->
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
+    <script src="/static/js/qrious.min.js"></script>
     <script>
         const DOMAIN = "{{ domain }}";
 
@@ -415,8 +482,10 @@
                 title: "NIP-05 Register",
                 subtitle: "Get your Nostr identifier",
                 faqTitle: "FAQ",
-                menuDirectory: "Directorio",
-                menuSupport: "Support",
+                supportTitle: "Contact",
+                contactTitle: "Contact",
+                menuDirectory: "Directory",
+                menuSupport: "Contact",
                 statusOnline: "Online",
                 statusOffline: "Offline",
                 labelUsername: "NIP-05 Username",
@@ -446,6 +515,8 @@
                 errorCreateInvoice: "Error creating invoice",
                 errorPaymentFailed: "Payment verification failed",
                 paymentExpired: "Invoice expired. Please start again.",
+                invoicePending: "You have a pending invoice. Please complete the payment.",
+                invoiceAlreadyPaid: "This invoice has already been paid. Processing your registration...",
                 backToForm: "Register another NIP-05",
                 footer: "Made with ❤️ by Cuba Bitcoin 2026",
                 sourceCode: "Source Code",
@@ -460,6 +531,9 @@
                 whyDesc2: "By having a NIP-05, you get a verification badge (a \"check\" or seal) in most Nostr clients. This is a signal to the community that you are a real user and not a bot or imposter.",
                 whyBenefit3: "Protection against impersonation",
                 whyDesc3: "If you are a well-known person, company or brand, having a NIP-05 on your own domain (e.g. ceo@mycompany.com) is the best way to prove that your Nostr account authentically belongs to you, protecting it against identity theft.",
+                activationTitle: "How long does it take for my NIP-05 to activate?",
+                activationDesc: "Your NIP-05 activation is usually almost instantaneous after confirming payment. However, due to network propagation, it may take a few minutes to reflect.",
+                activationDesc2: "If you don't see it active immediately, make sure your Nostr client is properly connected to the relays, as they are responsible for validating the identity. If the problem persists after a few minutes, don't hesitate to contact us.",
                 heroPrefix: "Register your",
                 heroMid: "on the domain",
                 lastRegsTitle: "Latest registrations",
@@ -472,8 +546,10 @@
                 title: "Registro NIP-05",
                 subtitle: "Obtén tu identificador Nostr",
                 faqTitle: "FAQ",
+                supportTitle: "Contacto",
+                contactTitle: "Contacto",
                 menuDirectory: "Directorio",
-                menuSupport: "Soporte",
+                menuSupport: "Contacto",
                 statusOnline: "En línea",
                 statusOffline: "Sin conexión",
                 labelUsername: "Usuario NIP-05",
@@ -503,6 +579,8 @@
                 errorCreateInvoice: "Error al crear la factura",
                 errorPaymentFailed: "Error en la verificación de pago",
                 paymentExpired: "Factura expirada. Por favor, comienza de nuevo.",
+                invoicePending: "Tienes una factura pendiente. Por favor, completa el pago.",
+                invoiceAlreadyPaid: "Esta factura ya ha sido pagada. Procesando tu registro...",
                 backToForm: "Registrar otro NIP-05",
                 footer: "Hecho con ❤️ por Cuba Bitcoin 2026",
                 sourceCode: "Código Fuente",
@@ -517,6 +595,9 @@
                 whyDesc2: "Al poseer un NIP-05, obtienes un distintivo de verificación (un \"check\" o sello) en la mayoría de los clientes de Nostr. Esto es una señal para la comunidad de que eres un usuario real y no un bot o un impostor.",
                 whyBenefit3: "Protección contra suplantación",
                 whyDesc3: "Si eres una persona conocida, una empresa o una marca, tener un NIP-05 en tu propio dominio (ej. ceo@miempresa.com) es la mejor manera de demostrar que la cuenta de Nostr te pertenece auténticamente, blindándola contra la suplantación de identidad.",
+                activationTitle: "¿Qué tiempo tarda en activarse mi NIP-05?",
+                activationDesc: "La activación de tu NIP-05 suele ser casi instantánea tras confirmar el pago. Sin embargo, debido a la propagación en la red, podría tardar unos minutos en reflejarse.",
+                activationDesc2: "Si no lo ves activo de inmediato, verifica que tu cliente de Nostr esté correctamente conectado a los relays, ya que ellos son los encargados de validar la identidad. Si después de unos minutos el problema persiste, no dudes en contactarnos.",
                 heroPrefix: "Registra tu",
                 heroMid: "en el dominio",
                 lastRegsTitle: "Últimos registros",
@@ -538,6 +619,7 @@
             localStorage.setItem('language', lang);
 
             document.getElementById('faqTitle').textContent = translations[lang].faqTitle;
+            document.getElementById('contactTitle').textContent = translations[lang].contactTitle;
             document.getElementById('label-username').textContent = translations[lang].labelUsername;
             document.getElementById('username').placeholder = translations[lang].usernamePlaceholder;
             document.getElementById('label-pubkey').textContent = translations[lang].labelPubkey;
@@ -568,6 +650,9 @@
             document.getElementById('whyDesc2').textContent = translations[lang].whyDesc2;
             document.getElementById('whyBenefit3').textContent = translations[lang].whyBenefit3;
             document.getElementById('whyDesc3').textContent = translations[lang].whyDesc3;
+            document.getElementById('activationTitle').textContent = translations[lang].activationTitle;
+            document.getElementById('activationDesc').textContent = translations[lang].activationDesc;
+            document.getElementById('activationDesc2').textContent = translations[lang].activationDesc2;
 
             // Update language selector
             document.getElementById('langEN').className = lang === 'en' ? 'text-xs font-semibold text-white transition-colors duration-200' : 'text-xs font-semibold text-slate-500 hover:text-white transition-colors duration-200';
@@ -671,7 +756,7 @@
 
         document.getElementById('menuSupport').addEventListener('click', function(e) {
             e.preventDefault();
-            scrollToSection('section-nip05');
+            scrollToSection('section-contact');
         });
 
         // Mobile menu handlers
@@ -684,7 +769,7 @@
         document.getElementById('menuSupportM').addEventListener('click', function(e) {
             e.preventDefault();
             closeMobileMenu();
-            scrollToSection('section-nip05');
+            scrollToSection('section-contact');
         });
         document.getElementById('menuFaqM').addEventListener('click', function(e) {
             e.preventDefault();
@@ -706,6 +791,7 @@
         setupFaqToggle('infoToggle', 'infoContent', 'infoIcon');
         setupFaqToggle('howToggle',  'howContent',  'howIcon');
         setupFaqToggle('whyToggle',  'whyContent',  'whyIcon');
+        setupFaqToggle('activationToggle', 'activationContent', 'activationIcon');
 
         const form = document.getElementById('registrationForm');
         const usernameInput = document.getElementById('username');
@@ -945,6 +1031,22 @@
                     throw new Error(data.detail || translations[currentLanguage].errorCreateInvoice);
                 }
 
+                if (data.status === 'already_paid') {
+                    const successSection = document.getElementById('successSection');
+                    const errorSection = document.getElementById('errorSection');
+                    errorSection.classList.add('hidden');
+                    form.classList.add('hidden');
+                    paymentSection.classList.add('hidden');
+                    successSection.classList.remove('hidden');
+                    document.getElementById('successNIP05').textContent = `${username}@{{ domain }}`;
+                    startPaymentVerification();
+                    return;
+                }
+
+                if (!data.payment_request) {
+                    throw new Error(data.detail || translations[currentLanguage].errorCreateInvoice);
+                }
+
                 currentInvoice = data;
 
                 const qrContainer = document.getElementById('qrCode');
@@ -1018,8 +1120,9 @@
 
         document.getElementById('backToFormBtn').addEventListener('click', resetToForm);
         document.getElementById('newRegistrationBtn').addEventListener('click', resetToForm);
+        document.getElementById('invoiceWrapper').addEventListener('click', copyInvoice);
 
-        window.copyInvoice = function() {
+        function copyInvoice() {
             const invoiceElement = document.getElementById('invoiceText');
             if (!invoiceElement || !invoiceElement.textContent) {
                 console.error('Invoice not found');
@@ -1043,7 +1146,7 @@
                     alert('Error copying to clipboard');
                 });
             }
-        };
+        }
 
         function showCopySuccess() {
             const hint = document.getElementById('copyHint');
@@ -1053,21 +1156,6 @@
             setTimeout(() => {
                 hint.innerHTML = originalText;
             }, 2000);
-        }
-
-        function maskNip05(nip05) {
-            const atIndex = nip05.indexOf('@');
-            if (atIndex === -1) return nip05;
-            const username = nip05.substring(0, atIndex);
-            const domain = nip05.substring(atIndex);
-            if (username.length <= 3) return '*'.repeat(username.length) + domain;
-            return '***' + username.substring(3) + domain;
-        }
-
-        function maskPubkey(pubkey) {
-            if (!pubkey || !pubkey.startsWith('npub1') || pubkey.length < 22) return pubkey;
-            const middle = pubkey.substring(13, pubkey.length - 8);
-            return 'npub1********' + middle + '********';
         }
 
         async function loadUltimosRegistros() {
@@ -1087,7 +1175,7 @@
             }
 
             try {
-                const res = await fetch('/api/ultimos-registros');
+                const res = await fetch('/api/latest-records');
                 const data = await res.json();
                 clearContainer();
 
@@ -1105,19 +1193,19 @@
 
                     const nip05Cell = document.createElement('p');
                     nip05Cell.className = 'text-white text-sm font-semibold tracking-tight truncate';
-                    nip05Cell.textContent = maskNip05(r.nip05);
+                    nip05Cell.textContent = r.nip05;
 
                     const pubkeyCell = document.createElement('p');
                     pubkeyCell.className = 'text-slate-400 text-xs font-mono truncate sm:overflow-visible sm:whitespace-normal';
-                    pubkeyCell.textContent = maskPubkey(r.npub) || '';
+                    pubkeyCell.textContent = r.npub || '';
 
                     const paidCell = document.createElement('div');
                     paidCell.className = 'flex justify-center';
-                    paidCell.appendChild(makeStatusDot(r.pago_completado, 'Payment completed', 'Payment pending'));
+                    paidCell.appendChild(makeStatusDot(r.payment_completed, 'Payment completed', r.admin_only ? 'Admin' : 'Pending'));
 
                     const statusCell = document.createElement('div');
                     statusCell.className = 'flex justify-center';
-                    statusCell.appendChild(makeStatusDot(r.en_nostr_json, 'Active in nostr.json', 'Not active in nostr.json'));
+                    statusCell.appendChild(makeStatusDot(r.in_nostr_json, 'Active in nostr.json', 'Not active in nostr.json'));
 
                     row.appendChild(nip05Cell);
                     row.appendChild(pubkeyCell);
@@ -1135,6 +1223,8 @@
         }
 
         loadUltimosRegistros();
+        
+        setInterval(loadUltimosRegistros, 30000);
     </script>
 </body>
 </html>

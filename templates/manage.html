@@ -1,0 +1,1357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NIP-05 Admin Panel</title>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="stylesheet" href="/static/css/tailwind.css">
+    <link rel="stylesheet" href="/static/css/vendor/all.min.css">
+    <style>
+        body { background-color: #08080f; }
+    </style>
+</head>
+<body class="text-white min-h-screen">
+    <div id="loginSection" class="min-h-screen flex items-center justify-center">
+        <div class="w-full max-w-md p-8 bg-white/5 border border-white/10 rounded-2xl">
+            <div class="flex justify-end mb-4">
+                <div class="flex items-center gap-1.5">
+                    <button id="langEN" class="text-xs font-semibold text-white transition-colors" data-lang="en">EN</button>
+                    <span class="text-slate-600 text-xs">/</span>
+                    <button id="langES" class="text-xs font-semibold text-slate-500 hover:text-white transition-colors" data-lang="es">ES</button>
+                </div>
+            </div>
+            <h1 class="text-2xl font-bold text-center mb-6">
+                <i class="fa-solid fa-shield-halved text-violet-400 mr-2"></i>
+                <span id="titleAdmin">NIP-05 Admin</span>
+            </h1>
+            <form id="loginForm" class="space-y-4">
+                <div>
+                    <label class="block text-sm text-slate-400 mb-1" id="labelUsername">Username</label>
+                    <input type="text" id="username" required
+                        class="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-violet-500">
+                </div>
+                <div>
+                    <label class="block text-sm text-slate-400 mb-1" id="labelPassword">Password</label>
+                    <input type="password" id="password" required
+                        class="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-violet-500">
+                </div>
+                <div id="loginError" class="text-red-400 text-sm hidden"></div>
+                <hr class="border-white/10">
+                <button type="submit"
+                    class="w-full py-2 bg-violet-600 hover:bg-violet-500 rounded-xl font-semibold transition-colors">
+                    <span id="btnLogin">Login</span>
+                </button>
+                <div class="text-center mt-4">
+                    <button type="button" id="forgotPasswordBtn" class="text-sm text-slate-500 hover:text-white transition-colors">
+                        <span id="linkForgotPassword">Forgot Password?</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="forgotSection" class="hidden min-h-screen flex items-center justify-center">
+        <div class="w-full max-w-md p-8 bg-white/5 border border-white/10 rounded-2xl">
+            <h2 class="text-xl font-bold mb-4 text-center">
+                <i class="fa-solid fa-key text-violet-400 mr-2"></i>
+                <span id="titleReset">Reset Password</span>
+            </h2>
+            <p class="text-sm text-slate-400 mb-4" id="descReset">Enter your username to receive a password reset link.</p>
+            <form id="forgotForm" class="space-y-4">
+                <div>
+                    <label class="block text-sm text-slate-400 mb-1" id="labelResetUsername">Username</label>
+                    <input type="text" id="resetUsername" required
+                        class="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-violet-500">
+                </div>
+                <div id="resetError" class="text-red-400 text-sm hidden"></div>
+                <div id="resetSuccess" class="text-green-400 text-sm hidden"></div>
+                <div class="flex gap-3">
+                    <button type="button" id="backToLoginBtn"
+                        class="flex-1 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl transition-colors">
+                        <span id="btnBackLogin">Back</span>
+                    </button>
+                    <button type="submit"
+                        class="flex-1 py-2 bg-violet-600 hover:bg-violet-500 rounded-xl font-semibold transition-colors">
+                        <span id="btnSendReset">Send Link</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="resetPasswordSection" class="hidden min-h-screen flex items-center justify-center">
+        <div class="w-full max-w-md p-8 bg-white/5 border border-white/10 rounded-2xl">
+            <h2 class="text-xl font-bold mb-4 text-center">
+                <i class="fa-solid fa-key text-violet-400 mr-2"></i>
+                <span id="titleNewPassword">New Password</span>
+            </h2>
+            <form id="resetPasswordForm" class="space-y-4">
+                <input type="hidden" id="resetToken">
+                <div>
+                    <label class="block text-sm text-slate-400 mb-1" id="labelNewPassword">New Password</label>
+                    <input type="password" id="newPassword" required
+                        class="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-violet-500">
+                </div>
+                <div>
+                    <label class="block text-sm text-slate-400 mb-1" id="labelConfirmPassword">Confirm Password</label>
+                    <input type="password" id="confirmPassword" required
+                        class="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-violet-500">
+                </div>
+                <div id="resetPasswordError" class="text-red-400 text-sm hidden"></div>
+                <button type="submit"
+                    class="w-full py-2 bg-violet-600 hover:bg-violet-500 rounded-xl font-semibold transition-colors">
+                    <span id="btnResetPassword">Reset Password</span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div id="dashboardSection" class="hidden min-h-screen">
+        <nav class="fixed top-0 left-0 right-0 z-50 bg-black/30 backdrop-blur-2xl border-b border-white/[0.06]">
+            <div class="flex items-center justify-between px-6 py-3">
+                <div class="flex items-center gap-3">
+                    <i class="fa-solid fa-shield-halved text-violet-400"></i>
+                    <span class="font-semibold" id="navTitle">Panel de Administración</span>
+                </div>
+                <div class="flex items-center gap-4">
+                    <div class="flex items-center gap-1">
+                        <button id="navRecords" class="px-3 py-1.5 text-sm text-white bg-violet-600 rounded-lg transition-colors">
+                            <i class="fa-solid fa-address-book mr-1"></i><span id="navRecordsLabel">Records</span>
+                        </button>
+                        <button id="navUsers" class="px-3 py-1.5 text-sm text-slate-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors hidden">
+                            <i class="fa-solid fa-users mr-1"></i><span id="navUsersLabel">Users</span>
+                        </button>
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                        <button id="langEN2" class="text-xs font-semibold text-white transition-colors" data-lang="en">EN</button>
+                        <span class="text-slate-600 text-xs">/</span>
+                        <button id="langES2" class="text-xs font-semibold text-slate-500 hover:text-white transition-colors" data-lang="es">ES</button>
+                    </div>
+                    <div class="relative">
+                        <button id="userMenuBtn" class="flex items-center gap-2 text-sm text-slate-400 hover:text-white transition-colors">
+                            <i class="fa-solid fa-user-circle text-lg"></i>
+                            <span id="userDisplay"></span>
+                            <i class="fa-solid fa-chevron-down text-xs"></i>
+                        </button>
+                        <div id="userDropdown" class="absolute right-0 mt-2 w-48 bg-white/10 border border-white/10 rounded-xl shadow-xl hidden overflow-hidden">
+                            <button id="editProfileBtn" class="w-full px-4 py-2 text-left text-sm text-slate-300 hover:bg-white/10 transition-colors flex items-center gap-2">
+                                <i class="fa-solid fa-user-pen"></i>
+                                <span id="menuEditProfile">Edit Profile</span>
+                            </button>
+                            <button id="changePasswordBtn" class="w-full px-4 py-2 text-left text-sm text-slate-300 hover:bg-white/10 transition-colors flex items-center gap-2">
+                                <i class="fa-solid fa-key"></i>
+                                <span id="btnChangePassword">Change Password</span>
+                            </button>
+                            <hr class="border-white/10">
+                            <button id="logoutBtn" class="w-full px-4 py-2 text-left text-sm text-red-400 hover:bg-white/10 transition-colors flex items-center gap-2">
+                                <i class="fa-solid fa-right-from-bracket"></i>
+                                <span id="btnLogout">Logout</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <div class="pt-20 px-6 pb-8">
+            <div class="max-w-6xl mx-auto">
+                <div class="flex items-center justify-end mb-6 gap-2">
+                    <button id="addUserBtn" class="px-4 py-2 bg-green-600 hover:bg-green-500 rounded-xl font-semibold transition-colors hidden">
+                        <i class="fa-solid fa-plus mr-2"></i><span id="btnAddUser">Add User</span>
+                    </button>
+                    <button id="addRecordBtn" class="px-4 py-2 bg-green-600 hover:bg-green-500 rounded-xl font-semibold transition-colors">
+                        <i class="fa-solid fa-plus mr-2"></i><span id="btnAddRecord">Add Record</span>
+                    </button>
+                </div>
+
+                <div id="recordsSection">
+                    <div class="mb-4">
+                        <input type="text" id="searchRecords" 
+                            class="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white text-sm placeholder-slate-500 focus:outline-none focus:border-violet-500/50 focus:bg-white/[0.08] transition-all"
+                            placeholder="Search by NIP-05, npub, hex or payment hash...">
+                    </div>
+                    <div class="bg-white/5 border border-white/10 rounded-2xl overflow-hidden">
+                        <div class="overflow-x-auto">
+                            <table class="w-full">
+                                <thead class="bg-white/5">
+                                    <tr>
+                                        <th class="px-4 py-3 text-left text-xs text-slate-400 uppercase" id="colNip05">NIP-05</th>
+                                        <th class="px-4 py-3 text-left text-xs text-slate-400 uppercase" id="colPubkey">Pubkey</th>
+                                    <th class="px-4 py-3 text-left text-xs text-slate-400 uppercase" id="colPaymentHash">Payment Hash</th>
+                                    <th class="px-4 py-3 text-center text-xs text-slate-400 uppercase" id="colStatus">Status</th>
+                                    <th class="px-4 py-3 text-center text-xs text-slate-400 uppercase" id="colType">Type</th>
+                                    <th class="px-4 py-3 text-center text-xs text-slate-400 uppercase" id="colActions">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recordsTable" class="divide-y divide-white/5"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div id="usersSection" class="hidden">
+                    <div class="bg-white/5 border border-white/10 rounded-2xl overflow-hidden">
+                        <table class="w-full">
+                            <thead class="bg-white/5">
+                                <tr>
+                                    <th class="px-4 py-3 text-left text-xs text-slate-400 uppercase" id="colUsername">Username</th>
+                                    <th class="px-4 py-3 text-left text-xs text-slate-400 uppercase" id="colEmail">Email</th>
+                                    <th class="px-4 py-3 text-center text-xs text-slate-400 uppercase" id="colRole">Role</th>
+                                    <th class="px-4 py-3 text-center text-xs text-slate-400 uppercase" id="colUserStatus">Status</th>
+                                    <th class="px-4 py-3 text-center text-xs text-slate-400 uppercase" id="colUserActions">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="usersTable" class="divide-y divide-white/5"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    <div id="recordModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center">
+        <div class="w-full max-w-md p-6 bg-white/5 border border-white/10 rounded-2xl">
+            <h2 id="modalTitle" class="text-xl font-bold mb-4">Add Record</h2>
+            <form id="recordForm" class="space-y-4">
+                <input type="hidden" id="recordId">
+                <div>
+                    <div class="flex items-center justify-between mb-2">
+                        <label for="recordUsername" class="block text-[10px] sm:text-xs font-semibold text-slate-400 uppercase tracking-widest" id="labelRecordUsername">
+                            Usuario NIP-05
+                        </label>
+                    </div>
+                    <div class="relative">
+                        <input type="text" id="recordUsername" required
+                            class="w-full pl-4 pr-20 py-2.5 sm:py-3 bg-white/5 border border-white/10 rounded-xl text-white text-sm placeholder-slate-500 focus:outline-none focus:border-violet-500/50 focus:bg-white/[0.08] transition-all"
+                            placeholder="username" maxlength="30">
+                        <span class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 text-sm pointer-events-none select-none whitespace-nowrap">@{{ domain }}</span>
+                    </div>
+                </div>
+                <div>
+                    <label for="recordPubkey" class="block text-[10px] sm:text-xs font-semibold text-slate-400 uppercase tracking-widest mb-2" id="labelRecordPubkey">
+                        Clave Pública (NPUB)
+                    </label>
+                    <input type="text" id="recordPubkey" required
+                        class="w-full px-4 py-2.5 sm:py-3 bg-white/5 border border-white/10 rounded-xl text-white text-sm placeholder-slate-500 focus:outline-none focus:border-violet-500/50 focus:bg-white/[0.08] transition-all"
+                        placeholder="npub1...">
+                </div>
+                <div>
+                    <label for="recordHex" class="block text-[10px] sm:text-xs font-semibold text-slate-400 uppercase tracking-widest mb-2" id="labelRecordHex">
+                        Clave Pública (hex)
+                    </label>
+                    <div class="flex gap-2">
+                        <input type="text" id="recordHex" readonly
+                            class="flex-1 px-4 py-2.5 sm:py-3 bg-white/5 border border-white/10 rounded-xl text-white text-xs placeholder-slate-500 focus:outline-none transition-all cursor-pointer break-all"
+                            placeholder="La clave hex aparecerá aquí...">
+                        <button type="button" id="copyRecordHexBtn"
+                            class="px-3 sm:px-4 py-2.5 sm:py-3 bg-white/5 hover:bg-white/10 border border-white/10 text-slate-400 hover:text-white rounded-xl transition-all">
+                            <i class="fa-solid fa-copy"></i>
+                        </button>
+                    </div>
+                </div>
+                <hr class="border-white/10">
+                <div class="flex gap-3">
+                    <button type="button" id="cancelModalBtn"
+                        class="flex-1 py-2.5 sm:py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl transition-colors">
+                        <span id="btnCancel">Cancel</span>
+                    </button>
+                    <button type="submit"
+                        class="flex-1 py-2.5 sm:py-3 bg-violet-600 hover:bg-violet-500 rounded-xl font-semibold transition-colors">
+                        <span id="btnSave">Save</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="changePasswordModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center">
+        <div class="w-full max-w-md p-6 bg-white/5 border border-white/10 rounded-2xl">
+            <h2 class="text-xl font-bold mb-4">
+                <i class="fa-solid fa-key text-violet-400 mr-2"></i>
+                <span id="modalChangePassword">Change Password</span>
+            </h2>
+            <form id="changePasswordForm" class="space-y-4">
+                <div>
+                    <label class="block text-sm text-slate-400 mb-1" id="labelOldPassword">Current Password</label>
+                    <input type="password" id="oldPassword" required
+                        class="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-violet-500">
+                </div>
+                <div>
+                    <label class="block text-sm text-slate-400 mb-1" id="labelChangePassword">New Password</label>
+                    <input type="password" id="changePassword" required
+                        class="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-violet-500">
+                </div>
+                <div>
+                    <label class="block text-sm text-slate-400 mb-1" id="labelChangeConfirmPassword">Confirm New Password</label>
+                    <input type="password" id="changeConfirmPassword" required
+                        class="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-violet-500">
+                </div>
+                <div id="changePasswordError" class="text-red-400 text-sm hidden"></div>
+                <div class="flex gap-3">
+                    <button type="button" id="cancelChangePasswordBtn"
+                        class="flex-1 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl transition-colors">
+                        <span id="btnChangeCancel">Cancel</span>
+                    </button>
+                    <button type="submit"
+                        class="flex-1 py-2 bg-violet-600 hover:bg-violet-500 rounded-xl font-semibold transition-colors">
+                        <span id="btnChangeSave">Save</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="profileModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center">
+        <div class="w-full max-w-md p-6 bg-white/5 border border-white/10 rounded-2xl">
+            <h2 class="text-xl font-bold mb-4">
+                <i class="fa-solid fa-user-pen text-violet-400 mr-2"></i>
+                <span id="modalEditProfile">Edit Profile</span>
+            </h2>
+            <form id="profileForm" class="space-y-4">
+                <div>
+                    <label class="block text-sm text-slate-400 mb-1" id="labelProfileEmail">Email (for password recovery)</label>
+                    <input type="email" id="profileEmail"
+                        class="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-violet-500">
+                    <span class="text-xs text-slate-500" id="profileEmailHint">Optional. Only available if SMTP is configured.</span>
+                </div>
+                <div id="profileError" class="text-red-400 text-sm hidden"></div>
+                <div id="profileSuccess" class="text-green-400 text-sm hidden"></div>
+                <div class="flex gap-3">
+                    <button type="button" id="cancelProfileBtn"
+                        class="flex-1 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl transition-colors">
+                        <span id="btnProfileCancel">Cancel</span>
+                    </button>
+                    <button type="submit"
+                        class="flex-1 py-2 bg-violet-600 hover:bg-violet-500 rounded-xl font-semibold transition-colors">
+                        <span id="btnProfileSave">Save</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="userModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center">
+        <div class="w-full max-w-md p-6 bg-white/5 border border-white/10 rounded-2xl">
+            <h2 class="text-xl font-bold mb-4">
+                <i class="fa-solid fa-user-plus text-violet-400 mr-2"></i>
+                <span id="modalUserTitle">Add User</span>
+            </h2>
+            <form id="userForm" class="space-y-4">
+                <input type="hidden" id="userId">
+                <div>
+                    <label for="userUsername" class="block text-[10px] sm:text-xs font-semibold text-slate-400 uppercase tracking-widest mb-2" id="labelUserUsername">
+                        Username
+                    </label>
+                    <input type="text" id="userUsername" required
+                        class="w-full px-4 py-2.5 sm:py-3 bg-white/5 border border-white/10 rounded-xl text-white text-sm placeholder-slate-500 focus:outline-none focus:border-violet-500/50 focus:bg-white/[0.08] transition-all"
+                        placeholder="username">
+                </div>
+                <div>
+                    <label for="userPassword" class="block text-[10px] sm:text-xs font-semibold text-slate-400 uppercase tracking-widest mb-2" id="labelUserPassword">
+                        Password
+                    </label>
+                    <input type="password" id="userPassword"
+                        class="w-full px-4 py-2.5 sm:py-3 bg-white/5 border border-white/10 rounded-xl text-white text-sm placeholder-slate-500 focus:outline-none focus:border-violet-500/50 focus:bg-white/[0.08] transition-all"
+                        placeholder="••••••••">
+                    <span class="text-xs text-slate-500 mt-1 block" id="userPasswordHint">Required for new users</span>
+                </div>
+                <div>
+                    <label for="userEmail" class="block text-[10px] sm:text-xs font-semibold text-slate-400 uppercase tracking-widest mb-2" id="labelUserEmail">
+                        Email
+                    </label>
+                    <input type="email" id="userEmail"
+                        class="w-full px-4 py-2.5 sm:py-3 bg-white/5 border border-white/10 rounded-xl text-white text-sm placeholder-slate-500 focus:outline-none focus:border-violet-500/50 focus:bg-white/[0.08] transition-all"
+                        placeholder="email@example.com">
+                </div>
+                <div>
+                    <label for="userRole" class="block text-[10px] sm:text-xs font-semibold text-slate-400 uppercase tracking-widest mb-2" id="labelUserRole">
+                        Role
+                    </label>
+                    <select id="userRole"
+                        class="w-full px-4 py-2.5 sm:py-3 bg-white/5 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:border-violet-500/50 focus:bg-white/[0.08] transition-all">
+                        <option value="operator">Operator</option>
+                        <option value="admin">Admin</option>
+                    </select>
+                </div>
+                <div id="userActiveWrapper" class="hidden">
+                    <label class="flex items-center gap-2 text-sm text-slate-400">
+                        <input type="checkbox" id="userActive" class="rounded bg-white/10 border-white/20">
+                        <span id="labelUserActive">Active</span>
+                    </label>
+                </div>
+                <div id="userError" class="text-red-400 text-sm hidden"></div>
+                <hr class="border-white/10">
+                <div class="flex gap-3">
+                    <button type="button" id="cancelUserBtn"
+                        class="flex-1 py-2.5 sm:py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl transition-colors">
+                        <span id="btnUserCancel">Cancel</span>
+                    </button>
+                    <button type="submit"
+                        class="flex-1 py-2.5 sm:py-3 bg-violet-600 hover:bg-violet-500 rounded-xl font-semibold transition-colors">
+                        <span id="btnUserSave">Save</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const DOMAIN = "{{ domain }}";
+
+        const translations = {
+            en: {
+                titleAdmin: "Administration Panel",
+                labelUsername: "Username",
+                labelPassword: "Password",
+                btnLogin: "Login",
+                linkForgotPassword: "Forgot Password?",
+                titleReset: "Reset Password",
+                descReset: "Enter your username to receive a password reset link.",
+                labelResetUsername: "Username",
+                btnBackLogin: "Back",
+                btnSendReset: "Send Link",
+                titleNewPassword: "New Password",
+                labelNewPassword: "New Password",
+                labelConfirmPassword: "Confirm Password",
+                btnResetPassword: "Reset Password",
+                navTitle: "Administration Panel",
+                btnChangePassword: "Change Password",
+                btnLogout: "Logout",
+                btnAddRecord: "Add Record",
+                searchPlaceholder: "Search by NIP-05, npub, hex or payment hash...",
+                colNip05: "NIP-05",
+                colPubkey: "Pubkey",
+                colPaymentHash: "Payment Hash",
+                colStatus: "Status",
+                colType: "Type",
+                colActions: "Actions",
+                modalAdd: "Add Record",
+                modalEdit: "Edit Record",
+                labelRecordUsername: "NIP-05 Username",
+                labelRecordPubkey: "Public Key (npub)",
+                labelRecordHex: "Public Key (hex)",
+                btnCancel: "Cancel",
+                btnSave: "Save",
+                statusActive: "Active",
+                statusInactive: "Inactive",
+                typeAdmin: "Admin",
+                typePaid: "Paid",
+                confirmDelete: "Delete",
+                errorInvalid: "Invalid credentials",
+                errorConnection: "Connection error",
+                errorSaving: "Error saving record",
+                modalChangePassword: "Change Password",
+                labelOldPassword: "Current Password",
+                labelChangePassword: "New Password",
+                labelChangeConfirmPassword: "Confirm New Password",
+                btnChangeCancel: "Cancel",
+                btnChangeSave: "Save",
+                errorPasswordMismatch: "Passwords do not match",
+                errorPasswordChange: "Error changing password",
+                successPasswordChange: "Password changed successfully",
+                successPasswordReset: "Password reset link sent",
+                errorPasswordReset: "Error sending reset link",
+                passwordResetSuccess: "Password reset successfully",
+                navRecords: "Records",
+                navUsers: "Users",
+                menuEditProfile: "Edit Profile",
+                modalEditProfile: "Edit Profile",
+                labelProfileEmail: "Email (for password recovery)",
+                profileEmailHint: "Optional. Only available if SMTP is configured.",
+                btnProfileCancel: "Cancel",
+                btnProfileSave: "Save",
+                successProfileUpdate: "Profile updated successfully",
+                errorProfileUpdate: "Error updating profile",
+                colUsername: "Username",
+                colEmail: "Email",
+                colRole: "Role",
+                colUserStatus: "Status",
+                colUserActions: "Actions",
+                modalUserAdd: "Add User",
+                modalUserEdit: "Edit User",
+                labelUserUsername: "Username",
+                labelUserPassword: "Password",
+                labelUserEmail: "Email",
+                labelUserRole: "Role",
+                labelUserActive: "Active",
+                userPasswordHint: "Required for new users",
+                btnUserCancel: "Cancel",
+                btnUserSave: "Save",
+                successUserCreate: "User created successfully",
+                successUserUpdate: "User updated successfully",
+                errorUserCreate: "Error creating user",
+                roleAdmin: "Admin",
+                roleOperator: "Operator",
+                btnAddUser: "Add User"
+            },
+            es: {
+                titleAdmin: "Panel de Administración",
+                labelUsername: "Usuario",
+                labelPassword: "Contraseña",
+                btnLogin: "Iniciar Sesión",
+                linkForgotPassword: "¿Olvidaste tu contraseña?",
+                titleReset: "Restablecer Contraseña",
+                descReset: "Ingresa tu nombre de usuario para recibir un enlace de recuperación.",
+                labelResetUsername: "Usuario",
+                btnBackLogin: "Volver",
+                btnSendReset: "Enviar Enlace",
+                titleNewPassword: "Nueva Contraseña",
+                labelNewPassword: "Nueva Contraseña",
+                labelConfirmPassword: "Confirmar Contraseña",
+                btnResetPassword: "Restablecer Contraseña",
+                navTitle: "Panel de Administración",
+                btnChangePassword: "Cambiar Contraseña",
+                btnLogout: "Cerrar Sesión",
+                btnAddRecord: "Agregar Registro",
+                searchPlaceholder: "Buscar por NIP-05, npub, hex o hash de pago...",
+                colNip05: "NIP-05",
+                colPubkey: "Clave Pública",
+                colPaymentHash: "Hash de Pago",
+                colStatus: "Estado",
+                colType: "Tipo",
+                colActions: "Acciones",
+                modalAdd: "Agregar Registro",
+                modalEdit: "Editar Registro",
+                labelRecordUsername: "Usuario NIP-05",
+                labelRecordPubkey: "Clave Pública (NPUB)",
+                labelRecordHex: "Clave Pública (hex)",
+                btnCancel: "Cancelar",
+                btnSave: "Guardar",
+                statusActive: "Activo",
+                statusInactive: "Inactivo",
+                typeAdmin: "Admin",
+                typePaid: "Pagado",
+                confirmDelete: "Eliminar",
+                errorInvalid: "Credenciales inválidas",
+                errorConnection: "Error de conexión",
+                errorSaving: "Error al guardar registro",
+                modalChangePassword: "Cambiar Contraseña",
+                labelOldPassword: "Contraseña Actual",
+                labelChangePassword: "Nueva Contraseña",
+                labelChangeConfirmPassword: "Confirmar Nueva Contraseña",
+                btnChangeCancel: "Cancelar",
+                btnChangeSave: "Guardar",
+                errorPasswordMismatch: "Las contraseñas no coinciden",
+                errorPasswordChange: "Error al cambiar contraseña",
+                successPasswordChange: "Contraseña cambiada exitosamente",
+                successPasswordReset: "Enlace de recuperación enviado",
+                errorPasswordReset: "Error al enviar enlace",
+                passwordResetSuccess: "Contraseña restablecida exitosamente",
+                navRecords: "Registros",
+                navUsers: "Usuarios",
+                menuEditProfile: "Editar Perfil",
+                modalEditProfile: "Editar Perfil",
+                labelProfileEmail: "Email (para recuperación de contraseña)",
+                profileEmailHint: "Opcional. Solo disponible si SMTP está configurado.",
+                btnProfileCancel: "Cancelar",
+                btnProfileSave: "Guardar",
+                successProfileUpdate: "Perfil actualizado exitosamente",
+                errorProfileUpdate: "Error al actualizar perfil",
+                colUsername: "Usuario",
+                colEmail: "Email",
+                colRole: "Rol",
+                colUserStatus: "Estado",
+                colUserActions: "Acciones",
+                modalUserAdd: "Agregar Usuario",
+                modalUserEdit: "Editar Usuario",
+                labelUserUsername: "Usuario",
+                labelUserPassword: "Contraseña",
+                labelUserEmail: "Email",
+                labelUserRole: "Rol",
+                labelUserActive: "Activo",
+                userPasswordHint: "Requerido para nuevos usuarios",
+                btnUserCancel: "Cancelar",
+                btnUserSave: "Guardar",
+                successUserCreate: "Usuario creado exitosamente",
+                successUserUpdate: "Usuario actualizado exitosamente",
+                errorUserCreate: "Error al crear usuario",
+                roleAdmin: "Admin",
+                roleOperator: "Operador",
+                btnAddUser: "Agregar Usuario"
+            }
+        };
+
+        let currentLang = localStorage.getItem('language') || 'en';
+
+        function setLanguage(lang) {
+            currentLang = lang;
+            localStorage.setItem('language', lang);
+            const t = translations[lang];
+
+            if (document.getElementById('titleAdmin')) document.getElementById('titleAdmin').textContent = t.titleAdmin;
+            if (document.getElementById('labelUsername')) document.getElementById('labelUsername').textContent = t.labelUsername;
+            if (document.getElementById('labelPassword')) document.getElementById('labelPassword').textContent = t.labelPassword;
+            if (document.getElementById('btnLogin')) document.getElementById('btnLogin').textContent = t.btnLogin;
+            if (document.getElementById('linkForgotPassword')) document.getElementById('linkForgotPassword').textContent = t.linkForgotPassword;
+            if (document.getElementById('titleReset')) document.getElementById('titleReset').textContent = t.titleReset;
+            if (document.getElementById('descReset')) document.getElementById('descReset').textContent = t.descReset;
+            if (document.getElementById('labelResetUsername')) document.getElementById('labelResetUsername').textContent = t.labelResetUsername;
+            if (document.getElementById('btnBackLogin')) document.getElementById('btnBackLogin').textContent = t.btnBackLogin;
+            if (document.getElementById('btnSendReset')) document.getElementById('btnSendReset').textContent = t.btnSendReset;
+            if (document.getElementById('titleNewPassword')) document.getElementById('titleNewPassword').textContent = t.titleNewPassword;
+            if (document.getElementById('labelNewPassword')) document.getElementById('labelNewPassword').textContent = t.labelNewPassword;
+            if (document.getElementById('labelConfirmPassword')) document.getElementById('labelConfirmPassword').textContent = t.labelConfirmPassword;
+            if (document.getElementById('btnResetPassword')) document.getElementById('btnResetPassword').textContent = t.btnResetPassword;
+            if (document.getElementById('navTitle')) document.getElementById('navTitle').textContent = t.navTitle;
+            if (document.getElementById('btnChangePassword')) document.getElementById('btnChangePassword').textContent = t.btnChangePassword;
+            if (document.getElementById('btnLogout')) document.getElementById('btnLogout').textContent = t.btnLogout;
+            if (document.getElementById('btnAddRecord')) document.getElementById('btnAddRecord').textContent = t.btnAddRecord;
+            if (document.getElementById('searchRecords')) document.getElementById('searchRecords').placeholder = t.searchPlaceholder;
+            if (document.getElementById('btnAddUser')) document.getElementById('btnAddUser').textContent = t.btnAddUser;
+            if (document.getElementById('colNip05')) document.getElementById('colNip05').textContent = t.colNip05;
+            if (document.getElementById('colPubkey')) document.getElementById('colPubkey').textContent = t.colPubkey;
+            if (document.getElementById('colPaymentHash')) document.getElementById('colPaymentHash').textContent = t.colPaymentHash;
+            if (document.getElementById('colStatus')) document.getElementById('colStatus').textContent = t.colStatus;
+            if (document.getElementById('colType')) document.getElementById('colType').textContent = t.colType;
+            if (document.getElementById('colActions')) document.getElementById('colActions').textContent = t.colActions;
+            if (document.getElementById('colUsername')) document.getElementById('colUsername').textContent = t.colUsername;
+            if (document.getElementById('colEmail')) document.getElementById('colEmail').textContent = t.colEmail;
+            if (document.getElementById('colRole')) document.getElementById('colRole').textContent = t.colRole;
+            if (document.getElementById('colUserStatus')) document.getElementById('colUserStatus').textContent = t.colUserStatus;
+            if (document.getElementById('colUserActions')) document.getElementById('colUserActions').textContent = t.colUserActions;
+            if (document.getElementById('labelRecordUsername')) document.getElementById('labelRecordUsername').textContent = t.labelRecordUsername;
+            if (document.getElementById('labelRecordPubkey')) document.getElementById('labelRecordPubkey').textContent = t.labelRecordPubkey;
+            if (document.getElementById('labelRecordHex')) document.getElementById('labelRecordHex').textContent = t.labelRecordHex;
+            if (document.getElementById('btnCancel')) document.getElementById('btnCancel').textContent = t.btnCancel;
+            if (document.getElementById('btnSave')) document.getElementById('btnSave').textContent = t.btnSave;
+            if (document.getElementById('modalTitle')) document.getElementById('modalTitle').textContent = t.modalAdd;
+            if (document.getElementById('modalChangePassword')) document.getElementById('modalChangePassword').textContent = t.modalChangePassword;
+            if (document.getElementById('labelOldPassword')) document.getElementById('labelOldPassword').textContent = t.labelOldPassword;
+            if (document.getElementById('labelChangePassword')) document.getElementById('labelChangePassword').textContent = t.labelChangePassword;
+            if (document.getElementById('labelChangeConfirmPassword')) document.getElementById('labelChangeConfirmPassword').textContent = t.labelChangeConfirmPassword;
+            if (document.getElementById('btnChangeCancel')) document.getElementById('btnChangeCancel').textContent = t.btnChangeCancel;
+            if (document.getElementById('btnChangeSave')) document.getElementById('btnChangeSave').textContent = t.btnChangeSave;
+            if (document.getElementById('menuEditProfile')) document.getElementById('menuEditProfile').textContent = t.menuEditProfile;
+            if (document.getElementById('navRecordsLabel')) document.getElementById('navRecordsLabel').textContent = t.navRecords;
+            if (document.getElementById('navUsersLabel')) document.getElementById('navUsersLabel').textContent = t.navUsers;
+            if (document.getElementById('modalEditProfile')) document.getElementById('modalEditProfile').textContent = t.modalEditProfile;
+            if (document.getElementById('labelProfileEmail')) document.getElementById('labelProfileEmail').textContent = t.labelProfileEmail;
+            if (document.getElementById('profileEmailHint')) document.getElementById('profileEmailHint').textContent = t.profileEmailHint;
+            if (document.getElementById('btnProfileCancel')) document.getElementById('btnProfileCancel').textContent = t.btnProfileCancel;
+            if (document.getElementById('btnProfileSave')) document.getElementById('btnProfileSave').textContent = t.btnProfileSave;
+            if (document.getElementById('modalUserTitle')) document.getElementById('modalUserTitle').textContent = t.modalUserAdd;
+            if (document.getElementById('labelUserUsername')) document.getElementById('labelUserUsername').textContent = t.labelUserUsername;
+            if (document.getElementById('labelUserPassword')) document.getElementById('labelUserPassword').textContent = t.labelUserPassword;
+            if (document.getElementById('labelUserEmail')) document.getElementById('labelUserEmail').textContent = t.labelUserEmail;
+            if (document.getElementById('labelUserRole')) document.getElementById('labelUserRole').textContent = t.labelUserRole;
+            if (document.getElementById('labelUserActive')) document.getElementById('labelUserActive').textContent = t.labelUserActive;
+            if (document.getElementById('userPasswordHint')) document.getElementById('userPasswordHint').textContent = t.userPasswordHint;
+            if (document.getElementById('btnUserCancel')) document.getElementById('btnUserCancel').textContent = t.btnUserCancel;
+            if (document.getElementById('btnUserSave')) document.getElementById('btnUserSave').textContent = t.btnUserSave;
+
+            if (document.getElementById('langEN')) {
+                document.getElementById('langEN').className = lang === 'en' ? 'text-xs font-semibold text-white transition-colors' : 'text-xs font-semibold text-slate-500 hover:text-white transition-colors';
+            }
+            if (document.getElementById('langES')) {
+                document.getElementById('langES').className = lang === 'es' ? 'text-xs font-semibold text-white transition-colors' : 'text-xs font-semibold text-slate-500 hover:text-white transition-colors';
+            }
+            if (document.getElementById('langEN2')) {
+                document.getElementById('langEN2').className = lang === 'en' ? 'text-xs font-semibold text-white transition-colors' : 'text-xs font-semibold text-slate-500 hover:text-white transition-colors';
+            }
+            if (document.getElementById('langES2')) {
+                document.getElementById('langES2').className = lang === 'es' ? 'text-xs font-semibold text-white transition-colors' : 'text-xs font-semibold text-slate-500 hover:text-white transition-colors';
+            }
+        }
+
+        setLanguage(currentLang);
+
+        document.getElementById('langEN').addEventListener('click', () => setLanguage('en'));
+        document.getElementById('langES').addEventListener('click', () => setLanguage('es'));
+        document.getElementById('langEN2').addEventListener('click', () => setLanguage('en'));
+        document.getElementById('langES2').addEventListener('click', () => setLanguage('es'));
+
+        let authToken = localStorage.getItem('admin_token');
+        let isLoadingRecords = false;
+        let isLoadingUsers = false;
+        let allRecords = [];
+
+        function showSection(id) {
+            document.getElementById('loginSection').classList.add('hidden');
+            document.getElementById('dashboardSection').classList.add('hidden');
+            document.getElementById('forgotSection').classList.add('hidden');
+            document.getElementById('resetPasswordSection').classList.add('hidden');
+            document.getElementById(id).classList.remove('hidden');
+        }
+
+        function showError(elementId, message) {
+            const errorDiv = document.getElementById(elementId);
+            errorDiv.textContent = message;
+            errorDiv.classList.remove('hidden');
+            setTimeout(() => {
+                errorDiv.classList.add('hidden');
+            }, 5000);
+        }
+
+        (async function init() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const resetToken = urlParams.get('token');
+            if (resetToken) {
+                document.getElementById('resetToken').value = resetToken;
+                showSection('resetPasswordSection');
+            } else if (authToken) {
+                const savedUser = localStorage.getItem('admin_user');
+                const savedRole = localStorage.getItem('admin_role');
+                if (savedUser) {
+                    document.getElementById('userDisplay').textContent = savedUser;
+                }
+                if (savedRole === 'admin') {
+                    document.getElementById('navUsers').classList.remove('hidden');
+                }
+                showSection('dashboardSection');
+                const res = await fetch('/api/manage/records', {
+                    headers: {'Authorization': `Bearer ${authToken}`}
+                });
+                if (res.ok) {
+                    loadRecords();
+                    setInterval(loadRecords, 30000);
+                } else {
+                    localStorage.removeItem('admin_token');
+                    localStorage.removeItem('admin_user');
+                    localStorage.removeItem('admin_role');
+                    authToken = null;
+                    showSection('loginSection');
+                }
+            } else {
+                showSection('loginSection');
+            }
+        })();
+
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const errorDiv = document.getElementById('loginError');
+
+            try {
+                const res = await fetch('/api/manage/login', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({username, password})
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    authToken = data.token;
+                    localStorage.setItem('admin_token', authToken);
+                    localStorage.setItem('admin_user', data.user.username);
+                    localStorage.setItem('admin_role', data.user.role);
+                    document.getElementById('userDisplay').textContent = data.user.username;
+                    
+                    if (data.user.role === 'admin') {
+                        document.getElementById('navUsers').classList.remove('hidden');
+                    } else {
+                        document.getElementById('navUsers').classList.add('hidden');
+                    }
+                    
+                    showSection('dashboardSection');
+                    loadRecords();
+                } else {
+                    showError('loginError', translations[currentLang].errorInvalid);
+                }
+            } catch (err) {
+                showError('loginError', translations[currentLang].errorConnection);
+            }
+        });
+
+        document.getElementById('forgotPasswordBtn').addEventListener('click', () => {
+            showSection('forgotSection');
+        });
+
+        document.getElementById('backToLoginBtn').addEventListener('click', () => {
+            showSection('loginSection');
+        });
+
+        document.getElementById('forgotForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const username = document.getElementById('resetUsername').value;
+            const errorDiv = document.getElementById('resetError');
+            const successDiv = document.getElementById('resetSuccess');
+
+            try {
+                const res = await fetch('/api/manage/password-reset', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({username})
+                });
+                if (res.ok) {
+                    successDiv.textContent = translations[currentLang].successPasswordReset;
+                    successDiv.classList.remove('hidden');
+                    errorDiv.classList.add('hidden');
+                } else {
+                    errorDiv.textContent = translations[currentLang].errorPasswordReset;
+                    errorDiv.classList.remove('hidden');
+                    successDiv.classList.add('hidden');
+                }
+            } catch (err) {
+                showError('resetError', translations[currentLang].errorConnection);
+            }
+        });
+
+        document.getElementById('resetPasswordForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const token = document.getElementById('resetToken').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            const errorDiv = document.getElementById('resetPasswordError');
+
+            if (newPassword !== confirmPassword) {
+                errorDiv.textContent = translations[currentLang].errorPasswordMismatch;
+                errorDiv.classList.remove('hidden');
+                return;
+            }
+
+            try {
+                const res = await fetch('/api/manage/password-reset/confirm', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({token, new_password: newPassword})
+                });
+                if (res.ok) {
+                    alert(translations[currentLang].passwordResetSuccess);
+                    window.location.href = '/manage';
+                } else {
+                    const data = await res.json();
+                    errorDiv.textContent = data.detail || translations[currentLang].errorPasswordReset;
+                    errorDiv.classList.remove('hidden');
+                }
+            } catch (err) {
+                showError('resetPasswordError', translations[currentLang].errorConnection);
+            }
+        });
+
+        document.getElementById('logoutBtn').addEventListener('click', async () => {
+            if (authToken) {
+                try {
+                    await fetch('/api/manage/logout', {
+                        method: 'POST',
+                        headers: {'Authorization': `Bearer ${authToken}`}
+                    });
+                } catch (_) {}
+            }
+            localStorage.removeItem('admin_token');
+            localStorage.removeItem('admin_user');
+            localStorage.removeItem('admin_role');
+            authToken = null;
+            showSection('loginSection');
+        });
+
+        document.getElementById('userMenuBtn').addEventListener('click', (e) => {
+            e.stopPropagation();
+            document.getElementById('userDropdown').classList.toggle('hidden');
+        });
+
+        document.addEventListener('click', () => {
+            document.getElementById('userDropdown').classList.add('hidden');
+        });
+
+        document.getElementById('editProfileBtn').addEventListener('click', async () => {
+            document.getElementById('userDropdown').classList.add('hidden');
+            try {
+                const res = await fetch('/api/manage/profile', {
+                    headers: {'Authorization': `Bearer ${authToken}`}
+                });
+                if (res.ok) {
+                    const profile = await res.json();
+                    document.getElementById('profileEmail').value = profile.email || '';
+                    document.getElementById('profileSuccess').classList.add('hidden');
+                    document.getElementById('profileError').classList.add('hidden');
+                    document.getElementById('profileModal').classList.remove('hidden');
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        });
+
+        document.getElementById('cancelProfileBtn').addEventListener('click', () => {
+            document.getElementById('profileModal').classList.add('hidden');
+            document.getElementById('profileForm').reset();
+            document.getElementById('profileError').classList.add('hidden');
+            document.getElementById('profileSuccess').classList.add('hidden');
+        });
+
+        document.getElementById('profileForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('profileEmail').value.trim() || null;
+            const errorDiv = document.getElementById('profileError');
+            const successDiv = document.getElementById('profileSuccess');
+
+            try {
+                const res = await fetch('/api/manage/profile', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({email})
+                });
+                if (res.ok) {
+                    successDiv.textContent = translations[currentLang].successProfileUpdate;
+                    successDiv.classList.remove('hidden');
+                    errorDiv.classList.add('hidden');
+                    setTimeout(() => {
+                        document.getElementById('profileModal').classList.add('hidden');
+                        document.getElementById('profileForm').reset();
+                        successDiv.classList.add('hidden');
+                    }, 1500);
+                } else {
+                    const data = await res.json();
+                    errorDiv.textContent = data.detail || translations[currentLang].errorProfileUpdate;
+                    errorDiv.classList.remove('hidden');
+                    successDiv.classList.add('hidden');
+                }
+            } catch (err) {
+                errorDiv.textContent = translations[currentLang].errorConnection;
+                errorDiv.classList.remove('hidden');
+                successDiv.classList.add('hidden');
+                setTimeout(() => {
+                    errorDiv.classList.add('hidden');
+                }, 5000);
+            }
+        });
+
+        document.getElementById('changePasswordBtn').addEventListener('click', () => {
+            document.getElementById('userDropdown').classList.add('hidden');
+            document.getElementById('changePasswordModal').classList.remove('hidden');
+        });
+
+        document.getElementById('cancelChangePasswordBtn').addEventListener('click', () => {
+            document.getElementById('changePasswordModal').classList.add('hidden');
+            document.getElementById('changePasswordForm').reset();
+            document.getElementById('changePasswordError').classList.add('hidden');
+        });
+
+        document.getElementById('changePasswordForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const oldPassword = document.getElementById('oldPassword').value;
+            const newPassword = document.getElementById('changePassword').value;
+            const confirmPassword = document.getElementById('changeConfirmPassword').value;
+            const errorDiv = document.getElementById('changePasswordError');
+
+            if (newPassword !== confirmPassword) {
+                errorDiv.textContent = translations[currentLang].errorPasswordMismatch;
+                errorDiv.classList.remove('hidden');
+                return;
+            }
+
+            try {
+                const res = await fetch('/api/manage/change-password', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({old_password: oldPassword, new_password: newPassword})
+                });
+                if (res.ok) {
+                    alert(translations[currentLang].successPasswordChange);
+                    document.getElementById('changePasswordModal').classList.add('hidden');
+                    document.getElementById('changePasswordForm').reset();
+                } else {
+                    const data = await res.json();
+                    errorDiv.textContent = data.detail || translations[currentLang].errorPasswordChange;
+                    errorDiv.classList.remove('hidden');
+                }
+            } catch (err) {
+                showError('changePasswordError', translations[currentLang].errorConnection);
+            }
+        });
+
+        async function loadRecords() {
+            if (isLoadingRecords) return;
+            isLoadingRecords = true;
+            
+            const res = await fetch('/api/manage/records', {
+                headers: {'Authorization': `Bearer ${authToken}`}
+            });
+            if (res.status === 401) {
+                document.getElementById('logoutBtn').click();
+                isLoadingRecords = false;
+                return;
+            }
+            allRecords = await res.json();
+            renderRecords();
+            isLoadingRecords = false;
+        }
+
+        function renderRecords() {
+            const searchTerm = document.getElementById('searchRecords').value.toLowerCase();
+            const t = translations[currentLang];
+            const tbody = document.getElementById('recordsTable');
+            tbody.innerHTML = '';
+
+            const filtered = allRecords.filter(r => {
+                if (!searchTerm) return true;
+                return (
+                    (r.nip05 && r.nip05.toLowerCase().includes(searchTerm)) ||
+                    (r.npub && r.npub.toLowerCase().includes(searchTerm)) ||
+                    (r.pubkey_hex && r.pubkey_hex.toLowerCase().includes(searchTerm)) ||
+                    (r.payment_hash && r.payment_hash.toLowerCase().includes(searchTerm))
+                );
+            });
+
+            filtered.forEach(r => {
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-white/5';
+
+                const tdNip05 = document.createElement('td');
+                tdNip05.className = 'px-4 py-3 font-mono text-sm align-middle';
+                tdNip05.textContent = r.nip05;
+
+                const tdPubkey = document.createElement('td');
+                tdPubkey.className = 'px-4 py-3 font-mono text-xs text-slate-400 align-middle';
+                const pubkeySpan = document.createElement('span');
+                pubkeySpan.textContent = r.npub ? r.npub.substring(0, 20) + '...' : 'N/A';
+                const copyPubkeyBtn = document.createElement('button');
+                copyPubkeyBtn.className = 'ml-2 text-slate-500 hover:text-white align-middle';
+                copyPubkeyBtn.innerHTML = '<i class="fa-regular fa-copy"></i>';
+                copyPubkeyBtn.title = 'Copy pubkey';
+                copyPubkeyBtn.addEventListener('click', () => {
+                    navigator.clipboard.writeText(r.npub || '');
+                });
+                tdPubkey.appendChild(pubkeySpan);
+                tdPubkey.appendChild(copyPubkeyBtn);
+
+                const tdPaymentHash = document.createElement('td');
+                tdPaymentHash.className = 'px-4 py-3 font-mono text-xs text-slate-400 align-middle';
+                if (r.payment_hash) {
+                    const hashSpan = document.createElement('span');
+                    hashSpan.textContent = r.payment_hash.substring(0, 12) + '...';
+                    const copyHashBtn = document.createElement('button');
+                    copyHashBtn.className = 'ml-2 text-slate-500 hover:text-white align-middle';
+                    copyHashBtn.innerHTML = '<i class="fa-regular fa-copy"></i>';
+                    copyHashBtn.title = 'Copy payment hash';
+                    copyHashBtn.addEventListener('click', () => {
+                        navigator.clipboard.writeText(r.payment_hash);
+                    });
+                    tdPaymentHash.appendChild(hashSpan);
+                    tdPaymentHash.appendChild(copyHashBtn);
+                } else {
+                    tdPaymentHash.textContent = '-';
+                }
+
+                const tdStatus = document.createElement('td');
+                tdStatus.className = 'px-4 py-3 text-center align-middle';
+                const statusSpan = document.createElement('span');
+                statusSpan.className = r.in_nostr_json
+                    ? 'px-2 py-1 bg-green-600/20 text-green-400 rounded text-xs'
+                    : 'px-2 py-1 bg-red-600/20 text-red-400 rounded text-xs';
+                statusSpan.textContent = r.in_nostr_json ? t.statusActive : t.statusInactive;
+                tdStatus.appendChild(statusSpan);
+
+                const tdType = document.createElement('td');
+                tdType.className = 'px-4 py-3 text-center align-middle';
+                const typeSpan = document.createElement('span');
+                typeSpan.className = r.admin_only
+                    ? 'px-2 py-1 bg-violet-600/20 text-violet-400 rounded text-xs'
+                    : 'px-2 py-1 bg-blue-600/20 text-blue-400 rounded text-xs';
+                typeSpan.textContent = r.admin_only ? t.typeAdmin : t.typePaid;
+                tdType.appendChild(typeSpan);
+
+                const tdActions = document.createElement('td');
+                tdActions.className = 'px-4 py-3 text-center align-middle';
+
+                const editBtn = document.createElement('button');
+                editBtn.className = 'text-blue-400 hover:text-blue-300 mr-2';
+                editBtn.innerHTML = '<i class="fa-solid fa-pen"></i>';
+                editBtn.addEventListener('click', () => editRecord(r.id, r.nip05, r.npub, r.pubkey_hex));
+
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className = 'text-red-400 hover:text-red-300';
+                deleteBtn.innerHTML = '<i class="fa-solid fa-trash"></i>';
+                deleteBtn.addEventListener('click', () => deleteRecord(r.id, r.nip05));
+
+                tdActions.appendChild(editBtn);
+                tdActions.appendChild(deleteBtn);
+
+                tr.appendChild(tdNip05);
+                tr.appendChild(tdPubkey);
+                tr.appendChild(tdPaymentHash);
+                tr.appendChild(tdStatus);
+                tr.appendChild(tdType);
+                tr.appendChild(tdActions);
+                tbody.appendChild(tr);
+            });
+            isLoadingRecords = false;
+        }
+
+        document.getElementById('searchRecords').addEventListener('input', () => {
+            renderRecords();
+        });
+
+        document.getElementById('addRecordBtn').addEventListener('click', () => {
+            document.getElementById('modalTitle').textContent = translations[currentLang].modalAdd;
+            document.getElementById('recordId').value = '';
+            document.getElementById('recordUsername').value = '';
+            document.getElementById('recordPubkey').value = '';
+            document.getElementById('recordHex').value = '';
+            document.getElementById('copyRecordHexBtn').disabled = true;
+            document.getElementById('recordModal').classList.remove('hidden');
+        });
+
+        document.getElementById('cancelModalBtn').addEventListener('click', () => {
+            document.getElementById('recordModal').classList.add('hidden');
+        });
+
+        function editRecord(id, nip05, npub, pubkeyHex) {
+            document.getElementById('modalTitle').textContent = translations[currentLang].modalEdit;
+            document.getElementById('recordId').value = id;
+            document.getElementById('recordUsername').value = nip05.split('@')[0];
+            document.getElementById('recordPubkey').value = npub;
+            document.getElementById('recordHex').value = pubkeyHex || '';
+            document.getElementById('copyRecordHexBtn').disabled = !pubkeyHex;
+            document.getElementById('recordModal').classList.remove('hidden');
+        }
+
+        async function deleteRecord(id, nip05) {
+            if (!confirm(`Delete ${nip05}?`)) return;
+            const res = await fetch(`/api/manage/records/${id}`, {
+                method: 'DELETE',
+                headers: {'Authorization': `Bearer ${authToken}`}
+            });
+            if (res.ok) loadRecords();
+        }
+
+        document.getElementById('recordForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('recordId').value;
+            const username = document.getElementById('recordUsername').value.trim();
+            const pubkey = document.getElementById('recordPubkey').value.trim();
+            const nip05 = `${username}@${DOMAIN}`;
+
+            const res = await fetch('/api/manage/records', {
+                method: id ? 'PUT' : 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${authToken}`
+                },
+                body: JSON.stringify({id: id || null, nip05, pubkey})
+            });
+
+            if (res.ok) {
+                document.getElementById('recordModal').classList.add('hidden');
+                loadRecords();
+            } else {
+                const data = await res.json();
+                alert(data.detail || translations[currentLang].errorSaving);
+            }
+        });
+
+        document.getElementById('recordPubkey').addEventListener('input', async (e) => {
+            const pubkey = e.target.value.trim();
+            document.getElementById('recordHex').value = '';
+            document.getElementById('copyRecordHexBtn').disabled = true;
+            if (!pubkey) return;
+            try {
+                const res = await fetch('/api/convert-pubkey', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({pubkey})
+                });
+                const data = await res.json();
+                if (data.hex) {
+                    document.getElementById('recordHex').value = data.hex;
+                    document.getElementById('copyRecordHexBtn').disabled = false;
+                }
+            } catch {}
+        });
+
+        document.getElementById('copyRecordHexBtn').addEventListener('click', () => {
+            const hexValue = document.getElementById('recordHex').value;
+            if (hexValue) {
+                navigator.clipboard.writeText(hexValue);
+            }
+        });
+
+        document.getElementById('navRecords').addEventListener('click', () => {
+            document.getElementById('navRecords').classList.add('bg-violet-600', 'text-white');
+            document.getElementById('navRecords').classList.remove('text-slate-400', 'hover:text-white', 'hover:bg-white/10');
+            document.getElementById('navUsers').classList.remove('bg-violet-600', 'text-white');
+            document.getElementById('navUsers').classList.add('text-slate-400', 'hover:text-white', 'hover:bg-white/10');
+            document.getElementById('recordsSection').classList.remove('hidden');
+            document.getElementById('usersSection').classList.add('hidden');
+            document.getElementById('addRecordBtn').classList.remove('hidden');
+            document.getElementById('addUserBtn').classList.add('hidden');
+            loadRecords();
+        });
+
+        document.getElementById('navUsers').addEventListener('click', () => {
+            document.getElementById('navUsers').classList.add('bg-violet-600', 'text-white');
+            document.getElementById('navUsers').classList.remove('text-slate-400', 'hover:text-white', 'hover:bg-white/10');
+            document.getElementById('navRecords').classList.remove('bg-violet-600', 'text-white');
+            document.getElementById('navRecords').classList.add('text-slate-400', 'hover:text-white', 'hover:bg-white/10');
+            document.getElementById('usersSection').classList.remove('hidden');
+            document.getElementById('recordsSection').classList.add('hidden');
+            document.getElementById('addRecordBtn').classList.add('hidden');
+            document.getElementById('addUserBtn').classList.remove('hidden');
+            loadUsers();
+        });
+
+        async function loadUsers() {
+            if (isLoadingUsers) return;
+            isLoadingUsers = true;
+            
+            const res = await fetch('/api/manage/users', {
+                headers: {'Authorization': `Bearer ${authToken}`}
+            });
+            if (res.status === 401 || res.status === 403) {
+                document.getElementById('logoutBtn').click();
+                isLoadingUsers = false;
+                return;
+            }
+            const users = await res.json();
+            const t = translations[currentLang];
+            const tbody = document.getElementById('usersTable');
+            tbody.innerHTML = '';
+
+            users.forEach(u => {
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-white/5';
+
+                const tdUsername = document.createElement('td');
+                tdUsername.className = 'px-4 py-3 font-mono text-sm';
+                tdUsername.textContent = u.username;
+
+                const tdEmail = document.createElement('td');
+                tdEmail.className = 'px-4 py-3 text-sm text-slate-400';
+                tdEmail.textContent = u.email || '-';
+
+                const tdRole = document.createElement('td');
+                tdRole.className = 'px-4 py-3 text-center';
+                const roleSpan = document.createElement('span');
+                roleSpan.className = u.role === 'admin' 
+                    ? 'px-2 py-1 bg-violet-600/20 text-violet-400 rounded text-xs'
+                    : 'px-2 py-1 bg-blue-600/20 text-blue-400 rounded text-xs';
+                roleSpan.textContent = u.role === 'admin' ? t.roleAdmin : t.roleOperator;
+                tdRole.appendChild(roleSpan);
+
+                const tdStatus = document.createElement('td');
+                tdStatus.className = 'px-4 py-3 text-center';
+                const statusSpan = document.createElement('span');
+                statusSpan.className = u.is_active
+                    ? 'px-2 py-1 bg-green-600/20 text-green-400 rounded text-xs'
+                    : 'px-2 py-1 bg-red-600/20 text-red-400 rounded text-xs';
+                statusSpan.textContent = u.is_active ? t.statusActive : t.statusInactive;
+                tdStatus.appendChild(statusSpan);
+
+                const tdActions = document.createElement('td');
+                tdActions.className = 'px-4 py-3 text-center';
+
+                const editBtn = document.createElement('button');
+                editBtn.className = 'text-blue-400 hover:text-blue-300 mr-2';
+                editBtn.innerHTML = '<i class="fa-solid fa-pen"></i>';
+                editBtn.addEventListener('click', () => editUser(u.id, u.username, u.email, u.role, u.is_active));
+
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className = 'text-red-400 hover:text-red-300';
+                deleteBtn.innerHTML = '<i class="fa-solid fa-trash"></i>';
+                deleteBtn.addEventListener('click', () => deleteUser(u.id, u.username));
+
+                tdActions.appendChild(editBtn);
+                tdActions.appendChild(deleteBtn);
+
+                tr.appendChild(tdUsername);
+                tr.appendChild(tdEmail);
+                tr.appendChild(tdRole);
+                tr.appendChild(tdStatus);
+                tr.appendChild(tdActions);
+                tbody.appendChild(tr);
+            });
+            isLoadingUsers = false;
+        }
+
+        function editUser(id, username, email, role, isActive) {
+            const t = translations[currentLang];
+            document.getElementById('modalUserTitle').textContent = t.modalUserEdit;
+            document.getElementById('userId').value = id;
+            document.getElementById('userUsername').value = username;
+            document.getElementById('userUsername').readOnly = true;
+            document.getElementById('userPassword').required = false;
+            document.getElementById('userPasswordHint').classList.add('hidden');
+            document.getElementById('userEmail').value = email || '';
+            document.getElementById('userRole').value = role;
+            document.getElementById('userActive').checked = isActive;
+            document.getElementById('userActiveWrapper').classList.remove('hidden');
+            document.getElementById('userModal').classList.remove('hidden');
+        }
+
+        async function deleteUser(id, username) {
+            if (!confirm(`Delete user ${username}?`)) return;
+            const res = await fetch(`/api/manage/users/${id}`, {
+                method: 'DELETE',
+                headers: {'Authorization': `Bearer ${authToken}`}
+            });
+            if (res.ok) loadUsers();
+        }
+
+        document.getElementById('addUserBtn').addEventListener('click', () => {
+            const t = translations[currentLang];
+            document.getElementById('modalUserTitle').textContent = t.modalUserAdd;
+            document.getElementById('userId').value = '';
+            document.getElementById('userUsername').value = '';
+            document.getElementById('userUsername').readOnly = false;
+            document.getElementById('userPassword').value = '';
+            document.getElementById('userPassword').required = true;
+            document.getElementById('userPasswordHint').classList.remove('hidden');
+            document.getElementById('userEmail').value = '';
+            document.getElementById('userRole').value = 'operator';
+            document.getElementById('userActive').checked = true;
+            document.getElementById('userActiveWrapper').classList.add('hidden');
+            document.getElementById('userError').classList.add('hidden');
+            document.getElementById('userModal').classList.remove('hidden');
+        });
+
+        document.getElementById('cancelUserBtn').addEventListener('click', () => {
+            document.getElementById('userModal').classList.add('hidden');
+            document.getElementById('userForm').reset();
+            document.getElementById('userError').classList.add('hidden');
+            document.getElementById('userUsername').readOnly = false;
+            document.getElementById('userPassword').required = true;
+            document.getElementById('userPasswordHint').classList.remove('hidden');
+            document.getElementById('userActiveWrapper').classList.add('hidden');
+        });
+
+        document.getElementById('userForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('userId').value;
+            const username = document.getElementById('userUsername').value.trim();
+            const password = document.getElementById('userPassword').value;
+            const email = document.getElementById('userEmail').value.trim() || null;
+            const role = document.getElementById('userRole').value;
+            const isActive = document.getElementById('userActive').checked;
+            const errorDiv = document.getElementById('userError');
+
+            let body;
+            if (id) {
+                body = {id: parseInt(id), email, role, is_active: isActive};
+            } else {
+                body = {username, password, email, role};
+            }
+
+            try {
+                const res = await fetch('/api/manage/users', {
+                    method: id ? 'PUT' : 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify(body)
+                });
+                if (res.ok) {
+                    document.getElementById('userModal').classList.add('hidden');
+                    document.getElementById('userForm').reset();
+                    document.getElementById('userUsername').readOnly = false;
+                    document.getElementById('userPassword').required = true;
+                    document.getElementById('userPasswordHint').classList.remove('hidden');
+                    document.getElementById('userActiveWrapper').classList.add('hidden');
+                    loadUsers();
+                } else {
+                    const data = await res.json();
+                    errorDiv.textContent = data.detail || translations[currentLang].errorUserCreate;
+                    errorDiv.classList.remove('hidden');
+                }
+            } catch (err) {
+                showError('userError', translations[currentLang].errorConnection);
+            }
+        });
+
+    </script>
+</body>
+</html>

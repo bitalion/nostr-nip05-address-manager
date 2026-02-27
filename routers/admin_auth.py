@@ -85,6 +85,7 @@ async def manage_login(request: Request, data: LoginRequest, csrf_protect: CsrfP
         samesite="strict" if COOKIE_SECURE else "lax",
         max_age=86400,
         path="/",
+        domain=DOMAIN if DOMAIN != "example.com" else None,
     )
     return response
 

@@ -1,5 +1,6 @@
 import logging
 from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi_csrf_protect import CsrfProtect
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 
@@ -37,6 +38,11 @@ limiter = Limiter(key_func=get_remote_address)
 
 router = APIRouter()
 
+csrf_protect = CsrfProtect()
+limiter = Limiter(key_func=get_remote_address)
+
+router = APIRouter()
+
 
 # ── Records ──────────────────────────────────────────────────────────────────
 
@@ -52,7 +58,9 @@ async def manage_create_record(
     request: Request,
     data: ManageRecordRequest,
     current_user: dict = Depends(get_current_user),
+    csrf_protect: CsrfProtect = Depends(csrf_protect),
 ):
+    await csrf_protect.validate_csrf(request)
     try:
         pubkey_hex = convert_npub_to_hex(data.pubkey)
     except ValueError as e:
@@ -69,7 +77,9 @@ async def manage_update_record(
     request: Request,
     data: ManageRecordRequest,
     current_user: dict = Depends(get_current_user),
+    csrf_protect: CsrfProtect = Depends(csrf_protect),
 ):
+    await csrf_protect.validate_csrf(request)
     if not data.id:
         raise HTTPException(status_code=400, detail="Record ID required")
 
@@ -94,7 +104,8 @@ async def manage_update_record(
 
 @router.delete("/api/manage/records/{record_id}")
 @limiter.limit("30/minute")
-async def manage_delete_record(request: Request, record_id: int, current_user: dict = Depends(get_current_user)):
+async def manage_delete_record(request: Request, record_id: int, current_user: dict = Depends(get_current_user), csrf_protect: CsrfProtect = Depends(csrf_protect)):
+    await csrf_protect.validate_csrf(request)
     db = await get_db()
     cursor = await db.execute("SELECT nip05 FROM records WHERE id = ?", (record_id,))
     row = await cursor.fetchone()
@@ -128,7 +139,9 @@ async def manage_create_user(
     request: Request,
     data: UserCreateRequest,
     current_user: dict = Depends(require_role("admin")),
+    csrf_protect: CsrfProtect = Depends(csrf_protect),
 ):
+    await csrf_protect.validate_csrf(request)
     if data.role not in ("admin", "operator"):
         raise HTTPException(status_code=400, detail="Invalid role")
     try:
@@ -144,7 +157,9 @@ async def manage_update_user(
     request: Request,
     data: UserUpdateRequest,
     current_user: dict = Depends(require_role("admin")),
+    csrf_protect: CsrfProtect = Depends(csrf_protect),
 ):
+    await csrf_protect.validate_csrf(request)
     if data.role not in ("admin", "operator"):
         raise HTTPException(status_code=400, detail="Invalid role")
     success = await update_user(data.id, data.email, data.role, data.is_active)
@@ -159,7 +174,9 @@ async def manage_delete_user(
     request: Request,
     user_id: int,
     current_user: dict = Depends(require_role("admin")),
+    csrf_protect: CsrfProtect = Depends(csrf_protect),
 ):
+    await csrf_protect.validate_csrf(request)
     if user_id == current_user["id"]:
         raise HTTPException(status_code=400, detail="Cannot delete yourself")
     success = await delete_user(user_id)
@@ -174,7 +191,9 @@ async def manage_reset_user_password(
     request: Request,
     data: UserResetPasswordRequest,
     current_user: dict = Depends(require_role("admin")),
+    csrf_protect: CsrfProtect = Depends(csrf_protect),
 ):
+    await csrf_protect.validate_csrf(request)
     success = await reset_user_password(data.user_id, data.new_password)
     if not success:
         raise HTTPException(status_code=404, detail="User not found")

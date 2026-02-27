@@ -4,6 +4,7 @@ from pathlib import Path
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
+from fastapi_csrf_protect import generate_csrf_token
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 
@@ -19,6 +20,12 @@ BASE_DIR = Path(__file__).parent.parent
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 
 router = APIRouter()
+
+
+@router.get("/api/csrf-token")
+async def get_csrf_token(request: Request):
+    csrf_token = generate_csrf_token(request)
+    return {"csrf_token": csrf_token}
 
 
 @router.get("/", response_class=HTMLResponse)

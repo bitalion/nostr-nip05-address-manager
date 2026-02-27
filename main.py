@@ -7,6 +7,7 @@ import httpx
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from fastapi_csrf_protect import CsrfProtect
 from slowapi import Limiter
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
@@ -42,7 +43,7 @@ app.add_middleware(
     allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE"],
-    allow_headers=["Content-Type", "Authorization"],
+    allow_headers=["Content-Type", "Authorization", "X-CSRF-Token"],
 )
 
 
@@ -78,6 +79,14 @@ class RequestIDMiddleware(BaseHTTPMiddleware):
 app.add_middleware(SecurityHeadersMiddleware)
 app.add_middleware(RequestIDMiddleware)
 app.add_middleware(SlowAPIMiddleware)
+
+# ── CSRF Protection ───────────────────────────────────────────────────────────
+csrf_protect = CsrfProtect()
+
+
+def generate_csrf_token():
+    return csrf_protect.generate_csrf_token()
+
 
 # ── Routers ───────────────────────────────────────────────────────────────────
 app.include_router(public.router)

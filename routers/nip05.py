@@ -1,7 +1,8 @@
 import logging
 import secrets
 import httpx
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi_csrf_protect import CsrfProtect
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 
@@ -22,10 +23,13 @@ limiter = Limiter(key_func=get_remote_address)
 
 router = APIRouter()
 
+csrf_protect = CsrfProtect()
+
 
 @router.post("/api/create-invoice")
 @limiter.limit("10/minute")
-async def create_invoice(request: Request, data: NIP05Request):
+async def create_invoice(request: Request, data: NIP05Request, csrf_protect: CsrfProtect = Depends(csrf_protect)):
+    await csrf_protect.validate_csrf(request)
     try:
         username = data.username.strip()
         pubkey_hex = convert_npub_to_hex(data.pubkey)
@@ -124,7 +128,8 @@ async def create_invoice(request: Request, data: NIP05Request):
 
 @router.post("/api/cancel-registration")
 @limiter.limit("10/minute")
-async def cancel_registration(request: Request, data: CancelRegistrationRequest):
+async def cancel_registration(request: Request, data: CancelRegistrationRequest, csrf_protect: CsrfProtect = Depends(csrf_protect)):
+    await csrf_protect.validate_csrf(request)
     username = data.username.strip()
     nip05_full = f"{username}@{DOMAIN}"
 
@@ -139,7 +144,8 @@ async def cancel_registration(request: Request, data: CancelRegistrationRequest)
 
 @router.post("/api/check-payment")
 @limiter.limit("30/minute")
-async def check_payment(request: Request, data: CheckPaymentRequest):
+async def check_payment(request: Request, data: CheckPaymentRequest, csrf_protect: CsrfProtect = Depends(csrf_protect)):
+    await csrf_protect.validate_csrf(request)
     if not LNURL or not LNKEY:
         raise HTTPException(status_code=500, detail="Lightning payment not configured")
 
@@ -193,7 +199,8 @@ async def check_payment(request: Request, data: CheckPaymentRequest):
 
 @router.post("/api/register")
 @limiter.limit("5/minute")
-async def register_nip05(data: NIP05Request, request: Request):
+async def register_nip05(data: NIP05Request, request: Request, csrf_protect: CsrfProtect = Depends(csrf_protect)):
+    await csrf_protect.validate_csrf(request)
     if not ADMIN_API_KEY:
         raise HTTPException(status_code=501, detail="Direct registration is disabled")
 

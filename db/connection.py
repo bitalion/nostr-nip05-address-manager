@@ -49,7 +49,7 @@ async def init_db() -> None:
             )
         """)
         await db.execute("CREATE INDEX IF NOT EXISTS idx_nip05 ON records(nip05)")
-        await db.execute("CREATE INDEX IF NOT EXISTS idx_npub ON records(pubkey_hex)")
+        await db.execute("CREATE INDEX IF NOT EXISTS idx_pubkey_hex ON records(pubkey_hex)")
         await db.execute("CREATE INDEX IF NOT EXISTS idx_users_username ON users(username)")
 
         try:

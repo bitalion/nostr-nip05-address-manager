@@ -125,6 +125,8 @@ async def check_and_add_nip05_entry_atomic(username: str, pubkey_hex: str, payme
 
     All three operations happen inside a single lock acquisition to eliminate the race
     condition between availability check, file write, and DB update.
+    
+    If writing nostr.json fails, DB is rolled back to maintain consistency.
     """
     from db.connection import get_db
     async with _nostr_json_lock:
@@ -137,15 +139,21 @@ async def check_and_add_nip05_entry_atomic(username: str, pubkey_hex: str, payme
             if existing.lower() == username_lower:
                 return False
 
-        data["names"][username] = pubkey_hex
-        save_nostr_json(data)
-
         db = await get_db()
         ts = int(time.time())
         await db.execute(
             "UPDATE records SET payment_completed=1, in_nostr_json=1, updated_at=? WHERE payment_hash=?",
             (ts, payment_hash)
         )
+
+        data["names"][username] = pubkey_hex
+        try:
+            save_nostr_json(data)
+        except Exception as e:
+            await db.rollback()
+            logger.error(f"Failed to write nostr.json, rolled back DB: {e}")
+            raise
+
         await db.commit()
 
     logger.info(f"Atomic NIP-05 add + payment confirm for user: {username}")

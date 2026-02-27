@@ -90,6 +90,19 @@ ports:
   - "8080:8000"  # Access at http://localhost:8080
 ```
 
+### Application Module Structure
+
+```
+/
+├── main.py              # App factory, middlewares, startup/shutdown
+├── config.py            # Environment variables and path constants
+├── schemas.py           # Pydantic request/response models
+├── db/                  # Database layer (connection, records, users)
+├── core/                # Business logic (security, nostr, email)
+├── services/            # External integrations (LNbits payments)
+└── routers/             # HTTP route handlers (public, nip05, admin)
+```
+
 ### Volume Structure
 
 ```
@@ -419,4 +432,4 @@ docker-compose logs --tail=50
 
 ---
 
-**Last updated:** 2026-02-18
+**Last updated:** 2026-02-26

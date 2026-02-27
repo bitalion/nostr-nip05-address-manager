@@ -246,7 +246,13 @@ DESARROLLO:
   Raíz (/home/bitalion/nip05/)
     │
     ├─ .env                    ← Configuración
-    ├─ main.py                 ← Aplicación
+    ├─ main.py                 ← App factory + middlewares
+    ├─ config.py               ← Variables de entorno y rutas
+    ├─ schemas.py              ← Modelos Pydantic
+    ├─ db/                     ← Capa de datos (connection, records, users)
+    ├─ core/                   ← Lógica (security, nostr, email)
+    ├─ services/               ← Integraciones externas (payments)
+    ├─ routers/                ← Rutas HTTP (public, nip05, admin_*)
     ├─ requirements.txt
     ├─ templates/
     ├─ static/
@@ -259,11 +265,16 @@ DESARROLLO:
 CONTENEDOR:
 
   docker:8000
-    ├─ /app/main.py           ← Código de app
-    ├─ /app/requirements.txt
+    ├─ /app/main.py           ← App factory
+    ├─ /app/config.py         ← Configuración
+    ├─ /app/schemas.py        ← Modelos Pydantic
+    ├─ /app/db/               ← Capa de base de datos
+    ├─ /app/core/             ← Lógica de negocio
+    ├─ /app/services/         ← Integraciones externas
+    ├─ /app/routers/          ← Rutas HTTP
     ├─ /app/templates/
     ├─ /app/static/
-    └─ /app/.well-known/      ← Datos persistentes
+    └─ /app/.well-known/      ← Datos persistentes (volumen)
 
 
 ════════════════════════════════════════════════════════════════════════════
@@ -301,7 +312,7 @@ CONTENEDOR:
 
 ¡Hecho con ❤️ por Cuba Bitcoin 2026! 🇨🇺
 
-Versión: 2.0.0 (Reorganizada)
-Fecha: 2026-02-17
+Versión: 2.1.0 (Refactorizada)
+Fecha: 2026-02-26
 
 ════════════════════════════════════════════════════════════════════════════

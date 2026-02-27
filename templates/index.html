@@ -94,7 +94,6 @@
             <!-- Desktop menu items (hidden on mobile) -->
             <a href="#" class="hidden sm:inline text-slate-400 text-sm font-medium hover:text-white transition-colors duration-200" id="menuNip05">NIP-05</a>
             <a href="#" class="hidden sm:inline text-slate-400 text-sm font-medium hover:text-white transition-colors duration-200" id="menuFaq"><span id="menuFaqLabel">FAQ</span></a>
-            <a href="#" class="hidden sm:inline text-slate-400 text-sm font-medium hover:text-white transition-colors duration-200" id="menuSupport"><span id="menuSupportLabel">Contacto</span></a>
 
             <!-- Status Indicator -->
             <div class="flex items-center gap-1.5" id="statusContainer">
@@ -122,9 +121,6 @@
             </a>
             <a href="#" id="menuFaqM" class="flex items-center gap-3 text-white text-sm font-medium hover:text-[#6C27FF] transition-colors py-2.5 border-b border-slate-700/40">
                 <i class="fa-solid fa-circle-question w-4 text-center text-slate-400"></i><span id="menuFaqLabelM">FAQ</span>
-            </a>
-            <a href="#" id="menuSupportM" class="flex items-center gap-3 text-white text-sm font-medium hover:text-[#6C27FF] transition-colors py-2.5">
-                <i class="fa-solid fa-paper-plane w-4 text-center text-slate-400"></i><span id="menuSupportLabelM">Contacto</span>
             </a>
         </div>
     </nav>
@@ -400,62 +396,6 @@
 
         </section><!-- fin section-faq -->
 
-        <!-- Sección de Contacto -->
-        <section id="section-contact" class="snap-section pt-14 sm:pt-16 pb-8">
-            <div class="flex-1 flex flex-col justify-center w-full max-w-2xl sm:max-w-4xl mx-auto px-3 sm:px-6 py-6 sm:py-8">
-                <h2 class="text-base font-semibold tracking-tight text-slate-300 mb-6" id="contactTitle">Contacto</h2>
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <!-- Nostr -->
-                    <a href="https://nostr.com/npub1huyn6ru55pv6l7p0sxvlu3vfpq7pan958sl4weft0kte6lvdvvksd5s34t" target="_blank" class="group relative flex flex-col items-center justify-center p-6 bg-gradient-to-br from-orange-500/20 to-orange-500/5 border border-orange-500/30 rounded-2xl hover:border-orange-500/60 hover:from-orange-500/30 hover:to-orange-500/10 transition-all duration-300">
-                        <div class="absolute inset-0 bg-orange-500/5 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                        <div class="relative z-10 flex items-center justify-center w-16 h-16 mb-4 bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl shadow-lg shadow-orange-500/20 group-hover:scale-110 group-hover:shadow-xl group-hover:shadow-orange-500/30 transition-all duration-300">
-                            <i class="fa-brands fa-nfc-directional text-3xl text-white"></i>
-                        </div>
-                        <div class="relative z-10 text-center">
-                            <p class="text-white font-bold text-base mb-1">Nostr</p>
-                            <p class="text-orange-400 text-sm font-medium">@Cuba_Bitcoin</p>
-                        </div>
-                    </a>
-                    
-                    <!-- Telegram -->
-                    <a href="https://t.me/Cuba_Bitcoin" target="_blank" class="group relative flex flex-col items-center justify-center p-6 bg-gradient-to-br from-[#229ED9]/20 to-[#229ED9]/5 border border-[#229ED9]/30 rounded-2xl hover:border-[#229ED9]/60 hover:from-[#229ED9]/30 hover:to-[#229ED9]/10 transition-all duration-300">
-                        <div class="absolute inset-0 bg-[#229ED9]/5 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                        <div class="relative z-10 flex items-center justify-center w-16 h-16 mb-4 bg-[#229ED9] rounded-2xl shadow-lg shadow-[#229ED9]/20 group-hover:scale-110 group-hover:shadow-xl group-hover:shadow-[#229ED9]/30 transition-all duration-300">
-                            <i class="fa-brands fa-telegram text-3xl text-white"></i>
-                        </div>
-                        <div class="relative z-10 text-center">
-                            <p class="text-white font-bold text-base mb-1">Telegram</p>
-                            <p class="text-[#229ED9] text-sm font-medium">@Cuba_Bitcoin</p>
-                        </div>
-                    </a>
-                    
-                    <!-- X / Twitter -->
-                    <a href="https://x.com/Cuba_BTC" target="_blank" class="group relative flex flex-col items-center justify-center p-6 bg-gradient-to-br from-white/10 to-white/5 border border-white/20 rounded-2xl hover:border-white/40 hover:from-white/15 hover:to-white/5 transition-all duration-300">
-                        <div class="absolute inset-0 bg-white/5 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                        <div class="relative z-10 flex items-center justify-center w-16 h-16 mb-4 bg-black rounded-2xl shadow-lg group-hover:scale-110 group-hover:shadow-xl transition-all duration-300">
-                            <i class="fa-brands fa-x-twitter text-3xl text-white"></i>
-                        </div>
-                        <div class="relative z-10 text-center">
-                            <p class="text-white font-bold text-base mb-1">X</p>
-                            <p class="text-slate-300 text-sm font-medium">@Cuba_BTC</p>
-                        </div>
-                    </a>
-                    
-                    <!-- Email -->
-                    <a href="mailto:cubabitcoin@gmail.com" class="group relative flex flex-col items-center justify-center p-6 bg-gradient-to-br from-violet-500/20 to-violet-500/5 border border-violet-500/30 rounded-2xl hover:border-violet-500/60 hover:from-violet-500/30 hover:to-violet-500/10 transition-all duration-300">
-                        <div class="absolute inset-0 bg-violet-500/5 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                        <div class="relative z-10 flex items-center justify-center w-16 h-16 mb-4 bg-gradient-to-br from-violet-500 to-violet-600 rounded-2xl shadow-lg shadow-violet-500/20 group-hover:scale-110 group-hover:shadow-xl group-hover:shadow-violet-500/30 transition-all duration-300">
-                            <i class="fa-regular fa-envelope text-3xl text-white"></i>
-                        </div>
-                        <div class="relative z-10 text-center">
-                            <p class="text-white font-bold text-base mb-1">Email</p>
-                            <p class="text-violet-400 text-sm font-medium">cubabitcoin@gmail.com</p>
-                        </div>
-                    </a>
-                </div>
-            </div>
-        </section>
-
         <!-- Footer -->
         <footer class="border-t border-white/10 py-6 px-4 bg-black/20">
             <div class="text-center flex flex-wrap items-center justify-center gap-2 sm:gap-4">
@@ -482,10 +422,7 @@
                 title: "NIP-05 Register",
                 subtitle: "Get your Nostr identifier",
                 faqTitle: "FAQ",
-                supportTitle: "Contact",
-                contactTitle: "Contact",
                 menuDirectory: "Directory",
-                menuSupport: "Contact",
                 statusOnline: "Online",
                 statusOffline: "Offline",
                 labelUsername: "NIP-05 Username",
@@ -546,10 +483,7 @@
                 title: "Registro NIP-05",
                 subtitle: "Obtén tu identificador Nostr",
                 faqTitle: "FAQ",
-                supportTitle: "Contacto",
-                contactTitle: "Contacto",
                 menuDirectory: "Directorio",
-                menuSupport: "Contacto",
                 statusOnline: "En línea",
                 statusOffline: "Sin conexión",
                 labelUsername: "Usuario NIP-05",
@@ -619,7 +553,6 @@
             localStorage.setItem('language', lang);
 
             document.getElementById('faqTitle').textContent = translations[lang].faqTitle;
-            document.getElementById('contactTitle').textContent = translations[lang].contactTitle;
             document.getElementById('label-username').textContent = translations[lang].labelUsername;
             document.getElementById('username').placeholder = translations[lang].usernamePlaceholder;
             document.getElementById('label-pubkey').textContent = translations[lang].labelPubkey;
@@ -661,10 +594,6 @@
             // Hero text
             document.getElementById('heroPrefix').textContent = translations[lang].heroPrefix + ' ';
             document.getElementById('heroMid').textContent = translations[lang].heroMid + ' ';
-
-            // Nav menu labels
-            document.getElementById('menuSupportLabel').textContent = translations[lang].menuSupport;
-            document.getElementById('menuSupportLabelM').textContent = translations[lang].menuSupport;
 
             // Últimos registros headers
             document.getElementById('lastRegsTitle').textContent = translations[lang].lastRegsTitle;
@@ -754,22 +683,12 @@
             scrollToSection('section-faq');
         });
 
-        document.getElementById('menuSupport').addEventListener('click', function(e) {
-            e.preventDefault();
-            scrollToSection('section-contact');
-        });
-
         // Mobile menu handlers
         document.getElementById('menuNip05M').addEventListener('click', function(e) {
             e.preventDefault();
             closeMobileMenu();
             scrollToSection('section-nip05');
             document.getElementById('username').focus();
-        });
-        document.getElementById('menuSupportM').addEventListener('click', function(e) {
-            e.preventDefault();
-            closeMobileMenu();
-            scrollToSection('section-contact');
         });
         document.getElementById('menuFaqM').addEventListener('click', function(e) {
             e.preventDefault();

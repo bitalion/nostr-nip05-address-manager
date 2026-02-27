@@ -43,8 +43,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Copy Python dependencies from the builder stage
 COPY --from=builder /install /usr/local
 
-# Copy application (top-level files)
+# Copy application modules
 COPY main.py .
+COPY config.py .
+COPY schemas.py .
+COPY db/ db/
+COPY core/ core/
+COPY services/ services/
+COPY routers/ routers/
 COPY templates/ templates/
 COPY static/ static/
 

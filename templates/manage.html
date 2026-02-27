@@ -659,7 +659,6 @@
         document.getElementById('langEN2').addEventListener('click', () => setLanguage('en'));
         document.getElementById('langES2').addEventListener('click', () => setLanguage('es'));
 
-        let authToken = localStorage.getItem('admin_token');
         let isLoadingRecords = false;
         let isLoadingUsers = false;
         let allRecords = [];
@@ -687,31 +686,29 @@
             if (resetToken) {
                 document.getElementById('resetToken').value = resetToken;
                 showSection('resetPasswordSection');
-            } else if (authToken) {
-                const savedUser = localStorage.getItem('admin_user');
-                const savedRole = localStorage.getItem('admin_role');
-                if (savedUser) {
-                    document.getElementById('userDisplay').textContent = savedUser;
-                }
-                if (savedRole === 'admin') {
-                    document.getElementById('navUsers').classList.remove('hidden');
-                }
-                showSection('dashboardSection');
-                const res = await fetch('/api/manage/records', {
-                    headers: {'Authorization': `Bearer ${authToken}`}
-                });
-                if (res.ok) {
-                    loadRecords();
-                    setInterval(loadRecords, 30000);
-                } else {
-                    localStorage.removeItem('admin_token');
-                    localStorage.removeItem('admin_user');
-                    localStorage.removeItem('admin_role');
-                    authToken = null;
+            } else {
+                try {
+                    const res = await fetch('/api/manage/records');
+                    if (res.ok) {
+                        const savedUser = localStorage.getItem('admin_user');
+                        const savedRole = localStorage.getItem('admin_role');
+                        if (savedUser) {
+                            document.getElementById('userDisplay').textContent = savedUser;
+                        }
+                        if (savedRole === 'admin') {
+                            document.getElementById('navUsers').classList.remove('hidden');
+                        }
+                        showSection('dashboardSection');
+                        loadRecords();
+                        setInterval(loadRecords, 30000);
+                    } else {
+                        localStorage.removeItem('admin_user');
+                        localStorage.removeItem('admin_role');
+                        showSection('loginSection');
+                    }
+                } catch (_) {
                     showSection('loginSection');
                 }
-            } else {
-                showSection('loginSection');
             }
         })();
 
@@ -729,8 +726,6 @@
                 });
                 const data = await res.json();
                 if (res.ok) {
-                    authToken = data.token;
-                    localStorage.setItem('admin_token', authToken);
                     localStorage.setItem('admin_user', data.user.username);
                     localStorage.setItem('admin_role', data.user.role);
                     document.getElementById('userDisplay').textContent = data.user.username;
@@ -818,18 +813,11 @@
         });
 
         document.getElementById('logoutBtn').addEventListener('click', async () => {
-            if (authToken) {
-                try {
-                    await fetch('/api/manage/logout', {
-                        method: 'POST',
-                        headers: {'Authorization': `Bearer ${authToken}`}
-                    });
-                } catch (_) {}
-            }
-            localStorage.removeItem('admin_token');
+            try {
+                await fetch('/api/manage/logout', { method: 'POST' });
+            } catch (_) {}
             localStorage.removeItem('admin_user');
             localStorage.removeItem('admin_role');
-            authToken = null;
             showSection('loginSection');
         });
 
@@ -845,9 +833,7 @@
         document.getElementById('editProfileBtn').addEventListener('click', async () => {
             document.getElementById('userDropdown').classList.add('hidden');
             try {
-                const res = await fetch('/api/manage/profile', {
-                    headers: {'Authorization': `Bearer ${authToken}`}
-                });
+                const res = await fetch('/api/manage/profile');
                 if (res.ok) {
                     const profile = await res.json();
                     document.getElementById('profileEmail').value = profile.email || '';
@@ -876,10 +862,7 @@
             try {
                 const res = await fetch('/api/manage/profile', {
                     method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${authToken}`
-                    },
+                    headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({email})
                 });
                 if (res.ok) {
@@ -934,10 +917,7 @@
             try {
                 const res = await fetch('/api/manage/change-password', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${authToken}`
-                    },
+                    headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({old_password: oldPassword, new_password: newPassword})
                 });
                 if (res.ok) {
@@ -958,9 +938,7 @@
             if (isLoadingRecords) return;
             isLoadingRecords = true;
             
-            const res = await fetch('/api/manage/records', {
-                headers: {'Authorization': `Bearer ${authToken}`}
-            });
+            const res = await fetch('/api/manage/records');
             if (res.status === 401) {
                 document.getElementById('logoutBtn').click();
                 isLoadingRecords = false;
@@ -1102,10 +1080,7 @@
 
         async function deleteRecord(id, nip05) {
             if (!confirm(`Delete ${nip05}?`)) return;
-            const res = await fetch(`/api/manage/records/${id}`, {
-                method: 'DELETE',
-                headers: {'Authorization': `Bearer ${authToken}`}
-            });
+            const res = await fetch(`/api/manage/records/${id}`, { method: 'DELETE' });
             if (res.ok) loadRecords();
         }
 
@@ -1118,10 +1093,7 @@
 
             const res = await fetch('/api/manage/records', {
                 method: id ? 'PUT' : 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${authToken}`
-                },
+                headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({id: id || null, nip05, pubkey})
             });
 
@@ -1188,9 +1160,7 @@
             if (isLoadingUsers) return;
             isLoadingUsers = true;
             
-            const res = await fetch('/api/manage/users', {
-                headers: {'Authorization': `Bearer ${authToken}`}
-            });
+            const res = await fetch('/api/manage/users');
             if (res.status === 401 || res.status === 403) {
                 document.getElementById('logoutBtn').click();
                 isLoadingUsers = false;
@@ -1274,10 +1244,7 @@
 
         async function deleteUser(id, username) {
             if (!confirm(`Delete user ${username}?`)) return;
-            const res = await fetch(`/api/manage/users/${id}`, {
-                method: 'DELETE',
-                headers: {'Authorization': `Bearer ${authToken}`}
-            });
+            const res = await fetch(`/api/manage/users/${id}`, { method: 'DELETE' });
             if (res.ok) loadUsers();
         }
 
@@ -1328,10 +1295,7 @@
             try {
                 const res = await fetch('/api/manage/users', {
                     method: id ? 'PUT' : 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${authToken}`
-                    },
+                    headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify(body)
                 });
                 if (res.ok) {

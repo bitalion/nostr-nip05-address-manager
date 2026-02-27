@@ -166,4 +166,4 @@ Requisitos:
 
 ---
 
-**Última actualización:** 2026-02-18
+**Última actualización:** 2026-02-26

@@ -31,11 +31,34 @@ NIP-05 lets you associate a Nostr public key (`npub...`) with a human-readable, 
 
 ```
 /
-├── main.py                      # FastAPI backend
+├── main.py                      # App factory, middlewares, startup/shutdown
+├── config.py                    # Environment variables and path constants
+├── schemas.py                   # Pydantic request/response models
+│
+├── db/
+│   ├── connection.py            # DB pool (get_db, init_db)
+│   ├── records.py               # CRUD operations on the records table
+│   └── users.py                 # CRUD on users + password reset tokens
+│
+├── core/
+│   ├── security.py              # Password hashing, token auth, Depends
+│   ├── nostr.py                 # npub conversion, nostr.json management
+│   └── email.py                 # Email sending
+│
+├── services/
+│   └── payments.py              # LNbits API integration
+│
+├── routers/
+│   ├── public.py                # Public routes (/, /health, /api/*)
+│   ├── nip05.py                 # Registration & payment routes
+│   ├── admin_auth.py            # Admin auth, password reset, profile
+│   └── admin_records.py         # Admin CRUD for records and users
+│
 ├── templates/
-│   └── index.html               # Frontend (Tailwind CSS + JS)
+│   ├── index.html               # Public registration frontend
+│   └── manage.html              # Admin panel
 ├── static/
-│   └── images/                  # Static images
+│   └── images/                  # Static assets
 ├── .well-known/
 │   └── nostr.json               # NIP-05 identity registry
 ├── docker/
@@ -231,7 +254,7 @@ Nostr clients query `https://domain.com/.well-known/nostr.json?name=alice` to ve
 | Payments | LNbits API (Lightning Network) |
 | Encoding | bech32 (npub → hex) |
 | Container | Docker + docker-compose |
-| Validation | Pydantic v1 |
+| Validation | Pydantic v2 |
 
 ---
 

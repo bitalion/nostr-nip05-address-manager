@@ -81,7 +81,9 @@ def save_nostr_json(data: dict) -> None:
 
 async def check_nip05_available(nip05: str) -> bool:
     from db.connection import get_db
+    from config import DOMAIN
     nip05_lower = nip05.lower().strip()
+    nip05_full = f"{nip05_lower}@{DOMAIN}"
 
     async with _nostr_json_lock:
         data = load_nostr_json()
@@ -91,8 +93,8 @@ async def check_nip05_available(nip05: str) -> bool:
 
     db = await get_db()
     cursor = await db.execute(
-        "SELECT 1 FROM records WHERE LOWER(nip05) = ? AND payment_completed = 1",
-        (nip05_lower,)
+        "SELECT 1 FROM records WHERE LOWER(nip05) = ?",
+        (nip05_full.lower(),)
     )
     row = await cursor.fetchone()
     return row is None

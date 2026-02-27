@@ -40,6 +40,15 @@ async def manage_page(request: Request):
     return templates.TemplateResponse("manage.html", {"request": request, "domain": DOMAIN})
 
 
+@router.get("/manage/reset", response_class=HTMLResponse)
+async def manage_reset_page(request: Request):
+    token = request.query_params.get("token", "")
+    return templates.TemplateResponse(
+        "manage.html", 
+        {"request": request, "domain": DOMAIN, "reset_token": token}
+    )
+
+
 @router.post("/api/manage/login")
 @limiter.limit("5/minute")
 async def manage_login(request: Request, data: LoginRequest):

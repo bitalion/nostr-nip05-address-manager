@@ -682,7 +682,10 @@
 
         (async function init() {
             const urlParams = new URLSearchParams(window.location.search);
-            const resetToken = urlParams.get('token');
+            let resetToken = urlParams.get('token');
+            if (!resetToken && typeof reset_token !== 'undefined' && reset_token) {
+                resetToken = reset_token;
+            }
             if (resetToken) {
                 document.getElementById('resetToken').value = resetToken;
                 showSection('resetPasswordSection');

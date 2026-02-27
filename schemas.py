@@ -68,12 +68,12 @@ class PasswordResetRequest(BaseModel):
 
 class PasswordResetConfirm(BaseModel):
     token: str = Field(max_length=100)
-    new_password: str = Field(max_length=200)
+    new_password: str = Field(min_length=8, max_length=200)
 
 
 class ChangePasswordRequest(BaseModel):
-    old_password: str = Field(max_length=200)
-    new_password: str = Field(max_length=200)
+    old_password: str = Field(min_length=8, max_length=200)
+    new_password: str = Field(min_length=8, max_length=200)
 
 
 class ProfileUpdateRequest(BaseModel):
@@ -82,7 +82,7 @@ class ProfileUpdateRequest(BaseModel):
 
 class UserCreateRequest(BaseModel):
     username: str = Field(max_length=50)
-    password: str = Field(max_length=200)
+    password: str = Field(min_length=8, max_length=200)
     email: str | None = None
     role: str = Field(max_length=20)
 
@@ -96,4 +96,4 @@ class UserUpdateRequest(BaseModel):
 
 class UserResetPasswordRequest(BaseModel):
     user_id: int
-    new_password: str = Field(max_length=200)
+    new_password: str = Field(min_length=8, max_length=200)

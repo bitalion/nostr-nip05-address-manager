@@ -2,7 +2,6 @@ import logging
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi_csrf_protect import CsrfProtect
 from slowapi import Limiter
-from slowapi.util import get_remote_address
 
 from core.nostr import (
     _nostr_json_lock,
@@ -34,7 +33,24 @@ from schemas import (
 )
 
 logger = logging.getLogger(__name__)
-limiter = Limiter(key_func=get_remote_address)
+
+
+def get_real_ip(request: Request) -> str:
+    forwarded = request.headers.get("X-Forwarded-For")
+    if forwarded:
+        return forwarded.split(",")[0].strip()
+    return request.client.host if request.client else "unknown"
+
+
+def get_rate_limit_key(request: Request) -> str:
+    ip = get_real_ip(request)
+    session_token = request.cookies.get("session_token", "")
+    if session_token:
+        return f"{ip}:{session_token}"
+    return ip
+
+
+limiter = Limiter(key_func=get_rate_limit_key)
 
 router = APIRouter()
 

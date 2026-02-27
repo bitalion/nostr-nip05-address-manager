@@ -5,7 +5,6 @@ from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from fastapi_csrf_protect import CsrfProtect
 from slowapi import Limiter
-from slowapi.util import get_remote_address
 
 from config import COOKIE_SECURE, DOMAIN, SMTP_HOST
 from core.email import send_email
@@ -28,7 +27,24 @@ from schemas import (
 )
 
 logger = logging.getLogger(__name__)
-limiter = Limiter(key_func=get_remote_address)
+
+
+def get_real_ip(request: Request) -> str:
+    forwarded = request.headers.get("X-Forwarded-For")
+    if forwarded:
+        return forwarded.split(",")[0].strip()
+    return request.client.host if request.client else "unknown"
+
+
+def get_rate_limit_key(request: Request) -> str:
+    ip = get_real_ip(request)
+    session_token = request.cookies.get("session_token", "")
+    if session_token:
+        return f"{ip}:{session_token}"
+    return ip
+
+
+limiter = Limiter(key_func=get_rate_limit_key)
 
 BASE_DIR = Path(__file__).parent.parent
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))

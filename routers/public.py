@@ -6,7 +6,6 @@ from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from fastapi_csrf_protect import generate_csrf_token
 from slowapi import Limiter
-from slowapi.util import get_remote_address
 
 from config import DOMAIN, INVOICE_AMOUNT_SATS, NOSTR_JSON_PATH, STATIC_DIR
 from core.nostr import check_nip05_available, convert_npub_to_hex, load_nostr_json
@@ -14,7 +13,24 @@ from db.connection import get_db
 from schemas import ConvertPubkeyRequest
 
 logger = logging.getLogger(__name__)
-limiter = Limiter(key_func=get_remote_address)
+
+
+def get_real_ip(request: Request) -> str:
+    forwarded = request.headers.get("X-Forwarded-For")
+    if forwarded:
+        return forwarded.split(",")[0].strip()
+    return request.client.host if request.client else "unknown"
+
+
+def get_rate_limit_key(request: Request) -> str:
+    ip = get_real_ip(request)
+    session_token = request.cookies.get("session_token", "")
+    if session_token:
+        return f"{ip}:{session_token}"
+    return ip
+
+
+limiter = Limiter(key_func=get_rate_limit_key)
 
 BASE_DIR = Path(__file__).parent.parent
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))

@@ -4,7 +4,6 @@ import httpx
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi_csrf_protect import CsrfProtect
 from slowapi import Limiter
-from slowapi.util import get_remote_address
 
 from config import ADMIN_API_KEY, DOMAIN, INVOICE_AMOUNT_SATS, LNKEY, LNURL
 from core.nostr import check_and_add_nip05_entry, check_and_add_nip05_entry_atomic, check_nip05_available, convert_npub_to_hex
@@ -19,7 +18,24 @@ from schemas import CancelRegistrationRequest, CheckPaymentRequest, NIP05Request
 import services.payments as payments_svc
 
 logger = logging.getLogger(__name__)
-limiter = Limiter(key_func=get_remote_address)
+
+
+def get_real_ip(request: Request) -> str:
+    forwarded = request.headers.get("X-Forwarded-For")
+    if forwarded:
+        return forwarded.split(",")[0].strip()
+    return request.client.host if request.client else "unknown"
+
+
+def get_rate_limit_key(request: Request) -> str:
+    ip = get_real_ip(request)
+    session_token = request.cookies.get("session_token", "")
+    if session_token:
+        return f"{ip}:{session_token}"
+    return ip
+
+
+limiter = Limiter(key_func=get_rate_limit_key)
 
 router = APIRouter()
 

@@ -11,7 +11,6 @@ from fastapi_csrf_protect import CsrfProtect
 from slowapi import Limiter
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
-from slowapi.util import get_remote_address
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from config import ALLOWED_ORIGINS, NOSTR_JSON_PATH, STATIC_DIR, WELL_KNOWN_DIR
@@ -23,8 +22,26 @@ from services.payments import _validate_lnurl
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+
+def get_real_ip(request: Request) -> str:
+    forwarded = request.headers.get("X-Forwarded-For")
+    if forwarded:
+        client_ip = forwarded.split(",")[0].strip()
+        if client_ip:
+            return client_ip
+    return request.client.host if request.client else "unknown"
+
+
+def get_rate_limit_key(request: Request) -> str:
+    ip = get_real_ip(request)
+    session_token = request.cookies.get("session_token", "")
+    if session_token:
+        return f"{ip}:{session_token}"
+    return ip
+
+
 # ── Rate limiter ──────────────────────────────────────────────────────────────
-limiter = Limiter(key_func=get_remote_address)
+limiter = Limiter(key_func=get_rate_limit_key)
 
 # ── App factory ───────────────────────────────────────────────────────────────
 app = FastAPI(title="NIP-05 Nostr Identifier")

@@ -3,8 +3,8 @@ from pathlib import Path
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
-from fastapi_csrf_protect import CsrfProtect
 from slowapi import Limiter
+from slowapi.util import get_remote_address
 
 from config import COOKIE_SECURE, DOMAIN, SMTP_HOST
 from core.email import send_email
@@ -27,31 +27,12 @@ from schemas import (
 )
 
 logger = logging.getLogger(__name__)
-
-
-def get_real_ip(request: Request) -> str:
-    forwarded = request.headers.get("X-Forwarded-For")
-    if forwarded:
-        return forwarded.split(",")[0].strip()
-    return request.client.host if request.client else "unknown"
-
-
-def get_rate_limit_key(request: Request) -> str:
-    ip = get_real_ip(request)
-    session_token = request.cookies.get("session_token", "")
-    if session_token:
-        return f"{ip}:{session_token}"
-    return ip
-
-
-limiter = Limiter(key_func=get_rate_limit_key)
+limiter = Limiter(key_func=get_remote_address)
 
 BASE_DIR = Path(__file__).parent.parent
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 
 router = APIRouter()
-
-csrf_protect = CsrfProtect()
 
 
 @router.get("/manage", response_class=HTMLResponse)
@@ -70,8 +51,7 @@ async def manage_reset_page(request: Request):
 
 @router.post("/api/manage/login")
 @limiter.limit("5/minute")
-async def manage_login(request: Request, data: LoginRequest, csrf_protect: CsrfProtect = Depends(csrf_protect)):
-    await csrf_protect.validate_csrf(request)
+async def manage_login(request: Request, data: LoginRequest):
     user = await authenticate_user(data.username, data.password)
     if not user:
         raise HTTPException(status_code=401, detail="Invalid credentials")
@@ -85,15 +65,13 @@ async def manage_login(request: Request, data: LoginRequest, csrf_protect: CsrfP
         samesite="strict" if COOKIE_SECURE else "lax",
         max_age=86400,
         path="/",
-        domain=DOMAIN if DOMAIN != "example.com" else None,
     )
     return response
 
 
 @router.post("/api/manage/logout")
 @limiter.limit("20/minute")
-async def manage_logout(request: Request, csrf_protect: CsrfProtect = Depends(csrf_protect)):
-    await csrf_protect.validate_csrf(request)
+async def manage_logout(request: Request):
     token = request.cookies.get("session_token")
     if token:
         await invalidate_token(token)
@@ -104,8 +82,7 @@ async def manage_logout(request: Request, csrf_protect: CsrfProtect = Depends(cs
 
 @router.post("/api/manage/password-reset")
 @limiter.limit("3/minute")
-async def request_password_reset(request: Request, data: PasswordResetRequest, csrf_protect: CsrfProtect = Depends(csrf_protect)):
-    await csrf_protect.validate_csrf(request)
+async def request_password_reset(request: Request, data: PasswordResetRequest):
     if not SMTP_HOST:
         raise HTTPException(status_code=503, detail="Password reset not available")
 
@@ -135,8 +112,7 @@ async def request_password_reset(request: Request, data: PasswordResetRequest, c
 
 @router.post("/api/manage/password-reset/confirm")
 @limiter.limit("5/minute")
-async def confirm_password_reset(request: Request, data: PasswordResetConfirm, csrf_protect: CsrfProtect = Depends(csrf_protect)):
-    await csrf_protect.validate_csrf(request)
+async def confirm_password_reset(request: Request, data: PasswordResetConfirm):
     user_id = await verify_password_reset_token(data.token)
     if not user_id:
         raise HTTPException(status_code=400, detail="Invalid or expired token")
@@ -152,9 +128,7 @@ async def change_password(
     request: Request,
     data: ChangePasswordRequest,
     current_user: dict = Depends(get_current_user),
-    csrf_protect: CsrfProtect = Depends(csrf_protect),
 ):
-    await csrf_protect.validate_csrf(request)
     user = await authenticate_user(current_user["username"], data.old_password)
     if not user:
         raise HTTPException(status_code=401, detail="Current password is incorrect")
@@ -177,9 +151,7 @@ async def manage_update_profile(
     request: Request,
     data: ProfileUpdateRequest,
     current_user: dict = Depends(get_current_user),
-    csrf_protect: CsrfProtect = Depends(csrf_protect),
 ):
-    await csrf_protect.validate_csrf(request)
     success = await update_user_profile(current_user["id"], data.email)
     if not success:
         raise HTTPException(status_code=404, detail="User not found")

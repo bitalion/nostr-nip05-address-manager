@@ -7,10 +7,10 @@ import httpx
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi_csrf_protect import CsrfProtect
 from slowapi import Limiter
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
+from slowapi.util import get_remote_address
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from config import ALLOWED_ORIGINS, NOSTR_JSON_PATH, STATIC_DIR, WELL_KNOWN_DIR
@@ -22,26 +22,8 @@ from services.payments import _validate_lnurl
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-
-def get_real_ip(request: Request) -> str:
-    forwarded = request.headers.get("X-Forwarded-For")
-    if forwarded:
-        client_ip = forwarded.split(",")[0].strip()
-        if client_ip:
-            return client_ip
-    return request.client.host if request.client else "unknown"
-
-
-def get_rate_limit_key(request: Request) -> str:
-    ip = get_real_ip(request)
-    session_token = request.cookies.get("session_token", "")
-    if session_token:
-        return f"{ip}:{session_token}"
-    return ip
-
-
 # ── Rate limiter ──────────────────────────────────────────────────────────────
-limiter = Limiter(key_func=get_rate_limit_key)
+limiter = Limiter(key_func=get_remote_address)
 
 # ── App factory ───────────────────────────────────────────────────────────────
 app = FastAPI(title="NIP-05 Nostr Identifier")
@@ -60,7 +42,7 @@ app.add_middleware(
     allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE"],
-    allow_headers=["Content-Type", "Authorization", "X-CSRF-Token"],
+    allow_headers=["Content-Type", "Authorization"],
 )
 
 
@@ -96,14 +78,6 @@ class RequestIDMiddleware(BaseHTTPMiddleware):
 app.add_middleware(SecurityHeadersMiddleware)
 app.add_middleware(RequestIDMiddleware)
 app.add_middleware(SlowAPIMiddleware)
-
-# ── CSRF Protection ───────────────────────────────────────────────────────────
-csrf_protect = CsrfProtect()
-
-
-def generate_csrf_token():
-    return csrf_protect.generate_csrf_token()
-
 
 # ── Routers ───────────────────────────────────────────────────────────────────
 app.include_router(public.router)

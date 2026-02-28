@@ -25,6 +25,15 @@ SMTP_FROM = os.getenv("SMTP_FROM", "noreply@example.com")
 
 ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "").split(",") if os.getenv("ALLOWED_ORIGINS") else []
 if not ALLOWED_ORIGINS:
-    ALLOWED_ORIGINS = [f"https://{DOMAIN}"] if DOMAIN != "example.com" else []
+    origins = []
+    if DOMAIN != "example.com":
+        origins.append(f"https://{DOMAIN}")
+    origins.append("http://localhost")
+    origins.append("http://localhost:8000")
+    origins.append("http://127.0.0.1")
+    origins.append("http://127.0.0.1:8000")
+    ALLOWED_ORIGINS = origins
 
 COOKIE_SECURE = os.getenv("COOKIE_SECURE", "true").lower() == "true"
+if DOMAIN in ("example.com", "localhost") or "localhost" in DOMAIN or "127.0.0.1" in DOMAIN:
+    COOKIE_SECURE = False

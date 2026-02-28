@@ -165,7 +165,7 @@
                     </button>
                 </div>
 
-                <div id="recordsSection">
+                <div id="recordsSection" style="display: block;">
                     <div class="mb-4">
                         <input type="text" id="searchRecords" 
                             class="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white text-sm placeholder-slate-500 focus:outline-none focus:border-violet-500/50 focus:bg-white/[0.08] transition-all"
@@ -178,18 +178,19 @@
                                     <tr>
                                         <th class="px-4 py-3 text-left text-xs text-slate-400 uppercase" id="colNip05">NIP-05</th>
                                         <th class="px-4 py-3 text-left text-xs text-slate-400 uppercase" id="colPubkey">Pubkey</th>
-                                    <th class="px-4 py-3 text-left text-xs text-slate-400 uppercase" id="colPaymentHash">Payment Hash</th>
-                                    <th class="px-4 py-3 text-center text-xs text-slate-400 uppercase" id="colStatus">Status</th>
-                                    <th class="px-4 py-3 text-center text-xs text-slate-400 uppercase" id="colType">Type</th>
-                                    <th class="px-4 py-3 text-center text-xs text-slate-400 uppercase" id="colActions">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody id="recordsTable" class="divide-y divide-white/5"></tbody>
-                        </table>
+                                        <th class="px-4 py-3 text-left text-xs text-slate-400 uppercase" id="colPaymentHash">Payment Hash</th>
+                                        <th class="px-4 py-3 text-center text-xs text-slate-400 uppercase" id="colStatus">Status</th>
+                                        <th class="px-4 py-3 text-center text-xs text-slate-400 uppercase" id="colType">Type</th>
+                                        <th class="px-4 py-3 text-center text-xs text-slate-400 uppercase" id="colActions">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="recordsTable" class="divide-y divide-white/5"></tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
 
-                <div id="usersSection" class="hidden">
+                <div id="usersSectionContainer" class="hidden">
                     <div class="bg-white/5 border border-white/10 rounded-2xl overflow-hidden">
                         <table class="w-full">
                             <thead class="bg-white/5">
@@ -691,7 +692,7 @@
                 showSection('resetPasswordSection');
             } else {
                 try {
-                    const res = await fetch('/api/manage/records');
+                    const res = await fetch('/api/manage/records', { credentials: 'same-origin' });
                     if (res.ok) {
                         const savedUser = localStorage.getItem('admin_user');
                         const savedRole = localStorage.getItem('admin_role');
@@ -817,7 +818,7 @@
 
         document.getElementById('logoutBtn').addEventListener('click', async () => {
             try {
-                await fetch('/api/manage/logout', { method: 'POST' });
+                await fetch('/api/manage/logout', { method: 'POST', credentials: 'same-origin' });
             } catch (_) {}
             localStorage.removeItem('admin_user');
             localStorage.removeItem('admin_role');
@@ -836,7 +837,7 @@
         document.getElementById('editProfileBtn').addEventListener('click', async () => {
             document.getElementById('userDropdown').classList.add('hidden');
             try {
-                const res = await fetch('/api/manage/profile');
+                const res = await fetch('/api/manage/profile', { credentials: 'same-origin' });
                 if (res.ok) {
                     const profile = await res.json();
                     document.getElementById('profileEmail').value = profile.email || '';
@@ -866,6 +867,7 @@
                 const res = await fetch('/api/manage/profile', {
                     method: 'PUT',
                     headers: {'Content-Type': 'application/json'},
+                    credentials: 'same-origin',
                     body: JSON.stringify({email})
                 });
                 if (res.ok) {
@@ -921,6 +923,7 @@
                 const res = await fetch('/api/manage/change-password', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
+                    credentials: 'same-origin',
                     body: JSON.stringify({old_password: oldPassword, new_password: newPassword})
                 });
                 if (res.ok) {
@@ -940,16 +943,20 @@
         async function loadRecords() {
             if (isLoadingRecords) return;
             isLoadingRecords = true;
-            
-            const res = await fetch('/api/manage/records');
-            if (res.status === 401) {
-                document.getElementById('logoutBtn').click();
+            try {
+                const res = await fetch('/api/manage/records', { credentials: 'same-origin' });
+                if (res.status === 401) {
+                    document.getElementById('logoutBtn').click();
+                    return;
+                }
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                allRecords = await res.json();
+                renderRecords();
+            } catch (err) {
+                console.error('Error loading records:', err);
+            } finally {
                 isLoadingRecords = false;
-                return;
             }
-            allRecords = await res.json();
-            renderRecords();
-            isLoadingRecords = false;
         }
 
         function renderRecords() {
@@ -1097,6 +1104,7 @@
             const res = await fetch('/api/manage/records', {
                 method: id ? 'PUT' : 'POST',
                 headers: {'Content-Type': 'application/json'},
+                credentials: 'same-origin',
                 body: JSON.stringify({id: id || null, nip05, pubkey})
             });
 
@@ -1140,8 +1148,11 @@
             document.getElementById('navRecords').classList.remove('text-slate-400', 'hover:text-white', 'hover:bg-white/10');
             document.getElementById('navUsers').classList.remove('bg-violet-600', 'text-white');
             document.getElementById('navUsers').classList.add('text-slate-400', 'hover:text-white', 'hover:bg-white/10');
-            document.getElementById('recordsSection').classList.remove('hidden');
-            document.getElementById('usersSection').classList.add('hidden');
+            
+            document.getElementById('recordsSection').style.display = 'block';
+            document.getElementById('usersSectionContainer').classList.add('hidden');
+            document.getElementById('usersSectionContainer').style.display = 'none';
+            
             document.getElementById('addRecordBtn').classList.remove('hidden');
             document.getElementById('addUserBtn').classList.add('hidden');
             loadRecords();
@@ -1152,8 +1163,11 @@
             document.getElementById('navUsers').classList.remove('text-slate-400', 'hover:text-white', 'hover:bg-white/10');
             document.getElementById('navRecords').classList.remove('bg-violet-600', 'text-white');
             document.getElementById('navRecords').classList.add('text-slate-400', 'hover:text-white', 'hover:bg-white/10');
-            document.getElementById('usersSection').classList.remove('hidden');
-            document.getElementById('recordsSection').classList.add('hidden');
+            
+            document.getElementById('recordsSection').style.display = 'none';
+            document.getElementById('usersSectionContainer').classList.remove('hidden');
+            document.getElementById('usersSectionContainer').style.display = 'block';
+            
             document.getElementById('addRecordBtn').classList.add('hidden');
             document.getElementById('addUserBtn').classList.remove('hidden');
             loadUsers();
@@ -1162,72 +1176,78 @@
         async function loadUsers() {
             if (isLoadingUsers) return;
             isLoadingUsers = true;
-            
-            const res = await fetch('/api/manage/users');
-            if (res.status === 401 || res.status === 403) {
-                document.getElementById('logoutBtn').click();
-                isLoadingUsers = false;
-                return;
-            }
-            const users = await res.json();
-            const t = translations[currentLang];
             const tbody = document.getElementById('usersTable');
-            tbody.innerHTML = '';
+            try {
+                const res = await fetch('/api/manage/users', { credentials: 'same-origin' });
+                if (res.status === 401 || res.status === 403) {
+                    tbody.innerHTML = `<tr><td colspan="5" class="px-4 py-8 text-center text-yellow-400 text-sm">${res.status === 403 ? 'Access denied. Admin role required.' : 'Session expired. Please login again.'}</td></tr>`;
+                    isLoadingUsers = false;
+                    return;
+                }
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                const users = await res.json();
+                if (!Array.isArray(users)) throw new Error('Invalid response');
+                const t = translations[currentLang];
+                tbody.innerHTML = '';
 
-            users.forEach(u => {
-                const tr = document.createElement('tr');
-                tr.className = 'hover:bg-white/5';
+                users.forEach(u => {
+                    const tr = document.createElement('tr');
+                    tr.className = 'hover:bg-white/5';
 
-                const tdUsername = document.createElement('td');
-                tdUsername.className = 'px-4 py-3 font-mono text-sm';
-                tdUsername.textContent = u.username;
+                    const tdUsername = document.createElement('td');
+                    tdUsername.className = 'px-4 py-3 font-mono text-sm';
+                    tdUsername.textContent = u.username;
 
-                const tdEmail = document.createElement('td');
-                tdEmail.className = 'px-4 py-3 text-sm text-slate-400';
-                tdEmail.textContent = u.email || '-';
+                    const tdEmail = document.createElement('td');
+                    tdEmail.className = 'px-4 py-3 text-sm text-slate-400';
+                    tdEmail.textContent = u.email || '-';
 
-                const tdRole = document.createElement('td');
-                tdRole.className = 'px-4 py-3 text-center';
-                const roleSpan = document.createElement('span');
-                roleSpan.className = u.role === 'admin' 
-                    ? 'px-2 py-1 bg-violet-600/20 text-violet-400 rounded text-xs'
-                    : 'px-2 py-1 bg-blue-600/20 text-blue-400 rounded text-xs';
-                roleSpan.textContent = u.role === 'admin' ? t.roleAdmin : t.roleOperator;
-                tdRole.appendChild(roleSpan);
+                    const tdRole = document.createElement('td');
+                    tdRole.className = 'px-4 py-3 text-center';
+                    const roleSpan = document.createElement('span');
+                    roleSpan.className = u.role === 'admin' 
+                        ? 'px-2 py-1 bg-violet-600/20 text-violet-400 rounded text-xs'
+                        : 'px-2 py-1 bg-blue-600/20 text-blue-400 rounded text-xs';
+                    roleSpan.textContent = u.role === 'admin' ? t.roleAdmin : t.roleOperator;
+                    tdRole.appendChild(roleSpan);
 
-                const tdStatus = document.createElement('td');
-                tdStatus.className = 'px-4 py-3 text-center';
-                const statusSpan = document.createElement('span');
-                statusSpan.className = u.is_active
-                    ? 'px-2 py-1 bg-green-600/20 text-green-400 rounded text-xs'
-                    : 'px-2 py-1 bg-red-600/20 text-red-400 rounded text-xs';
-                statusSpan.textContent = u.is_active ? t.statusActive : t.statusInactive;
-                tdStatus.appendChild(statusSpan);
+                    const tdStatus = document.createElement('td');
+                    tdStatus.className = 'px-4 py-3 text-center';
+                    const statusSpan = document.createElement('span');
+                    statusSpan.className = u.is_active
+                        ? 'px-2 py-1 bg-green-600/20 text-green-400 rounded text-xs'
+                        : 'px-2 py-1 bg-red-600/20 text-red-400 rounded text-xs';
+                    statusSpan.textContent = u.is_active ? t.statusActive : t.statusInactive;
+                    tdStatus.appendChild(statusSpan);
 
-                const tdActions = document.createElement('td');
-                tdActions.className = 'px-4 py-3 text-center';
+                    const tdActions = document.createElement('td');
+                    tdActions.className = 'px-4 py-3 text-center';
 
-                const editBtn = document.createElement('button');
-                editBtn.className = 'text-blue-400 hover:text-blue-300 mr-2';
-                editBtn.innerHTML = '<i class="fa-solid fa-pen"></i>';
-                editBtn.addEventListener('click', () => editUser(u.id, u.username, u.email, u.role, u.is_active));
+                    const editBtn = document.createElement('button');
+                    editBtn.className = 'text-blue-400 hover:text-blue-300 mr-2';
+                    editBtn.innerHTML = '<i class="fa-solid fa-pen"></i>';
+                    editBtn.addEventListener('click', () => editUser(u.id, u.username, u.email, u.role, u.is_active));
 
-                const deleteBtn = document.createElement('button');
-                deleteBtn.className = 'text-red-400 hover:text-red-300';
-                deleteBtn.innerHTML = '<i class="fa-solid fa-trash"></i>';
-                deleteBtn.addEventListener('click', () => deleteUser(u.id, u.username));
+                    const deleteBtn = document.createElement('button');
+                    deleteBtn.className = 'text-red-400 hover:text-red-300';
+                    deleteBtn.innerHTML = '<i class="fa-solid fa-trash"></i>';
+                    deleteBtn.addEventListener('click', () => deleteUser(u.id, u.username));
 
-                tdActions.appendChild(editBtn);
-                tdActions.appendChild(deleteBtn);
+                    tdActions.appendChild(editBtn);
+                    tdActions.appendChild(deleteBtn);
 
-                tr.appendChild(tdUsername);
-                tr.appendChild(tdEmail);
-                tr.appendChild(tdRole);
-                tr.appendChild(tdStatus);
-                tr.appendChild(tdActions);
-                tbody.appendChild(tr);
-            });
-            isLoadingUsers = false;
+                    tr.appendChild(tdUsername);
+                    tr.appendChild(tdEmail);
+                    tr.appendChild(tdRole);
+                    tr.appendChild(tdStatus);
+                    tr.appendChild(tdActions);
+                    tbody.appendChild(tr);
+                });
+            } catch (err) {
+                tbody.innerHTML = `<tr><td colspan="5" class="px-4 py-8 text-center text-red-400 text-sm">Error: ${err.message}. Click Users tab to retry.</td></tr>`;
+            } finally {
+                isLoadingUsers = false;
+            }
         }
 
         function editUser(id, username, email, role, isActive) {
@@ -1299,6 +1319,7 @@
                 const res = await fetch('/api/manage/users', {
                     method: id ? 'PUT' : 'POST',
                     headers: {'Content-Type': 'application/json'},
+                    credentials: 'same-origin',
                     body: JSON.stringify(body)
                 });
                 if (res.ok) {

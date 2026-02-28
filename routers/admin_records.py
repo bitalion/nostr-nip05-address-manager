@@ -92,14 +92,14 @@ async def manage_update_record(
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
-    success = await db_update_record_pubkey(data.nip05, data.pubkey, pubkey_hex)
-    if not success:
-        raise HTTPException(status_code=404, detail="Record not found")
-
     parts = data.nip05.split('@', 1)
     if len(parts) != 2 or not parts[0] or not parts[1]:
         raise HTTPException(status_code=400, detail="NIP-05 must be in format user@domain")
     username, domain = parts
+
+    success = await db_update_record_pubkey(data.nip05, data.pubkey, pubkey_hex)
+    if not success:
+        raise HTTPException(status_code=404, detail="Record not found")
 
     async with _nostr_json_lock:
         nostr_data = load_nostr_json()
@@ -108,6 +108,8 @@ async def manage_update_record(
         if existing_key:
             nostr_data["domains"][domain][existing_key] = pubkey_hex
             save_nostr_json(nostr_data)
+        else:
+            logger.warning(f"DB updated but nostr.json entry not found: {username}@{domain}")
 
     return {"success": True}
 

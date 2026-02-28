@@ -66,7 +66,10 @@ async def manage_create_record(
     if domain not in DOMAINS_MAP:
         raise HTTPException(status_code=400, detail=f"Domain not configured: {domain}")
 
-    await db_create_admin_record(data.nip05, data.pubkey, pubkey_hex)
+    try:
+        await db_create_admin_record(data.nip05, data.pubkey, pubkey_hex)
+    except ValueError as e:
+        raise HTTPException(status_code=409, detail=str(e)) from e
     added = await check_and_add_nip05_entry(username, pubkey_hex, domain)
     if not added:
         await db_delete_record(data.nip05)

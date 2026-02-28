@@ -56,7 +56,7 @@ COPY static/ static/
 
 # Create an empty .well-known placeholder — runtime data is injected via volume mount,
 # never baked into the image
-RUN mkdir -p .well-known && echo '{"names":{}}' > .well-known/nostr.json
+RUN mkdir -p .well-known && echo '{"domains":{}}' > .well-known/nostr.json
 
 # Copy compiled Tailwind CSS from builder
 COPY --from=builder /app/static/css/tailwind.css static/css/tailwind.css

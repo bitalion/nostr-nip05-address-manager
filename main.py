@@ -14,7 +14,7 @@ from slowapi.middleware import SlowAPIMiddleware
 from slowapi.util import get_remote_address
 from starlette.middleware.base import BaseHTTPMiddleware
 
-from config import ALLOWED_ORIGINS, NOSTR_JSON_PATH, STATIC_DIR, WELL_KNOWN_DIR
+from config import ALLOWED_ORIGINS, DOMAINS_LIST, NOSTR_JSON_PATH, PRIMARY_DOMAIN, STATIC_DIR, WELL_KNOWN_DIR
 from db.connection import init_db
 from routers import admin_auth, admin_records, nip05, public
 import services.payments as payments_svc
@@ -105,10 +105,23 @@ async def startup() -> None:
 
     await init_db()
 
-    if not NOSTR_JSON_PATH.exists():
+    if NOSTR_JSON_PATH.exists():
+        try:
+            with open(NOSTR_JSON_PATH, "r") as f:
+                existing_data = json.load(f)
+            if "names" in existing_data and "domains" not in existing_data:
+                from core.nostr import _migrate_nostr_json, save_nostr_json
+                migrated = _migrate_nostr_json(existing_data)
+                save_nostr_json(migrated)
+                logger.info(f"Migrated nostr.json to multi-domain format under {PRIMARY_DOMAIN}")
+        except (json.JSONDecodeError, OSError) as e:
+            logger.warning(f"Could not check/migrate nostr.json: {e}")
+    else:
         with open(NOSTR_JSON_PATH, "w") as f:
-            json.dump({"names": {}}, f)
+            json.dump({"domains": {}}, f)
         os.chmod(NOSTR_JSON_PATH, 0o644)
+
+    logger.info(f"Configured domains: {', '.join(d['domain'] + ':' + str(d['price']) + ' sats' for d in DOMAINS_LIST)}")
 
 
 @app.on_event("shutdown")
@@ -125,8 +138,7 @@ async def shutdown() -> None:
 # ── Entry point ───────────────────────────────────────────────────────────────
 if __name__ == "__main__":
     import uvicorn
-    from config import DOMAIN, INVOICE_AMOUNT_SATS
     logger.info("Starting NIP-05 Nostr Identifier server...")
-    logger.info(f"Domain: {DOMAIN}")
-    logger.info(f"Invoice amount: {INVOICE_AMOUNT_SATS} sats")
+    logger.info(f"Primary domain: {PRIMARY_DOMAIN}")
+    logger.info(f"Configured domains: {', '.join(d['domain'] + ':' + str(d['price']) + ' sats' for d in DOMAINS_LIST)}")
     uvicorn.run(app, host="0.0.0.0", port=8000, log_level="info")

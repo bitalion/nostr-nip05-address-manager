@@ -7,7 +7,7 @@ import shutil
 import tempfile
 import time
 import bech32
-from config import DOMAIN, NOSTR_JSON_PATH, NOSTR_JSON_BACKUP
+from config import NOSTR_JSON_PATH, NOSTR_JSON_BACKUP, PRIMARY_DOMAIN
 
 logger = logging.getLogger(__name__)
 
@@ -32,11 +32,23 @@ def convert_npub_to_hex(npub: str) -> str:
         raise ValueError("Key must be npub or 64-character hex")
 
 
+def _migrate_nostr_json(data: dict) -> dict:
+    """Migrate old {"names": {...}} format to {"domains": {...}}."""
+    if "domains" in data:
+        return data
+    names = data.get("names", {})
+    migrated = {"domains": {PRIMARY_DOMAIN: names} if names else {}}
+    logger.info(f"Migrated nostr.json from old format: {len(names)} entries moved to {PRIMARY_DOMAIN}")
+    return migrated
+
+
 def load_nostr_json() -> dict:
     try:
         with open(NOSTR_JSON_PATH, "r") as f:
             data = json.load(f)
-            logger.info(f"Loaded nostr.json with {len(data.get('names', {}))} entries")
+            data = _migrate_nostr_json(data)
+            total = sum(len(v) for v in data.get("domains", {}).values())
+            logger.info(f"Loaded nostr.json with {total} entries across {len(data.get('domains', {}))} domains")
             return data
     except FileNotFoundError:
         logger.warning(f"nostr.json not found at {NOSTR_JSON_PATH}")
@@ -46,18 +58,20 @@ def load_nostr_json() -> dict:
             try:
                 with open(NOSTR_JSON_BACKUP, "r") as f:
                     data = json.load(f)
-                logger.info(f"Recovered {len(data.get('names', {}))} entries from backup")
+                data = _migrate_nostr_json(data)
+                total = sum(len(v) for v in data.get("domains", {}).values())
+                logger.info(f"Recovered {total} entries from backup")
                 return data
             except (json.JSONDecodeError, OSError):
                 logger.error("Backup is also corrupt")
     except OSError as e:
         logger.error(f"Error reading nostr.json: {e.filename or 'unknown file'}")
-    return {"names": {}}
+    return {"domains": {}}
 
 
 def save_nostr_json(data: dict) -> None:
-    if not isinstance(data.get("names"), dict):
-        raise ValueError("Invalid nostr.json structure: 'names' must be a dict")
+    if not isinstance(data.get("domains"), dict):
+        raise ValueError("Invalid nostr.json structure: 'domains' must be a dict")
 
     if NOSTR_JSON_PATH.exists():
         shutil.copy2(NOSTR_JSON_PATH, NOSTR_JSON_BACKUP)
@@ -73,22 +87,28 @@ def save_nostr_json(data: dict) -> None:
             tmp_path = tmp.name
         shutil.move(tmp_path, NOSTR_JSON_PATH)
         os.chmod(NOSTR_JSON_PATH, 0o644)
-        logger.info(f"Saved nostr.json with {len(data.get('names', {}))} entries")
+        total = sum(len(v) for v in data.get("domains", {}).values())
+        logger.info(f"Saved nostr.json with {total} entries across {len(data['domains'])} domains")
     except Exception:
         if tmp_path and os.path.exists(tmp_path):
             os.unlink(tmp_path)
         raise
 
 
-async def check_nip05_available(nip05: str) -> bool:
+def get_names_for_domain(data: dict, domain: str) -> dict:
+    """Return the names dict for a specific domain."""
+    return data.get("domains", {}).get(domain, {})
+
+
+async def check_nip05_available(nip05: str, domain: str) -> bool:
     from db.connection import get_db
-    from config import DOMAIN
     nip05_lower = nip05.lower().strip()
-    nip05_full = f"{nip05_lower}@{DOMAIN}"
+    nip05_full = f"{nip05_lower}@{domain}"
 
     async with _nostr_json_lock:
         data = load_nostr_json()
-        for existing in data.get("names", {}).keys():
+        domain_names = get_names_for_domain(data, domain)
+        for existing in domain_names.keys():
             if existing.lower() == nip05_lower:
                 return False
 
@@ -101,42 +121,46 @@ async def check_nip05_available(nip05: str) -> bool:
     return row is None
 
 
-async def check_and_add_nip05_entry(username: str, pubkey_hex: str) -> bool:
+async def check_and_add_nip05_entry(username: str, pubkey_hex: str, domain: str) -> bool:
     from db.records import db_update_nostr_json_status
     async with _nostr_json_lock:
         data = load_nostr_json()
-        if "names" not in data:
-            data["names"] = {}
+        if "domains" not in data:
+            data["domains"] = {}
+        if domain not in data["domains"]:
+            data["domains"][domain] = {}
 
         username_lower = username.lower().strip()
-        for existing in data.get("names", {}).keys():
+        for existing in data["domains"][domain].keys():
             if existing.lower() == username_lower:
                 return False
 
-        data["names"][username] = pubkey_hex
+        data["domains"][domain][username] = pubkey_hex
         save_nostr_json(data)
-        logger.info(f"Added NIP-05 entry for user: {username}")
+        logger.info(f"Added NIP-05 entry for user: {username}@{domain}")
 
-    await db_update_nostr_json_status(f"{username}@{DOMAIN}", True)
+    await db_update_nostr_json_status(f"{username}@{domain}", True)
     return True
 
 
-async def check_and_add_nip05_entry_atomic(username: str, pubkey_hex: str, payment_hash: str) -> bool:
+async def check_and_add_nip05_entry_atomic(username: str, pubkey_hex: str, payment_hash: str, domain: str) -> bool:
     """Atomically verify username availability, write nostr.json, and confirm payment in DB.
 
     All three operations happen inside a single lock acquisition to eliminate the race
     condition between availability check, file write, and DB update.
-    
+
     If writing nostr.json fails, DB is rolled back to maintain consistency.
     """
     from db.connection import get_db
     async with _nostr_json_lock:
         data = load_nostr_json()
-        if "names" not in data:
-            data["names"] = {}
+        if "domains" not in data:
+            data["domains"] = {}
+        if domain not in data["domains"]:
+            data["domains"][domain] = {}
 
         username_lower = username.lower().strip()
-        for existing in data.get("names", {}).keys():
+        for existing in data["domains"][domain].keys():
             if existing.lower() == username_lower:
                 return False
 
@@ -147,7 +171,7 @@ async def check_and_add_nip05_entry_atomic(username: str, pubkey_hex: str, payme
             (ts, payment_hash)
         )
 
-        data["names"][username] = pubkey_hex
+        data["domains"][domain][username] = pubkey_hex
         try:
             save_nostr_json(data)
         except Exception as e:
@@ -157,5 +181,5 @@ async def check_and_add_nip05_entry_atomic(username: str, pubkey_hex: str, payme
 
         await db.commit()
 
-    logger.info(f"Atomic NIP-05 add + payment confirm for user: {username}")
+    logger.info(f"Atomic NIP-05 add + payment confirm for user: {username}@{domain}")
     return True

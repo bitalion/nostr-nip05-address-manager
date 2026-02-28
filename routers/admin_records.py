@@ -67,7 +67,10 @@ async def manage_create_record(
         raise HTTPException(status_code=400, detail=f"Domain not configured: {domain}")
 
     await db_create_admin_record(data.nip05, data.pubkey, pubkey_hex)
-    await check_and_add_nip05_entry(username, pubkey_hex, domain)
+    added = await check_and_add_nip05_entry(username, pubkey_hex, domain)
+    if not added:
+        await db_delete_record(data.nip05)
+        raise HTTPException(status_code=409, detail="NIP-05 already exists in nostr.json")
     return {"success": True}
 
 
@@ -90,15 +93,17 @@ async def manage_update_record(
     if not success:
         raise HTTPException(status_code=404, detail="Record not found")
 
-    parts = data.nip05.split('@')
-    username = parts[0]
-    domain = parts[1] if len(parts) > 1 else ""
+    parts = data.nip05.split('@', 1)
+    if len(parts) != 2 or not parts[0] or not parts[1]:
+        raise HTTPException(status_code=400, detail="NIP-05 must be in format user@domain")
+    username, domain = parts
 
     async with _nostr_json_lock:
         nostr_data = load_nostr_json()
         domain_names = nostr_data.get("domains", {}).get(domain, {})
-        if username in domain_names:
-            nostr_data["domains"][domain][username] = pubkey_hex
+        existing_key = next((k for k in domain_names if k.lower() == username.lower()), None)
+        if existing_key:
+            nostr_data["domains"][domain][existing_key] = pubkey_hex
             save_nostr_json(nostr_data)
 
     return {"success": True}
@@ -114,15 +119,17 @@ async def manage_delete_record(request: Request, record_id: int, current_user: d
         raise HTTPException(status_code=404, detail="Record not found")
 
     nip05 = row[0]
-    parts = nip05.split('@')
-    username = parts[0]
-    domain = parts[1] if len(parts) > 1 else ""
+    parts = nip05.split('@', 1)
+    if len(parts) != 2 or not parts[0] or not parts[1]:
+        raise HTTPException(status_code=500, detail="Stored NIP-05 is invalid")
+    username, domain = parts
 
     async with _nostr_json_lock:
         nostr_data = load_nostr_json()
         domain_names = nostr_data.get("domains", {}).get(domain, {})
-        if username in domain_names:
-            del nostr_data["domains"][domain][username]
+        existing_key = next((k for k in domain_names if k.lower() == username.lower()), None)
+        if existing_key:
+            del nostr_data["domains"][domain][existing_key]
             if not nostr_data["domains"][domain]:
                 del nostr_data["domains"][domain]
             save_nostr_json(nostr_data)

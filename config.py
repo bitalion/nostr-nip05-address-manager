@@ -24,11 +24,22 @@ if _domains_raw:
     DOMAINS_LIST = []
     for entry in _domains_raw.split(","):
         entry = entry.strip()
+        if not entry:
+            continue
         if ":" in entry:
             domain, price = entry.rsplit(":", 1)
-            DOMAINS_LIST.append({"domain": domain.strip(), "price": int(price.strip())})
+            domain = domain.strip()
+            if not domain:
+                raise ValueError("Empty domain name in DOMAINS configuration")
+            try:
+                price_int = int(price.strip())
+            except ValueError:
+                raise ValueError(f"Invalid price for domain '{domain}': {price.strip()}")
+            DOMAINS_LIST.append({"domain": domain, "price": price_int})
         else:
             DOMAINS_LIST.append({"domain": entry, "price": INVOICE_AMOUNT_SATS})
+    if not DOMAINS_LIST:
+        raise ValueError("DOMAINS is set but contains no valid entries")
 else:
     DOMAINS_LIST = [{"domain": DOMAIN, "price": INVOICE_AMOUNT_SATS}]
 

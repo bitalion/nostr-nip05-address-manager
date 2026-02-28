@@ -59,8 +59,8 @@ async def manage_create_record(
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
-    parts = data.nip05.split('@')
-    if len(parts) != 2:
+    parts = data.nip05.split('@', 1)
+    if len(parts) != 2 or not parts[0] or not parts[1]:
         raise HTTPException(status_code=400, detail="NIP-05 must be in format user@domain")
     username, domain = parts
     if domain not in DOMAINS_MAP:

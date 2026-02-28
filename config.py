@@ -33,8 +33,8 @@ if _domains_raw:
                 raise ValueError("Empty domain name in DOMAINS configuration")
             try:
                 price_int = int(price.strip())
-            except ValueError:
-                raise ValueError(f"Invalid price for domain '{domain}': {price.strip()}")
+            except ValueError as e:
+                raise ValueError(f"Invalid price for domain '{domain}': {price.strip()}") from e
             DOMAINS_LIST.append({"domain": domain, "price": price_int})
         else:
             DOMAINS_LIST.append({"domain": entry, "price": INVOICE_AMOUNT_SATS})

@@ -145,6 +145,19 @@ async def manage_get_profile(request: Request, current_user: dict = Depends(get_
     return profile
 
 
+@router.get("/api/manage/check-auth")
+async def check_auth(request: Request):
+    """Lightweight endpoint to check authentication status without DB query."""
+    from core.security import verify_token
+    token = request.cookies.get("session_token")
+    if not token:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    user = await verify_token(token)
+    if not user:
+        raise HTTPException(status_code=401, detail="Invalid or expired session")
+    return {"authenticated": True, "username": user["username"], "role": user["role"]}
+
+
 @router.put("/api/manage/profile")
 @limiter.limit("30/minute")
 async def manage_update_profile(

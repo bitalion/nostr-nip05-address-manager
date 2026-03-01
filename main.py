@@ -5,7 +5,8 @@ import uuid
 from pathlib import Path
 
 import httpx
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, HTTPException
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from slowapi import Limiter
@@ -29,7 +30,14 @@ limiter = Limiter(key_func=get_remote_address)
 # ── App factory ───────────────────────────────────────────────────────────────
 app = FastAPI(title="NIP-05 Nostr Identifier")
 app.state.limiter = limiter
-app.add_exception_handler(RateLimitExceeded, lambda req, exc: __import__('fastapi').responses.JSONResponse(
+
+
+@app.exception_handler(HTTPException)
+async def http_exception_handler(request: Request, exc: HTTPException):
+    return JSONResponse(status_code=exc.status_code, content={"detail": exc.detail})
+
+
+app.add_exception_handler(RateLimitExceeded, lambda req, exc: JSONResponse(
     status_code=429, content={"detail": "Rate limit exceeded"}
 ))
 

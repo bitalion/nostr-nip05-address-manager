@@ -12,8 +12,8 @@
     </style>
 </head>
 <body class="text-white min-h-screen">
-    <div id="loginSection" class="min-h-screen flex items-center justify-center">
-        <div class="w-full max-w-md p-8 bg-white/5 border border-white/10 rounded-2xl">
+    <div id="loginSection" class="hidden min-h-screen flex items-center justify-center">
+        <div class="w-full max-w-md p-6 bg-white/5 border border-white/10 rounded-2xl">
             <div class="flex justify-end mb-4">
                 <div class="flex items-center gap-1.5">
                     <button id="langEN" class="text-xs font-semibold text-white transition-colors" data-lang="en">EN</button>
@@ -27,19 +27,19 @@
             </h1>
             <form id="loginForm" class="space-y-4">
                 <div>
-                    <label class="block text-sm text-slate-400 mb-1" id="labelUsername">Username</label>
+                    <label class="block text-[10px] sm:text-xs font-semibold text-slate-400 uppercase tracking-widest mb-2" id="labelUsername">Username</label>
                     <input type="text" id="username" required
-                        class="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-violet-500">
+                        class="w-full px-4 py-2.5 sm:py-3 bg-white/5 border border-white/10 rounded-xl text-white text-sm placeholder-slate-500 focus:outline-none focus:border-violet-500/50 focus:bg-white/[0.08] transition-all">
                 </div>
                 <div>
-                    <label class="block text-sm text-slate-400 mb-1" id="labelPassword">Password</label>
+                    <label class="block text-[10px] sm:text-xs font-semibold text-slate-400 uppercase tracking-widest mb-2" id="labelPassword">Password</label>
                     <input type="password" id="password" required
-                        class="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-violet-500">
+                        class="w-full px-4 py-2.5 sm:py-3 bg-white/5 border border-white/10 rounded-xl text-white text-sm placeholder-slate-500 focus:outline-none focus:border-violet-500/50 focus:bg-white/[0.08] transition-all">
                 </div>
                 <div id="loginError" class="text-red-400 text-sm hidden"></div>
                 <hr class="border-white/10">
                 <button type="submit"
-                    class="w-full py-2 bg-violet-600 hover:bg-violet-500 rounded-xl font-semibold transition-colors">
+                    class="w-full py-2.5 sm:py-3 bg-violet-600 hover:bg-violet-500 rounded-xl font-semibold transition-colors">
                     <span id="btnLogin">Login</span>
                 </button>
                 <div class="text-center mt-4">
@@ -52,7 +52,7 @@
     </div>
 
     <div id="forgotSection" class="hidden min-h-screen flex items-center justify-center">
-        <div class="w-full max-w-md p-8 bg-white/5 border border-white/10 rounded-2xl">
+        <div class="w-full max-w-md p-6 bg-white/5 border border-white/10 rounded-2xl">
             <h2 class="text-xl font-bold mb-4 text-center">
                 <i class="fa-solid fa-key text-violet-400 mr-2"></i>
                 <span id="titleReset">Reset Password</span>
@@ -60,19 +60,19 @@
             <p class="text-sm text-slate-400 mb-4" id="descReset">Enter your username to receive a password reset link.</p>
             <form id="forgotForm" class="space-y-4">
                 <div>
-                    <label class="block text-sm text-slate-400 mb-1" id="labelResetUsername">Username</label>
+                    <label class="block text-[10px] sm:text-xs font-semibold text-slate-400 uppercase tracking-widest mb-2" id="labelResetUsername">Username</label>
                     <input type="text" id="resetUsername" required
-                        class="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-violet-500">
+                        class="w-full px-4 py-2.5 sm:py-3 bg-white/5 border border-white/10 rounded-xl text-white text-sm placeholder-slate-500 focus:outline-none focus:border-violet-500/50 focus:bg-white/[0.08] transition-all">
                 </div>
                 <div id="resetError" class="text-red-400 text-sm hidden"></div>
                 <div id="resetSuccess" class="text-green-400 text-sm hidden"></div>
                 <div class="flex gap-3">
                     <button type="button" id="backToLoginBtn"
-                        class="flex-1 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl transition-colors">
+                        class="flex-1 py-2.5 sm:py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl transition-colors">
                         <span id="btnBackLogin">Back</span>
                     </button>
                     <button type="submit"
-                        class="flex-1 py-2 bg-violet-600 hover:bg-violet-500 rounded-xl font-semibold transition-colors">
+                        class="flex-1 py-2.5 sm:py-3 bg-violet-600 hover:bg-violet-500 rounded-xl font-semibold transition-colors">
                         <span id="btnSendReset">Send Link</span>
                     </button>
                 </div>
@@ -81,7 +81,7 @@
     </div>
 
     <div id="resetPasswordSection" class="hidden min-h-screen flex items-center justify-center">
-        <div class="w-full max-w-md p-8 bg-white/5 border border-white/10 rounded-2xl">
+        <div class="w-full max-w-md p-6 bg-white/5 border border-white/10 rounded-2xl">
             <h2 class="text-xl font-bold mb-4 text-center">
                 <i class="fa-solid fa-key text-violet-400 mr-2"></i>
                 <span id="titleNewPassword">New Password</span>
@@ -89,18 +89,18 @@
             <form id="resetPasswordForm" class="space-y-4">
                 <input type="hidden" id="resetToken">
                 <div>
-                    <label class="block text-sm text-slate-400 mb-1" id="labelNewPassword">New Password</label>
+                    <label class="block text-[10px] sm:text-xs font-semibold text-slate-400 uppercase tracking-widest mb-2" id="labelNewPassword">New Password</label>
                     <input type="password" id="newPassword" required
-                        class="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-violet-500">
+                        class="w-full px-4 py-2.5 sm:py-3 bg-white/5 border border-white/10 rounded-xl text-white text-sm placeholder-slate-500 focus:outline-none focus:border-violet-500/50 focus:bg-white/[0.08] transition-all">
                 </div>
                 <div>
-                    <label class="block text-sm text-slate-400 mb-1" id="labelConfirmPassword">Confirm Password</label>
+                    <label class="block text-[10px] sm:text-xs font-semibold text-slate-400 uppercase tracking-widest mb-2" id="labelConfirmPassword">Confirm Password</label>
                     <input type="password" id="confirmPassword" required
-                        class="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-violet-500">
+                        class="w-full px-4 py-2.5 sm:py-3 bg-white/5 border border-white/10 rounded-xl text-white text-sm placeholder-slate-500 focus:outline-none focus:border-violet-500/50 focus:bg-white/[0.08] transition-all">
                 </div>
                 <div id="resetPasswordError" class="text-red-400 text-sm hidden"></div>
                 <button type="submit"
-                    class="w-full py-2 bg-violet-600 hover:bg-violet-500 rounded-xl font-semibold transition-colors">
+                    class="w-full py-2.5 sm:py-3 bg-violet-600 hover:bg-violet-500 rounded-xl font-semibold transition-colors">
                     <span id="btnResetPassword">Reset Password</span>
                 </button>
             </form>
@@ -108,6 +108,13 @@
     </div>
 
     <div id="dashboardSection" class="hidden min-h-screen">
+        <div id="loadingScreen" class="min-h-screen flex items-center justify-center">
+            <div class="text-center">
+                <i class="fa-solid fa-circle-notch fa-spin text-4xl text-violet-400"></i>
+                <p class="mt-4 text-slate-400">Loading...</p>
+            </div>
+        </div>
+        <div id="dashboardContent" class="hidden">
         <nav class="fixed top-0 left-0 right-0 z-50 bg-black/30 backdrop-blur-2xl border-b border-white/[0.06]">
             <div class="flex items-center justify-between px-6 py-3">
                 <div class="flex items-center gap-3">
@@ -208,6 +215,7 @@
                 </div>
             </div>
         </div>
+        </div>
 
     <div id="recordModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center">
         <div class="w-full max-w-md p-6 bg-white/5 border border-white/10 rounded-2xl">
@@ -272,28 +280,29 @@
             </h2>
             <form id="changePasswordForm" class="space-y-4">
                 <div>
-                    <label class="block text-sm text-slate-400 mb-1" id="labelOldPassword">Current Password</label>
-                    <input type="password" id="oldPassword" required
-                        class="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-violet-500">
+                    <label class="block text-[10px] sm:text-xs font-semibold text-slate-400 uppercase tracking-widest mb-2" id="labelOldPassword">Current Password</label>
+                    <input type="password" id="oldPassword" required autocomplete="new-password"
+                        class="w-full px-4 py-2.5 sm:py-3 bg-white/5 border border-white/10 rounded-xl text-white text-sm placeholder-slate-500 focus:outline-none focus:border-violet-500/50 focus:bg-white/[0.08] transition-all">
                 </div>
                 <div>
-                    <label class="block text-sm text-slate-400 mb-1" id="labelChangePassword">New Password</label>
-                    <input type="password" id="changePassword" required
-                        class="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-violet-500">
+                    <label class="block text-[10px] sm:text-xs font-semibold text-slate-400 uppercase tracking-widest mb-2" id="labelChangePassword">New Password</label>
+                    <input type="password" id="changePassword" required autocomplete="new-password"
+                        class="w-full px-4 py-2.5 sm:py-3 bg-white/5 border border-white/10 rounded-xl text-white text-sm placeholder-slate-500 focus:outline-none focus:border-violet-500/50 focus:bg-white/[0.08] transition-all">
                 </div>
                 <div>
-                    <label class="block text-sm text-slate-400 mb-1" id="labelChangeConfirmPassword">Confirm New Password</label>
-                    <input type="password" id="changeConfirmPassword" required
-                        class="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-violet-500">
+                    <label class="block text-[10px] sm:text-xs font-semibold text-slate-400 uppercase tracking-widest mb-2" id="labelChangeConfirmPassword">Confirm New Password</label>
+                    <input type="password" id="changeConfirmPassword" required autocomplete="new-password"
+                        class="w-full px-4 py-2.5 sm:py-3 bg-white/5 border border-white/10 rounded-xl text-white text-sm placeholder-slate-500 focus:outline-none focus:border-violet-500/50 focus:bg-white/[0.08] transition-all">
                 </div>
                 <div id="changePasswordError" class="text-red-400 text-sm hidden"></div>
+                <hr class="border-white/10">
                 <div class="flex gap-3">
                     <button type="button" id="cancelChangePasswordBtn"
-                        class="flex-1 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl transition-colors">
+                        class="flex-1 py-2.5 sm:py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl transition-colors">
                         <span id="btnChangeCancel">Cancel</span>
                     </button>
                     <button type="submit"
-                        class="flex-1 py-2 bg-violet-600 hover:bg-violet-500 rounded-xl font-semibold transition-colors">
+                        class="flex-1 py-2.5 sm:py-3 bg-violet-600 hover:bg-violet-500 rounded-xl font-semibold transition-colors">
                         <span id="btnChangeSave">Save</span>
                     </button>
                 </div>
@@ -667,9 +676,15 @@
         function showSection(id) {
             document.getElementById('loginSection').classList.add('hidden');
             document.getElementById('dashboardSection').classList.add('hidden');
+            document.getElementById('loadingScreen').classList.add('hidden');
+            document.getElementById('dashboardContent').classList.add('hidden');
             document.getElementById('forgotSection').classList.add('hidden');
             document.getElementById('resetPasswordSection').classList.add('hidden');
             document.getElementById(id).classList.remove('hidden');
+            if (id === 'dashboardSection') {
+                document.getElementById('loadingScreen').classList.add('hidden');
+                document.getElementById('dashboardContent').classList.remove('hidden');
+            }
         }
 
         function showError(elementId, message) {
@@ -682,6 +697,7 @@
         }
 
         (async function init() {
+            const loadingScreen = document.getElementById('loadingScreen');
             const urlParams = new URLSearchParams(window.location.search);
             let resetToken = urlParams.get('token');
             if (!resetToken && typeof reset_token !== 'undefined' && reset_token) {
@@ -690,10 +706,12 @@
             if (resetToken) {
                 document.getElementById('resetToken').value = resetToken;
                 showSection('resetPasswordSection');
+                if (loadingScreen) loadingScreen.classList.add('hidden');
             } else {
                 try {
-                    const res = await fetch('/api/manage/records', { credentials: 'same-origin' });
+                    const res = await fetch('/api/manage/check-auth', { credentials: 'same-origin' });
                     if (res.ok) {
+                        const data = await res.json();
                         const savedUser = localStorage.getItem('admin_user');
                         const savedRole = localStorage.getItem('admin_role');
                         if (savedUser) {
@@ -703,15 +721,25 @@
                             document.getElementById('navUsers').classList.remove('hidden');
                         }
                         showSection('dashboardSection');
-                        loadRecords();
+                        if (loadingScreen) loadingScreen.classList.add('hidden');
+                        
+                        const activeTab = localStorage.getItem('activeTab');
+                        if (activeTab === 'users' && savedRole === 'admin') {
+                            document.getElementById('navUsers').click();
+                        } else {
+                            loadRecords();
+                        }
                         setInterval(loadRecords, 30000);
                     } else {
                         localStorage.removeItem('admin_user');
                         localStorage.removeItem('admin_role');
+                        localStorage.removeItem('activeTab');
                         showSection('loginSection');
+                        if (loadingScreen) loadingScreen.classList.add('hidden');
                     }
                 } catch (_) {
                     showSection('loginSection');
+                    if (loadingScreen) loadingScreen.classList.add('hidden');
                 }
             }
         })();
@@ -932,10 +960,12 @@
                     document.getElementById('changePasswordForm').reset();
                 } else {
                     const data = await res.json();
-                    errorDiv.textContent = data.detail || translations[currentLang].errorPasswordChange;
+                    const errorMsg = typeof data.detail === 'object' ? JSON.stringify(data.detail) : (data.detail || translations[currentLang].errorPasswordChange);
+                    errorDiv.textContent = errorMsg;
                     errorDiv.classList.remove('hidden');
                 }
             } catch (err) {
+                console.error('Error:', err);
                 showError('changePasswordError', translations[currentLang].errorConnection);
             }
         });
@@ -1155,6 +1185,7 @@
             
             document.getElementById('addRecordBtn').classList.remove('hidden');
             document.getElementById('addUserBtn').classList.add('hidden');
+            localStorage.setItem('activeTab', 'records');
             loadRecords();
         });
 
@@ -1170,6 +1201,7 @@
             
             document.getElementById('addRecordBtn').classList.add('hidden');
             document.getElementById('addUserBtn').classList.remove('hidden');
+            localStorage.setItem('activeTab', 'users');
             loadUsers();
         });
 

@@ -7,8 +7,8 @@ from fastapi.templating import Jinja2Templates
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 
-from config import DOMAINS_LIST, DOMAINS_MAP, NOSTR_JSON_PATH, PRIMARY_DOMAIN, STATIC_DIR
-from core.nostr import check_nip05_available, convert_npub_to_hex, get_names_for_domain, load_nostr_json
+from config import DOMAINS_LIST, DOMAINS_MAP, PRIMARY_DOMAIN, STATIC_DIR, get_nostr_json_path
+from core.nostr import check_nip05_available, convert_npub_to_hex, load_nostr_json
 from db.connection import get_db
 from schemas import CheckPubkeyRequest, ConvertPubkeyRequest
 
@@ -50,17 +50,18 @@ async def health():
         "primary_domain": PRIMARY_DOMAIN,
     }
 
-    if NOSTR_JSON_PATH.exists():
-        try:
-            data = load_nostr_json()
-            total = sum(len(v) for v in data.get("domains", {}).values())
-            health_status["registered_users"] = total
-        except Exception:
-            health_status["status"] = "degraded"
-            health_status["nostr_json"] = "error"
-    else:
+    try:
+        total = 0
+        for d in DOMAINS_LIST:
+            domain = d["domain"]
+            nostr_json_path = get_nostr_json_path(domain)
+            if nostr_json_path.exists():
+                data = load_nostr_json(domain)
+                total += len(data.get("names", {}))
+        health_status["registered_users"] = total
+    except Exception:
         health_status["status"] = "degraded"
-        health_status["nostr_json"] = "not_found"
+        health_status["nostr_json"] = "error"
 
     status_code = 200 if health_status["status"] == "healthy" else 503
     return JSONResponse(content=health_status, status_code=status_code)
@@ -69,8 +70,11 @@ async def health():
 @router.get("/.well-known/nostr.json")
 async def get_nostr_json(request: Request):
     host = request.headers.get("host", "").split(":")[0].lower()
-    data = load_nostr_json()
-    names = get_names_for_domain(data, host) if host in DOMAINS_MAP else {}
+    if host in DOMAINS_MAP:
+        data = load_nostr_json(host)
+        names = data.get("names", {})
+    else:
+        names = {}
     return JSONResponse(content={"names": names})
 
 
@@ -93,9 +97,8 @@ async def check_pubkey(request: Request, data: CheckPubkeyRequest):
         raise HTTPException(status_code=422, detail=str(e))
 
     domain = data.domain
-    nostr_data = load_nostr_json()
-    domain_names = get_names_for_domain(nostr_data, domain)
-    for existing_hex in domain_names.values():
+    nostr_data = load_nostr_json(domain)
+    for existing_hex in nostr_data.get("names", {}).values():
         if existing_hex.lower() == hex_key.lower():
             return {"hex": hex_key, "registered": True}
     return {"hex": hex_key, "registered": False}

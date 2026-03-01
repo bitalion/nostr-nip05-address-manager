@@ -6,10 +6,19 @@ load_dotenv()
 
 BASE_DIR = Path(__file__).parent
 STATIC_DIR = BASE_DIR / "static"
-WELL_KNOWN_DIR = BASE_DIR / ".well-known"
-NOSTR_JSON_PATH = WELL_KNOWN_DIR / "nostr.json"
-NOSTR_JSON_BACKUP = BASE_DIR / "nostr.json.bak"
+NOSTR_DATA_DIR = Path(os.getenv("NOSTR_DATA_DIR", str(BASE_DIR / "data")))
 DB_PATH = BASE_DIR / "base.sqlite"
+
+# Legacy path (migration only)
+_LEGACY_NOSTR_JSON = BASE_DIR / ".well-known" / "nostr.json"
+
+
+def get_nostr_json_path(domain: str) -> Path:
+    return NOSTR_DATA_DIR / domain / ".well-known" / "nostr.json"
+
+
+def get_nostr_json_backup(domain: str) -> Path:
+    return NOSTR_DATA_DIR / domain / "nostr.json.bak"
 
 LNURL = os.getenv("LNBITS_URL", "")
 LNKEY = os.getenv("LNBITS_API_KEY", "")

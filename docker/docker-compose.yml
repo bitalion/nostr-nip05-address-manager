@@ -18,7 +18,7 @@ services:
       - PYTHONUNBUFFERED=1
     volumes:
       # Allow data persistence (paths relative from project root)
-      - ../data/.well-known:/app/.well-known
+      - ../data:/app/data
       - ../static:/app/static
       - ../templates:/app/templates
     restart: unless-stopped

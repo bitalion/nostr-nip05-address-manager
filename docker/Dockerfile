@@ -54,9 +54,8 @@ COPY routers/ routers/
 COPY templates/ templates/
 COPY static/ static/
 
-# Create an empty .well-known placeholder — runtime data is injected via volume mount,
-# never baked into the image
-RUN mkdir -p .well-known && echo '{"domains":{}}' > .well-known/nostr.json
+# Create data directory — per-domain nostr.json files are injected via volume mount
+RUN mkdir -p data
 
 # Copy compiled Tailwind CSS from builder
 COPY --from=builder /app/static/css/tailwind.css static/css/tailwind.css

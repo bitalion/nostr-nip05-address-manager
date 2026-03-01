@@ -102,12 +102,12 @@ async def manage_update_record(
         raise HTTPException(status_code=404, detail="Record not found")
 
     async with _nostr_json_lock:
-        nostr_data = load_nostr_json()
-        domain_names = nostr_data.get("domains", {}).get(domain, {})
-        existing_key = next((k for k in domain_names if k.lower() == username.lower()), None)
+        nostr_data = load_nostr_json(domain)
+        names = nostr_data.get("names", {})
+        existing_key = next((k for k in names if k.lower() == username.lower()), None)
         if existing_key:
-            nostr_data["domains"][domain][existing_key] = pubkey_hex
-            save_nostr_json(nostr_data)
+            nostr_data["names"][existing_key] = pubkey_hex
+            save_nostr_json(nostr_data, domain)
         else:
             logger.warning(f"DB updated but nostr.json entry not found: {username}@{domain}")
 
@@ -130,14 +130,12 @@ async def manage_delete_record(request: Request, record_id: int, current_user: d
     username, domain = parts
 
     async with _nostr_json_lock:
-        nostr_data = load_nostr_json()
-        domain_names = nostr_data.get("domains", {}).get(domain, {})
-        existing_key = next((k for k in domain_names if k.lower() == username.lower()), None)
+        nostr_data = load_nostr_json(domain)
+        names = nostr_data.get("names", {})
+        existing_key = next((k for k in names if k.lower() == username.lower()), None)
         if existing_key:
-            del nostr_data["domains"][domain][existing_key]
-            if not nostr_data["domains"][domain]:
-                del nostr_data["domains"][domain]
-            save_nostr_json(nostr_data)
+            del nostr_data["names"][existing_key]
+            save_nostr_json(nostr_data, domain)
 
     await db_delete_record(nip05)
     return {"success": True}

@@ -71,5 +71,5 @@ if not ALLOWED_ORIGINS:
     ALLOWED_ORIGINS = origins
 
 COOKIE_SECURE = os.getenv("COOKIE_SECURE", "true").lower() == "true"
-if DOMAIN in ("example.com", "localhost") or "localhost" in DOMAIN or "127.0.0.1" in DOMAIN:
+if PRIMARY_DOMAIN in ("example.com", "localhost") or "localhost" in PRIMARY_DOMAIN or "127.0.0.1" in PRIMARY_DOMAIN:
     COOKIE_SECURE = False

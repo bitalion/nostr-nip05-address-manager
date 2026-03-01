@@ -52,6 +52,7 @@ async def create_invoice(request: Request, data: NIP05Request):
                 "amount_sats": price,
                 "username": username,
                 "pubkey": pubkey_hex,
+                "domain": domain,
                 "status": "already_paid",
                 "message": "Payment already completed",
             }

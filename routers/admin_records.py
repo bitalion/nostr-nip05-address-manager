@@ -96,6 +96,8 @@ async def manage_update_record(
     if len(parts) != 2 or not parts[0] or not parts[1]:
         raise HTTPException(status_code=400, detail="NIP-05 must be in format user@domain")
     username, domain = parts
+    if domain not in DOMAINS_MAP:
+        raise HTTPException(status_code=400, detail=f"Domain not configured: {domain}")
 
     success = await db_update_record_pubkey(data.nip05, data.pubkey, pubkey_hex)
     if not success:

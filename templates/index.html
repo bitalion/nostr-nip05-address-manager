@@ -165,7 +165,7 @@
                         {% if domains|length > 1 %}
                         <div style="position: absolute; right: 0.5rem; top: 50%; transform: translateY(-50%); display: flex; align-items: center;">
                             <span style="color: #64748b; font-size: 0.875rem; margin-right: 2px;">@</span>
-                            <select id="domainSelect"
+                            <select id="domainSelect" aria-label="NIP-05 domain"
                                 style="background: transparent; color: #94a3b8; font-size: 0.875rem; border: none; outline: none; cursor: pointer; padding-right: 1rem; font-weight: 500; -webkit-appearance: none; -moz-appearance: none; appearance: none; background-image: url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%2212%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%2394a3b8%22 stroke-width=%222%22><polyline points=%226 9 12 15 18 9%22/></svg>'); background-repeat: no-repeat; background-position: right 0 center; background-size: 12px;">
                                 {% for d in domains %}
                                 <option value="{{ d.domain }}" data-price="{{ d.price }}" style="background: #1a1a2e; color: white;">{{ d.domain }}</option>
@@ -994,7 +994,7 @@
                     form.classList.add('hidden');
                     paymentSection.classList.add('hidden');
                     successSection.classList.remove('hidden');
-                    document.getElementById('registeredNip05').textContent = `${username}@${selectedDomain}`;
+                    document.getElementById('registeredNip05').textContent = `${data.username}@${data.domain}`;
                     return;
                 }
 

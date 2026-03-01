@@ -118,6 +118,11 @@ def migrate_to_per_domain():
     for domain, names in domains_dict.items():
         if not names:
             continue
+        if isinstance(names, dict) and "names" in names and isinstance(names["names"], dict):
+            names = names["names"]
+        if not isinstance(names, dict):
+            logger.warning(f"Skipping invalid legacy payload for domain {domain}")
+            continue
         nostr_json_path = get_nostr_json_path(domain)
         # Merge if destination already exists
         if nostr_json_path.exists():

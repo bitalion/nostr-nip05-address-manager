@@ -72,6 +72,7 @@ def save_nostr_json(data: dict) -> None:
             os.fsync(tmp.fileno())
             tmp_path = tmp.name
         shutil.move(tmp_path, NOSTR_JSON_PATH)
+        os.chmod(NOSTR_JSON_PATH, 0o644)
         logger.info(f"Saved nostr.json with {len(data.get('names', {}))} entries")
     except Exception:
         if tmp_path and os.path.exists(tmp_path):

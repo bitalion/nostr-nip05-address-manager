@@ -94,6 +94,7 @@ async def startup() -> None:
     payments_svc.http_client = httpx.AsyncClient(timeout=30.0)
 
     WELL_KNOWN_DIR.mkdir(exist_ok=True)
+    os.chmod(WELL_KNOWN_DIR, 0o755)
     for tmp_file in WELL_KNOWN_DIR.glob("*.tmp.json"):
         try:
             tmp_file.unlink()
@@ -106,6 +107,7 @@ async def startup() -> None:
     if not NOSTR_JSON_PATH.exists():
         with open(NOSTR_JSON_PATH, "w") as f:
             json.dump({"names": {}}, f)
+        os.chmod(NOSTR_JSON_PATH, 0o644)
 
 
 @app.on_event("shutdown")

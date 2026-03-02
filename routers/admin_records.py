@@ -42,8 +42,14 @@ router = APIRouter()
 
 @router.get("/api/manage/records")
 @limiter.limit("60/minute")
-async def manage_get_records(request: Request, current_user: dict = Depends(get_current_user)):
-    return await get_all_records()
+async def manage_get_records(
+    request: Request,
+    current_user: dict = Depends(get_current_user),
+    limit: int = 12,
+    offset: int = 0,
+):
+    records, total = await get_all_records(limit=limit, offset=offset)
+    return {"records": records, "total": total, "limit": limit, "offset": offset}
 
 
 @router.post("/api/manage/records")

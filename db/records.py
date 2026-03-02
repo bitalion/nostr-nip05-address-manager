@@ -6,10 +6,17 @@ from db.connection import get_db
 logger = logging.getLogger(__name__)
 
 
-async def get_all_records() -> list:
+async def get_all_records(limit: int = 12, offset: int = 0) -> tuple[list, int]:
     db = await get_db()
     db.row_factory = aiosqlite.Row
-    cursor = await db.execute("SELECT * FROM records ORDER BY id DESC")
+    
+    count_cursor = await db.execute("SELECT COUNT(*) as total FROM records")
+    total = (await count_cursor.fetchone())["total"]
+    
+    cursor = await db.execute(
+        "SELECT * FROM records ORDER BY id DESC LIMIT ? OFFSET ?",
+        (limit, offset)
+    )
     rows = await cursor.fetchall()
     return [
         {
@@ -25,7 +32,7 @@ async def get_all_records() -> list:
             "in_nostr_json": bool(row["in_nostr_json"]),
         }
         for row in rows
-    ]
+    ], total
 
 
 async def db_create_admin_record(nip05: str, npub: str, pubkey_hex: str) -> int:

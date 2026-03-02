@@ -195,6 +195,20 @@
                             </table>
                         </div>
                     </div>
+                    <div class="flex items-center justify-between mt-4 px-4">
+                        <div class="text-sm text-slate-400">
+                            <span id="recordsShowing">Showing 0-0 of 0</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button type="button" id="prevPageBtn" class="px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-sm text-slate-400 hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                                <i class="fa-solid fa-chevron-left"></i>
+                            </button>
+                            <span id="pageIndicator" class="text-sm text-slate-400">1</span>
+                            <button type="button" id="nextPageBtn" class="px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-sm text-slate-400 hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                                <i class="fa-solid fa-chevron-right"></i>
+                            </button>
+                        </div>
+                    </div>
                 </div>
 
                 <div id="usersSectionContainer" class="hidden">
@@ -970,24 +984,57 @@
             }
         });
 
+        let recordsLimit = 12;
+        let recordsOffset = 0;
+        let recordsTotal = 0;
+
         async function loadRecords() {
             if (isLoadingRecords) return;
             isLoadingRecords = true;
             try {
-                const res = await fetch('/api/manage/records', { credentials: 'same-origin' });
+                const res = await fetch(`/api/manage/records?limit=${recordsLimit}&offset=${recordsOffset}`, { credentials: 'same-origin' });
                 if (res.status === 401) {
                     document.getElementById('logoutBtn').click();
                     return;
                 }
                 if (!res.ok) throw new Error(`HTTP ${res.status}`);
-                allRecords = await res.json();
+                const data = await res.json();
+                allRecords = data.records;
+                recordsTotal = data.total;
                 renderRecords();
+                updatePagination();
             } catch (err) {
                 console.error('Error loading records:', err);
             } finally {
                 isLoadingRecords = false;
             }
         }
+
+        function updatePagination() {
+            const currentPage = Math.floor(recordsOffset / recordsLimit) + 1;
+            const totalPages = Math.ceil(recordsTotal / recordsLimit);
+            const start = recordsTotal > 0 ? recordsOffset + 1 : 0;
+            const end = Math.min(recordsOffset + recordsLimit, recordsTotal);
+            
+            document.getElementById('recordsShowing').textContent = `Showing ${start}-${end} of ${recordsTotal}`;
+            document.getElementById('pageIndicator').textContent = `${currentPage}/${totalPages}`;
+            document.getElementById('prevPageBtn').disabled = recordsOffset === 0;
+            document.getElementById('nextPageBtn').disabled = recordsOffset + recordsLimit >= recordsTotal;
+        }
+
+        document.getElementById('prevPageBtn').addEventListener('click', () => {
+            if (recordsOffset > 0) {
+                recordsOffset = Math.max(0, recordsOffset - recordsLimit);
+                loadRecords();
+            }
+        });
+
+        document.getElementById('nextPageBtn').addEventListener('click', () => {
+            if (recordsOffset + recordsLimit < recordsTotal) {
+                recordsOffset += recordsLimit;
+                loadRecords();
+            }
+        });
 
         function renderRecords() {
             const searchTerm = document.getElementById('searchRecords').value.toLowerCase();
@@ -1090,8 +1137,13 @@
             isLoadingRecords = false;
         }
 
+        let searchTimeout;
         document.getElementById('searchRecords').addEventListener('input', () => {
-            renderRecords();
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                recordsOffset = 0;
+                loadRecords();
+            }, 300);
         });
 
         document.getElementById('addRecordBtn').addEventListener('click', () => {

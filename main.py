@@ -15,7 +15,7 @@ from slowapi.middleware import SlowAPIMiddleware
 from slowapi.util import get_remote_address
 from starlette.middleware.base import BaseHTTPMiddleware
 
-from config import ALLOWED_ORIGINS, NOSTR_JSON_PATH, STATIC_DIR, WELL_KNOWN_DIR
+from config import ALLOWED_ORIGINS, DOMAINS_LIST, NOSTR_DATA_DIR, PRIMARY_DOMAIN, STATIC_DIR, get_nostr_json_path
 from db.connection import init_db
 from routers import admin_auth, admin_records, nip05, public
 import services.payments as payments_svc
@@ -99,12 +99,19 @@ app.include_router(admin_records.router)
 @app.on_event("startup")
 async def startup() -> None:
     from config import LNURL
+    from core.nostr import migrate_to_per_domain
     _validate_lnurl(LNURL)
     payments_svc.http_client = httpx.AsyncClient(timeout=30.0)
 
-    WELL_KNOWN_DIR.mkdir(exist_ok=True)
-    os.chmod(WELL_KNOWN_DIR, 0o755)
-    for tmp_file in WELL_KNOWN_DIR.glob("*.tmp.json"):
+    # Create per-domain directories
+    for domain_entry in DOMAINS_LIST:
+        domain = domain_entry["domain"]
+        domain_well_known = NOSTR_DATA_DIR / domain / ".well-known"
+        domain_well_known.mkdir(parents=True, exist_ok=True)
+        os.chmod(domain_well_known, 0o755)
+
+    # Clean orphan temp files in each domain directory
+    for tmp_file in NOSTR_DATA_DIR.rglob("*.tmp.json"):
         try:
             tmp_file.unlink()
             logger.info(f"Cleaned orphan temp file: {tmp_file}")
@@ -113,10 +120,21 @@ async def startup() -> None:
 
     await init_db()
 
-    if not NOSTR_JSON_PATH.exists():
-        with open(NOSTR_JSON_PATH, "w") as f:
-            json.dump({"names": {}}, f)
-        os.chmod(NOSTR_JSON_PATH, 0o644)
+    # Migrate legacy centralized nostr.json to per-domain files
+    migrate_to_per_domain()
+
+    # Ensure each configured domain has a nostr.json file
+    for domain_entry in DOMAINS_LIST:
+        domain = domain_entry["domain"]
+        nostr_json_path = get_nostr_json_path(domain)
+        if not nostr_json_path.exists():
+            nostr_json_path.parent.mkdir(parents=True, exist_ok=True)
+            with open(nostr_json_path, "w") as f:
+                json.dump({"names": {}}, f)
+            os.chmod(nostr_json_path, 0o644)
+            logger.info(f"Created empty nostr.json for {domain}")
+
+    logger.info(f"Configured domains: {', '.join(d['domain'] + ':' + str(d['price']) + ' sats' for d in DOMAINS_LIST)}")
 
 
 @app.on_event("shutdown")
@@ -133,8 +151,7 @@ async def shutdown() -> None:
 # ── Entry point ───────────────────────────────────────────────────────────────
 if __name__ == "__main__":
     import uvicorn
-    from config import DOMAIN, INVOICE_AMOUNT_SATS
     logger.info("Starting NIP-05 Nostr Identifier server...")
-    logger.info(f"Domain: {DOMAIN}")
-    logger.info(f"Invoice amount: {INVOICE_AMOUNT_SATS} sats")
+    logger.info(f"Primary domain: {PRIMARY_DOMAIN}")
+    logger.info(f"Configured domains: {', '.join(d['domain'] + ':' + str(d['price']) + ' sats' for d in DOMAINS_LIST)}")
     uvicorn.run(app, host="0.0.0.0", port=8000, log_level="info")

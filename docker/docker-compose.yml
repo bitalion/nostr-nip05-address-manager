@@ -14,10 +14,11 @@ services:
       - LNBITS_API_KEY=${LNBITS_API_KEY}
       - INVOICE_AMOUNT_SATS=${INVOICE_AMOUNT_SATS:-100}
       - DOMAIN=${DOMAIN:-example.com}
+      - DOMAINS=${DOMAINS:-}
       - PYTHONUNBUFFERED=1
     volumes:
       # Allow data persistence (paths relative from project root)
-      - ../data/.well-known:/app/.well-known
+      - ../data:/app/data
       - ../static:/app/static
       - ../templates:/app/templates
     restart: unless-stopped

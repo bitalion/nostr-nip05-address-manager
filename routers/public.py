@@ -7,10 +7,10 @@ from fastapi.templating import Jinja2Templates
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 
-from config import DOMAIN, INVOICE_AMOUNT_SATS, NOSTR_JSON_PATH, STATIC_DIR
+from config import DOMAINS_LIST, DOMAINS_MAP, PRIMARY_DOMAIN, STATIC_DIR, get_nostr_json_path
 from core.nostr import check_nip05_available, convert_npub_to_hex, load_nostr_json
 from db.connection import get_db
-from schemas import ConvertPubkeyRequest
+from schemas import CheckPubkeyRequest, ConvertPubkeyRequest
 
 logger = logging.getLogger(__name__)
 limiter = Limiter(key_func=get_remote_address)
@@ -26,7 +26,12 @@ async def index(request: Request):
     try:
         return templates.TemplateResponse(
             "index.html",
-            {"request": request, "domain": DOMAIN, "price_sats": INVOICE_AMOUNT_SATS}
+            {
+                "request": request,
+                "domain": PRIMARY_DOMAIN,
+                "price_sats": DOMAINS_MAP[PRIMARY_DOMAIN],
+                "domains": DOMAINS_LIST,
+            }
         )
     except Exception as e:
         return HTMLResponse(content=f"Error: {str(e)}", status_code=500)
@@ -39,26 +44,38 @@ async def favicon():
 
 @router.get("/health")
 async def health():
-    health_status = {"status": "healthy", "domain": DOMAIN}
+    health_status = {
+        "status": "healthy",
+        "domains": [d["domain"] for d in DOMAINS_LIST],
+        "primary_domain": PRIMARY_DOMAIN,
+    }
 
-    if NOSTR_JSON_PATH.exists():
-        try:
-            data = load_nostr_json()
-            health_status["registered_users"] = len(data.get("names", {}))
-        except Exception:
-            health_status["status"] = "degraded"
-            health_status["nostr_json"] = "error"
-    else:
+    try:
+        total = 0
+        for d in DOMAINS_LIST:
+            domain = d["domain"]
+            nostr_json_path = get_nostr_json_path(domain)
+            if nostr_json_path.exists():
+                data = load_nostr_json(domain)
+                total += len(data.get("names", {}))
+        health_status["registered_users"] = total
+    except Exception:
         health_status["status"] = "degraded"
-        health_status["nostr_json"] = "not_found"
+        health_status["nostr_json"] = "error"
 
     status_code = 200 if health_status["status"] == "healthy" else 503
     return JSONResponse(content=health_status, status_code=status_code)
 
 
 @router.get("/.well-known/nostr.json")
-async def get_nostr_json():
-    return JSONResponse(content=load_nostr_json())
+async def get_nostr_json(request: Request):
+    host = request.headers.get("host", "").split(":")[0].lower()
+    if host in DOMAINS_MAP:
+        data = load_nostr_json(host)
+        names = data.get("names", {})
+    else:
+        names = {}
+    return JSONResponse(content={"names": names})
 
 
 @router.post("/api/convert-pubkey")
@@ -73,13 +90,14 @@ async def convert_pubkey(request: Request, data: ConvertPubkeyRequest):
 
 @router.post("/api/check-pubkey")
 @limiter.limit("20/minute")
-async def check_pubkey(request: Request, data: ConvertPubkeyRequest):
+async def check_pubkey(request: Request, data: CheckPubkeyRequest):
     try:
         hex_key = convert_npub_to_hex(data.pubkey)
     except ValueError as e:
         raise HTTPException(status_code=422, detail=str(e))
 
-    nostr_data = load_nostr_json()
+    domain = data.domain
+    nostr_data = load_nostr_json(domain)
     for existing_hex in nostr_data.get("names", {}).values():
         if existing_hex.lower() == hex_key.lower():
             return {"hex": hex_key, "registered": True}
@@ -88,11 +106,21 @@ async def check_pubkey(request: Request, data: ConvertPubkeyRequest):
 
 @router.get("/api/check-availability/{username}")
 @limiter.limit("30/minute")
-async def check_availability(request: Request, username: str):
+async def check_availability(request: Request, username: str, domain: str = ""):
     if not re.match(r'^[a-zA-Z0-9_-]{1,30}$', username):
         raise HTTPException(status_code=400, detail="Invalid username format")
-    available = await check_nip05_available(username.strip())
+    if not domain:
+        domain = PRIMARY_DOMAIN
+    if domain not in DOMAINS_MAP:
+        raise HTTPException(status_code=400, detail="Domain not configured")
+    available = await check_nip05_available(username.strip(), domain)
     return {"available": available}
+
+
+@router.get("/api/domains")
+@limiter.limit("30/minute")
+async def get_domains(request: Request):
+    return DOMAINS_LIST
 
 
 @router.get("/api/latest-records")

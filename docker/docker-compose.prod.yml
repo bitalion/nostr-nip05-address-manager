@@ -14,9 +14,10 @@ services:
       - LNBITS_API_KEY=${LNBITS_API_KEY}
       - INVOICE_AMOUNT_SATS=${INVOICE_AMOUNT_SATS:-100}
       - DOMAIN=${DOMAIN:-example.com}
+      - DOMAINS=${DOMAINS:-}
       - PYTHONUNBUFFERED=1
     volumes:
-      - ../data/.well-known:/app/.well-known
+      - ../data:/app/data
       - ../static:/app/static
       - ../templates:/app/templates
     networks:
@@ -49,6 +50,7 @@ services:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./ssl:/etc/nginx/ssl:ro
       - ../static:/app/static:ro
+      - ../data:/app/data:ro
     depends_on:
       - nip05-app
     networks:

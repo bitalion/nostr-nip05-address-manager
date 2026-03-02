@@ -94,15 +94,12 @@ http {
             proxy_connect_timeout 10s;
         }
 
-        # .well-known (NIP-05)
-        location /.well-known/ {
-            limit_req zone=general_limit burst=50 nodelay;
-            proxy_pass http://nip05-app:8000;
-            proxy_set_header Host $host;
-            proxy_set_header X-Real-IP $remote_addr;
-            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-            proxy_set_header X-Forwarded-Proto $scheme;
-            proxy_cache off;
+        # NIP-05: serve nostr.json directly from per-domain directory
+        location = /.well-known/nostr.json {
+            alias /app/data/$host/.well-known/nostr.json;
+            add_header Access-Control-Allow-Origin "*" always;
+            add_header Cache-Control "public, max-age=300";
+            default_type application/json;
         }
 
         # Otras rutas

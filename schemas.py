@@ -25,19 +25,38 @@ class ValidatedPubkeyMixin:
         return v
 
 
-class NIP05Request(ValidatedUsernameMixin, ValidatedPubkeyMixin, BaseModel):
+class ValidatedDomainMixin:
+    @field_validator('domain')
+    @classmethod
+    def validate_domain(cls, v: str) -> str:
+        from config import DOMAINS_MAP, PRIMARY_DOMAIN
+        if not v:
+            return PRIMARY_DOMAIN
+        if v not in DOMAINS_MAP:
+            raise ValueError(f'Domain not configured: {v}')
+        return v
+
+
+class NIP05Request(ValidatedUsernameMixin, ValidatedPubkeyMixin, ValidatedDomainMixin, BaseModel):
     username: str = Field(max_length=30)
     pubkey: str = Field(max_length=200)
+    domain: str = Field(default="", max_length=253)
 
 
 class ConvertPubkeyRequest(ValidatedPubkeyMixin, BaseModel):
     pubkey: str = Field(max_length=200)
 
 
-class CheckPaymentRequest(ValidatedPubkeyMixin, ValidatedUsernameMixin, BaseModel):
+class CheckPubkeyRequest(ValidatedPubkeyMixin, ValidatedDomainMixin, BaseModel):
+    pubkey: str = Field(max_length=200)
+    domain: str = Field(default="", max_length=253)
+
+
+class CheckPaymentRequest(ValidatedPubkeyMixin, ValidatedUsernameMixin, ValidatedDomainMixin, BaseModel):
     username: str = Field(max_length=30)
     pubkey: str = Field(max_length=200)
     payment_hash: str = Field(max_length=64)
+    domain: str = Field(default="", max_length=253)
 
     @field_validator('payment_hash')
     @classmethod
@@ -47,8 +66,9 @@ class CheckPaymentRequest(ValidatedPubkeyMixin, ValidatedUsernameMixin, BaseMode
         return v
 
 
-class CancelRegistrationRequest(BaseModel):
+class CancelRegistrationRequest(ValidatedDomainMixin, BaseModel):
     username: str = Field(max_length=50)
+    domain: str = Field(default="", max_length=253)
 
 
 class LoginRequest(BaseModel):

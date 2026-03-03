@@ -48,6 +48,7 @@ htmlcov/
 
 # Docker
 data/
+.well-known/
 .dockerignore
 
 # Testing

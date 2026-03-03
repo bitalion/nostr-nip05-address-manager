@@ -3,6 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 
+from config import DOMAINS_MAP
 from core.nostr import (
     _nostr_json_lock,
     check_and_add_nip05_entry,
@@ -64,8 +65,21 @@ async def manage_create_record(
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
-    await db_create_admin_record(data.nip05, data.pubkey, pubkey_hex)
-    await check_and_add_nip05_entry(data.nip05.split('@')[0], pubkey_hex)
+    parts = data.nip05.split('@', 1)
+    if len(parts) != 2 or not parts[0] or not parts[1]:
+        raise HTTPException(status_code=400, detail="NIP-05 must be in format user@domain")
+    username, domain = parts
+    if domain not in DOMAINS_MAP:
+        raise HTTPException(status_code=400, detail=f"Domain not configured: {domain}")
+
+    try:
+        await db_create_admin_record(data.nip05, data.pubkey, pubkey_hex)
+    except ValueError as e:
+        raise HTTPException(status_code=409, detail=str(e)) from e
+    added = await check_and_add_nip05_entry(username, pubkey_hex, domain)
+    if not added:
+        await db_delete_record(data.nip05)
+        raise HTTPException(status_code=409, detail="NIP-05 already exists in nostr.json")
     return {"success": True}
 
 
@@ -84,16 +98,26 @@ async def manage_update_record(
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
+    parts = data.nip05.split('@', 1)
+    if len(parts) != 2 or not parts[0] or not parts[1]:
+        raise HTTPException(status_code=400, detail="NIP-05 must be in format user@domain")
+    username, domain = parts
+    if domain not in DOMAINS_MAP:
+        raise HTTPException(status_code=400, detail=f"Domain not configured: {domain}")
+
     success = await db_update_record_pubkey(data.nip05, data.pubkey, pubkey_hex)
     if not success:
         raise HTTPException(status_code=404, detail="Record not found")
 
-    username = data.nip05.split('@')[0]
     async with _nostr_json_lock:
-        nostr_data = load_nostr_json()
-        if "names" in nostr_data and username in nostr_data["names"]:
-            nostr_data["names"][username] = pubkey_hex
-            save_nostr_json(nostr_data)
+        nostr_data = load_nostr_json(domain)
+        names = nostr_data.get("names", {})
+        existing_key = next((k for k in names if k.lower() == username.lower()), None)
+        if existing_key:
+            nostr_data["names"][existing_key] = pubkey_hex
+            save_nostr_json(nostr_data, domain)
+        else:
+            logger.warning(f"DB updated but nostr.json entry not found: {username}@{domain}")
 
     return {"success": True}
 
@@ -108,13 +132,18 @@ async def manage_delete_record(request: Request, record_id: int, current_user: d
         raise HTTPException(status_code=404, detail="Record not found")
 
     nip05 = row[0]
-    username = nip05.split('@')[0]
+    parts = nip05.split('@', 1)
+    if len(parts) != 2 or not parts[0] or not parts[1]:
+        raise HTTPException(status_code=500, detail="Stored NIP-05 is invalid")
+    username, domain = parts
 
     async with _nostr_json_lock:
-        nostr_data = load_nostr_json()
-        if "names" in nostr_data and username in nostr_data["names"]:
-            del nostr_data["names"][username]
-            save_nostr_json(nostr_data)
+        nostr_data = load_nostr_json(domain)
+        names = nostr_data.get("names", {})
+        existing_key = next((k for k in names if k.lower() == username.lower()), None)
+        if existing_key:
+            del nostr_data["names"][existing_key]
+            save_nostr_json(nostr_data, domain)
 
     await db_delete_record(nip05)
     return {"success": True}

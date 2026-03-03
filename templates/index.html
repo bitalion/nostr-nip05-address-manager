@@ -137,7 +137,7 @@
             <span id="heroPrefix">Registra tu </span><span class="bg-gradient-to-r from-violet-400 to-violet-200 bg-clip-text text-transparent font-extrabold">NIP-05</span>
         </p>
         <p class="mt-1 sm:mt-2">
-            <span id="heroMid" class="text-sm sm:text-base font-light text-slate-500 tracking-wide">en el dominio </span><span class="text-white text-lg sm:text-xl md:text-2xl font-bold tracking-tight">{{ domain }}</span>
+            <span id="heroMid" class="text-sm sm:text-base font-light text-slate-500 tracking-wide">en el dominio </span><span id="heroDomain" class="text-white text-lg sm:text-xl md:text-2xl font-bold tracking-tight">{{ domain }}</span>
         </p>
     </div>
 
@@ -150,7 +150,7 @@
                         <label for="username" class="block text-[10px] sm:text-xs font-semibold text-slate-400 uppercase tracking-widest" id="label-username">
                             NIP-05 Username
                         </label>
-                        <span class="text-[10px] font-medium text-slate-500 tracking-wide">{{ price_sats }} ⚡</span>
+                        <span id="priceDisplay" class="text-[10px] font-medium text-slate-500 tracking-wide">{{ price_sats }} ⚡</span>
                     </div>
                     <div class="relative">
                         <input
@@ -159,10 +159,22 @@
                             name="username"
                             required
                             maxlength="30"
-                            class="w-full pl-4 pr-40 py-2.5 sm:py-3 bg-white/5 border border-white/10 rounded-xl text-white text-sm placeholder-slate-500 focus:outline-none focus:border-violet-500/50 focus:bg-white/[0.08] transition-all"
+                            class="w-full pl-4 pr-52 py-2.5 sm:py-3 bg-white/5 border border-white/10 rounded-xl text-white text-sm placeholder-slate-500 focus:outline-none focus:border-violet-500/50 focus:bg-white/[0.08] transition-all"
                             placeholder="username"
                         >
+                        {% if domains|length > 1 %}
+                        <div style="position: absolute; right: 0.5rem; top: 50%; transform: translateY(-50%); display: flex; align-items: center;">
+                            <span style="color: #64748b; font-size: 0.875rem; margin-right: 2px;">@</span>
+                            <select id="domainSelect" aria-label="NIP-05 domain"
+                                style="background: transparent; color: #94a3b8; font-size: 0.875rem; border: none; outline: none; cursor: pointer; padding-right: 1rem; font-weight: 500; -webkit-appearance: none; -moz-appearance: none; appearance: none; background-image: url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%2212%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%2394a3b8%22 stroke-width=%222%22><polyline points=%226 9 12 15 18 9%22/></svg>'); background-repeat: no-repeat; background-position: right 0 center; background-size: 12px;">
+                                {% for d in domains %}
+                                <option value="{{ d.domain }}" data-price="{{ d.price }}" style="background: #1a1a2e; color: white;">{{ d.domain }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        {% else %}
                         <span class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 text-sm pointer-events-none select-none whitespace-nowrap">@{{ domain }}</span>
+                        {% endif %}
                     </div>
                     <p id="availabilityMsg" class="text-xs mt-1 hidden"></p>
                 </div>
@@ -414,7 +426,10 @@
 
     <script src="/static/js/qrious.min.js"></script>
     <script>
-        const DOMAIN = "{{ domain }}";
+        const DOMAINS = {{ domains | tojson }};
+        let selectedDomain = DOMAINS[0].domain;
+        let selectedPrice = DOMAINS[0].price;
+        const DOMAIN = selectedDomain;
 
         // Translations
         const translations = {
@@ -608,6 +623,28 @@
         // Initialize language
         setLanguage(currentLanguage);
 
+        // Domain selector
+        const domainSelect = document.getElementById('domainSelect');
+        if (domainSelect) {
+            domainSelect.addEventListener('change', function() {
+                selectedDomain = this.value;
+                const opt = this.options[this.selectedIndex];
+                selectedPrice = parseInt(opt.dataset.price);
+                document.getElementById('priceDisplay').textContent = selectedPrice + ' ⚡';
+                document.getElementById('heroDomain').textContent = selectedDomain;
+                // Re-check availability for new domain
+                const usernameVal = usernameInput ? usernameInput.value.trim() : '';
+                if (usernameVal.length >= 1) {
+                    clearTimeout(debounceTimer);
+                    debounceTimer = setTimeout(checkAvailability, 100);
+                }
+                // Re-check pubkey for new domain
+                if (pubkeyInput && pubkeyInput.value.trim()) {
+                    pubkeyInput.dispatchEvent(new Event('input'));
+                }
+            });
+        }
+
         // Check nostr.json status
         const statusDot = document.getElementById('statusDot');
         const statusText = document.getElementById('statusText');
@@ -740,7 +777,7 @@
             if (usernameVal.length < 1) return;
 
             try {
-                const res = await fetch('/api/check-availability/' + usernameVal);
+                const res = await fetch('/api/check-availability/' + usernameVal + '?domain=' + encodeURIComponent(selectedDomain));
                 const data = await res.json();
                 
                 if (data.available) {
@@ -805,7 +842,7 @@
                     const res = await fetch('/api/check-pubkey', {
                         method: 'POST',
                         headers: {'Content-Type': 'application/json'},
-                        body: JSON.stringify({ pubkey: pubkeyValue })
+                        body: JSON.stringify({ pubkey: pubkeyValue, domain: selectedDomain })
                     });
 
                     const data = await res.json();
@@ -869,7 +906,8 @@
                     body: JSON.stringify({
                         payment_hash: currentInvoice.payment_hash,
                         username: currentInvoice.username,
-                        pubkey: currentInvoice.pubkey
+                        pubkey: currentInvoice.pubkey,
+                        domain: currentInvoice.domain
                     })
                 });
 
@@ -879,7 +917,7 @@
                     clearInterval(paymentCheckInterval);
                     paymentSection.classList.add('hidden');
                     successSection.classList.remove('hidden');
-                    document.getElementById('registeredNip05').textContent = currentInvoice.username + '@' + DOMAIN;
+                    document.getElementById('registeredNip05').textContent = currentInvoice.username + '@' + currentInvoice.domain;
                     loadUltimosRegistros();
                 }
             } catch (err) {
@@ -940,7 +978,8 @@
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({
                         username: username,
-                        pubkey: pubkeyHex
+                        pubkey: pubkeyHex,
+                        domain: selectedDomain
                     })
                 });
 
@@ -951,14 +990,11 @@
                 }
 
                 if (data.status === 'already_paid') {
-                    const successSection = document.getElementById('successSection');
-                    const errorSection = document.getElementById('errorSection');
                     errorSection.classList.add('hidden');
                     form.classList.add('hidden');
                     paymentSection.classList.add('hidden');
                     successSection.classList.remove('hidden');
-                    document.getElementById('successNIP05').textContent = `${username}@{{ domain }}`;
-                    startPaymentVerification();
+                    document.getElementById('registeredNip05').textContent = `${data.username}@${data.domain}`;
                     return;
                 }
 
@@ -967,6 +1003,7 @@
                 }
 
                 currentInvoice = data;
+                currentInvoice.domain = selectedDomain;
 
                 const qrContainer = document.getElementById('qrCode');
                 qrContainer.innerHTML = '<canvas id="qrCanvas" width="200" height="200"></canvas><img id="qrLogo" src="/static/images/nostr-logo-black.svg" alt="Nostr" class="qr-logo">';

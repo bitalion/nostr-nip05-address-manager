@@ -6,7 +6,7 @@ from fastapi.templating import Jinja2Templates
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 
-from config import COOKIE_SECURE, DOMAIN, SMTP_HOST
+from config import COOKIE_SECURE, DOMAINS_LIST, PRIMARY_DOMAIN, SMTP_HOST
 from core.email import send_email
 from core.security import create_token, get_current_user, invalidate_token
 from db.users import (
@@ -37,15 +37,15 @@ router = APIRouter()
 
 @router.get("/manage", response_class=HTMLResponse)
 async def manage_page(request: Request):
-    return templates.TemplateResponse("manage.html", {"request": request, "domain": DOMAIN})
+    return templates.TemplateResponse("manage.html", {"request": request, "domain": PRIMARY_DOMAIN, "domains": DOMAINS_LIST})
 
 
 @router.get("/manage/reset", response_class=HTMLResponse)
 async def manage_reset_page(request: Request):
     token = request.query_params.get("token", "")
     return templates.TemplateResponse(
-        "manage.html", 
-        {"request": request, "domain": DOMAIN, "reset_token": token}
+        "manage.html",
+        {"request": request, "domain": PRIMARY_DOMAIN, "domains": DOMAINS_LIST, "reset_token": token}
     )
 
 
@@ -91,7 +91,7 @@ async def request_password_reset(request: Request, data: PasswordResetRequest):
         return {"message": "If the user exists, a reset email will be sent"}
 
     token, _ = result
-    reset_url = f"https://{DOMAIN}/manage/reset?token={token}"
+    reset_url = f"https://{PRIMARY_DOMAIN}/manage/reset?token={token}"
     body = f"""
     <html>
     <body style="font-family: Arial, sans-serif; background: #08080f; color: white; padding: 20px;">
@@ -106,7 +106,7 @@ async def request_password_reset(request: Request, data: PasswordResetRequest):
     </body>
     </html>
     """
-    send_email(f"{data.username}@{DOMAIN}", "Password Reset Request", body)
+    send_email(f"{data.username}@{PRIMARY_DOMAIN}", "Password Reset Request", body)
     return {"message": "If the user exists, a reset email will be sent"}
 
 

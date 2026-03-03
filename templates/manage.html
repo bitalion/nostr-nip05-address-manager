@@ -244,9 +244,21 @@
                     </div>
                     <div class="relative">
                         <input type="text" id="recordUsername" required
-                            class="w-full pl-4 pr-20 py-2.5 sm:py-3 bg-white/5 border border-white/10 rounded-xl text-white text-sm placeholder-slate-500 focus:outline-none focus:border-violet-500/50 focus:bg-white/[0.08] transition-all"
+                            class="w-full pl-4 pr-52 py-2.5 sm:py-3 bg-white/5 border border-white/10 rounded-xl text-white text-sm placeholder-slate-500 focus:outline-none focus:border-violet-500/50 focus:bg-white/[0.08] transition-all"
                             placeholder="username" maxlength="30">
+                        {% if domains|length > 1 %}
+                        <div style="position: absolute; right: 0.5rem; top: 50%; transform: translateY(-50%); display: flex; align-items: center;">
+                            <span style="color: #64748b; font-size: 0.875rem; margin-right: 2px;">@</span>
+                            <select id="recordDomainSelect" aria-label="NIP-05 domain"
+                                style="background: transparent; color: #94a3b8; font-size: 0.875rem; border: none; outline: none; cursor: pointer; padding-right: 1rem; font-weight: 500; -webkit-appearance: none; -moz-appearance: none; appearance: none; background-image: url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%2212%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%2394a3b8%22 stroke-width=%222%22><polyline points=%226 9 12 15 18 9%22/></svg>'); background-repeat: no-repeat; background-position: right 0 center; background-size: 12px;">
+                                {% for d in domains %}
+                                <option value="{{ d.domain }}" style="background: #1a1a2e; color: white;">{{ d.domain }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        {% else %}
                         <span class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 text-sm pointer-events-none select-none whitespace-nowrap">@{{ domain }}</span>
+                        {% endif %}
                     </div>
                 </div>
                 <div>
@@ -420,6 +432,7 @@
 
     <script>
         const DOMAIN = "{{ domain }}";
+        const DOMAINS = {{ domains | tojson }};
 
         const translations = {
             en: {
@@ -1163,7 +1176,12 @@
         function editRecord(id, nip05, npub, pubkeyHex) {
             document.getElementById('modalTitle').textContent = translations[currentLang].modalEdit;
             document.getElementById('recordId').value = id;
-            document.getElementById('recordUsername').value = nip05.split('@')[0];
+            const parts = nip05.split('@');
+            document.getElementById('recordUsername').value = parts[0];
+            const domainSel = document.getElementById('recordDomainSelect');
+            if (domainSel && parts.length > 1) {
+                domainSel.value = parts[1];
+            }
             document.getElementById('recordPubkey').value = npub;
             document.getElementById('recordHex').value = pubkeyHex || '';
             document.getElementById('copyRecordHexBtn').disabled = !pubkeyHex;
@@ -1181,7 +1199,9 @@
             const id = document.getElementById('recordId').value;
             const username = document.getElementById('recordUsername').value.trim();
             const pubkey = document.getElementById('recordPubkey').value.trim();
-            const nip05 = `${username}@${DOMAIN}`;
+            const domainSel = document.getElementById('recordDomainSelect');
+            const recordDomain = domainSel ? domainSel.value : DOMAIN;
+            const nip05 = `${username}@${recordDomain}`;
 
             const res = await fetch('/api/manage/records', {
                 method: id ? 'PUT' : 'POST',

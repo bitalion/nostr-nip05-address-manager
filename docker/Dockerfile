@@ -1,10 +1,10 @@
 # Stage 1: Build
-FROM python:3.11-slim as builder
+FROM ubuntu/python:3.12-24.04_stable as builder
 
 WORKDIR /app
 
 # Install required system dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN apt update && apt install -y --no-install-recommends \
     gcc \
     curl \
     && rm -rf /var/lib/apt/lists/*
@@ -31,12 +31,12 @@ COPY templates/ templates/
 RUN tailwindcss -i static/css/input.css -o static/css/tailwind.css --minify
 
 # Stage 2: Runtime
-FROM python:3.11-slim
+FROM ubuntu/python:3.12-24.04_stable
 
 WORKDIR /app
 
 # Install only the required runtime dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN apt update && apt install -y --no-install-recommends \
     curl \
     && rm -rf /var/lib/apt/lists/*
 

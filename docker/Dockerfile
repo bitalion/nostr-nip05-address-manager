@@ -1,5 +1,5 @@
 # Stage 1: Build
-FROM ubuntu/python:3.12-24.04_stable as builder
+FROM python:3.11-slim as builder
 
 WORKDIR /app
 
@@ -31,7 +31,7 @@ COPY templates/ templates/
 RUN tailwindcss -i static/css/input.css -o static/css/tailwind.css --minify
 
 # Stage 2: Runtime
-FROM ubuntu/python:3.12-24.04_stable
+FROM python:3.11-slim
 
 WORKDIR /app
 

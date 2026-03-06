@@ -4,7 +4,7 @@ FROM ubuntu/python:3.12-24.04_stable as builder
 WORKDIR /app
 
 # Install required system dependencies
-RUN apt update && apt install -y --no-install-recommends \
+RUN apt-get update && apt install -y --no-install-recommends \
     gcc \
     curl \
     && rm -rf /var/lib/apt/lists/*

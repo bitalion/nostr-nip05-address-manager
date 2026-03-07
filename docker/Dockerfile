@@ -3,8 +3,8 @@ FROM python:3.11-slim as builder
 
 WORKDIR /app
 
-# Install required system dependencies
-RUN apt-get update && apt install -y --no-install-recommends \
+# Install required system dependencies - FIXED: apt-get instead of apt
+RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
     curl \
     && rm -rf /var/lib/apt/lists/*
@@ -17,6 +17,8 @@ RUN pip install --no-cache-dir -r requirements.txt --prefix=/install
 
 # Download Tailwind CSS v4 standalone CLI and verify SHA256 checksum
 # Hash pinned to v4.2.0 tailwindcss-linux-x64 — update alongside the version tag
+# FIXED: Added pipefail option
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN curl -fsSL https://github.com/tailwindlabs/tailwindcss/releases/download/v4.2.0/tailwindcss-linux-x64 \
     -o /usr/local/bin/tailwindcss && \
     echo "8f65e2d21c675f1e8d265219979d17d10634c1f553a2f583265b7edb28726432  /usr/local/bin/tailwindcss" \
@@ -35,8 +37,8 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-# Install only the required runtime dependencies
-RUN apt update && apt install -y --no-install-recommends \
+# Install only the required runtime dependencies - FIXED: apt-get instead of apt
+RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     && rm -rf /var/lib/apt/lists/*
 

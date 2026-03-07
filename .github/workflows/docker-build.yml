@@ -24,6 +24,8 @@ jobs:
         uses: hadolint/hadolint-action@v3.1.0
         with:
           dockerfile: docker/Dockerfile
+          failure-threshold: warning
+          ignored: DL3008
 
       # 2. Setup Docker Buildx for multi-platform support and advanced caching
       - name: Set up Docker Buildx

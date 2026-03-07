@@ -39,7 +39,7 @@ async def upgrade(db: aiosqlite.Connection) -> None:
         
         import time
         from core.security import hash_password
-        hashed = hash_password("manage")
+        hashed = hash_password("changeme")
         await db.execute(
             """INSERT OR IGNORE INTO users (username, password_hash, role, created_at)
                VALUES (?, ?, 'admin', ?)""",

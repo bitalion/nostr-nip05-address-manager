@@ -9,3 +9,5 @@ slowapi==0.1.9
 starlette==0.52.1
 aiosqlite==0.22.1
 fastapi-csrf-protect==0.3.4
+coincurve==0.0.1
+pynostr==0.7.0

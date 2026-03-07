@@ -73,3 +73,13 @@ if not ALLOWED_ORIGINS:
 COOKIE_SECURE = os.getenv("COOKIE_SECURE", "true").lower() == "true"
 if PRIMARY_DOMAIN in ("example.com", "localhost") or "localhost" in PRIMARY_DOMAIN or "127.0.0.1" in PRIMARY_DOMAIN:
     COOKIE_SECURE = False
+
+NOSTR_RELAYS = os.getenv("NOSTR_RELAYS", "").split(",") if os.getenv("NOSTR_RELAYS") else []
+NOSTR_RELAYS = [r.strip() for r in NOSTR_RELAYS if r.strip()]
+
+NOSTR_PRIVATE_KEY = os.getenv("NOSTR_PRIVATE_KEY", "")
+
+NOSTR_NOTIFICATION_MESSAGE = os.getenv(
+    "NOSTR_NOTIFICATION_MESSAGE",
+    "✅ Your NIP-05 identifier '{username}@{domain}' has been registered successfully!\n\nPlease update your Nostr client profile to use this NIP-05 identifier.\n\nThis helps others find and verify your identity on Nostr."
+)

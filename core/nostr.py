@@ -7,11 +7,13 @@ import shutil
 import tempfile
 import time
 import bech32
-from config import get_nostr_json_path, get_nostr_json_backup, PRIMARY_DOMAIN, NOSTR_DATA_DIR, _LEGACY_NOSTR_JSON
+from config import get_nostr_json_path, get_nostr_json_backup, PRIMARY_DOMAIN, NOSTR_DATA_DIR, _LEGACY_NOSTR_JSON, NOSTR_RELAYS, NOSTR_PRIVATE_KEY
 
 logger = logging.getLogger(__name__)
 
 _nostr_json_lock = asyncio.Lock()
+
+_nostr_notification_lock = asyncio.Lock()
 
 
 def convert_npub_to_hex(npub: str) -> str:
@@ -182,6 +184,9 @@ async def check_and_add_nip05_entry(username: str, pubkey_hex: str, domain: str)
         logger.info(f"Added NIP-05 entry for user: {username}@{domain}")
 
     await db_update_nostr_json_status(f"{username}@{domain}", True)
+
+    asyncio.create_task(send_nip05_registration_notification(pubkey_hex, username, domain))
+
     return True
 
 
@@ -221,5 +226,60 @@ async def check_and_add_nip05_entry_atomic(username: str, pubkey_hex: str, payme
 
         await db.commit()
 
+    asyncio.create_task(send_nip05_registration_notification(pubkey_hex, username, domain))
+
     logger.info(f"Atomic NIP-05 add + payment confirm for user: {username}@{domain}")
     return True
+
+
+async def send_nip05_registration_notification(pubkey_hex: str, username: str, domain: str) -> bool:
+    """Send a Nostr notification to the user when their NIP-05 is registered."""
+    from config import NOSTR_PRIVATE_KEY, NOSTR_NOTIFICATION_MESSAGE, NOSTR_RELAYS
+    
+    if not NOSTR_RELAYS:
+        logger.warning("Nostr relays not configured, skipping notification")
+        return False
+
+    try:
+        from pynostr.key import PrivateKey
+        from pynostr.encrypted_dm import EncryptedDirectMessage
+        from pynostr.relay_manager import RelayManager
+
+        content = NOSTR_NOTIFICATION_MESSAGE.format(username=username, domain=domain)
+
+        if NOSTR_PRIVATE_KEY:
+            if NOSTR_PRIVATE_KEY.startswith("nsec"):
+                private_key = PrivateKey.from_nsec(NOSTR_PRIVATE_KEY)
+                privkey_hex = private_key.hex()
+            else:
+                privkey_hex = NOSTR_PRIVATE_KEY
+        else:
+            private_key = PrivateKey()
+            privkey_hex = private_key.hex()
+            logger.info(f"Generated new Nostr key for notifications: {private_key.public_key.bech32()}")
+
+        dm = EncryptedDirectMessage(
+            recipient_pubkey=pubkey_hex,
+            cleartext_content=content
+        )
+        dm.encrypt(privkey_hex, recipient_pubkey=pubkey_hex)
+        dm_event = dm.to_event()
+        dm_event.sign(privkey_hex)
+
+        relay_manager = RelayManager(timeout=15)
+        for relay in NOSTR_RELAYS:
+            relay_manager.add_relay(relay)
+        
+        logger.info(f"Publishing DM to {len(NOSTR_RELAYS)} relays for {username}@{domain}")
+        relay_manager.publish_event(dm_event)
+        
+        import time
+        time.sleep(5)
+        relay_manager.close_all_relay_connections()
+
+        logger.info(f"Sent NIP-05 registration DM to {username}@{domain}")
+        return True
+
+    except Exception as e:
+        logger.error(f"Failed to send Nostr notification: {e}")
+        return False
